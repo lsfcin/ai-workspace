@@ -1,0 +1,39 @@
+# ============================================================
+# AI-Workspace — .gitignore com whitelist
+# Versiona apenas arquivos de sistema do workspace.
+# Dados de projetos, fichas pessoais e materiais de aula
+# ficam somente no ambiente local.
+# ============================================================
+
+# Ignorar tudo por padrão
+*
+**/*
+
+# Permitir navegação em diretórios
+!*/
+
+# ── Raiz ────────────────────────────────────────────────────
+!CLAUDE.md
+!00_ESTRUTURA_DE_PASTAS.md
+!README.md
+!LICENSE
+!.gitignore
+
+# ── Contextos e specs (todos os níveis) ─────────────────────
+!**/CONTEXT.md
+!**/SPECS.md
+
+# ── Meta: templates, tools, referências ─────────────────────
+!meta/templates/
+!meta/templates/*.md
+!meta/tools/
+!meta/tools/*.md
+!meta/referencias/
+!meta/referencias/clief-notes/
+!meta/referencias/clief-notes/CONTEXT.md
+!meta/referencias/clief-notes/*.pdf
+
+# ── Hook de versionamento ────────────────────────────────────
+!meta/hooks/
+!meta/hooks/*.py
+!meta/hooks/*.sh
