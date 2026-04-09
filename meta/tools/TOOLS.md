@@ -1,111 +1,36 @@
-# Ferramentas Disponíveis
+# Ferramentas — Referência Técnica
 
-> Hardware: RTX 3050 6GB Laptop GPU · 16GB RAM
-> Limite prático Ollama: modelos ≤7B rodam em GPU; 8-9B com RAM offload (mais lento)
+> Lido para implementação de scripts, não para routing. Para routing → `CONTEXT.md`.
 
-## Prioridade de seleção (ordem de custo crescente)
+## Hardware
 
-1. Script Python / CLI → zero custo, sem LLM
-2. Modelo local Ollama → zero custo, latência depende do tamanho
-3. Gemini 2.0 Flash → ~$0.075/1M in · requer billing ativo (ver abaixo)
-4. Claude Haiku 4.5 → ~$0.80/1M in · fallback quando Gemini indisponível
-5. Claude Sonnet 4.6 → ~$3/1M in · qualidade sem complexidade extrema
-6. Claude Opus 4.6 → ~$15/1M in · design, arquitetura, raciocínio complexo
+> RTX 3050 6GB Laptop GPU · 16GB RAM  
+> Ollama: modelos ≤7B em GPU; 8-9B com RAM offload (mais lento)
 
-## Agentes Cloud
-
-| Agente | Modelo real | Status | RPM | RPD | Usar quando |
-|--------|-------------|--------|-----|-----|-------------|
-| Opus | claude-opus-4-6 | ✅ | — | — | Arquitetura, raciocínio complexo, code gen novo |
-| Sonnet | claude-sonnet-4-6 | ✅ | — | — | Escrita, análise, qualidade sem gênio |
-| Haiku | claude-haiku-4-5-20251001 | ✅ | — | — | Fallback pago leve quando Gemini offline |
-| **Gemflite** | gemini-3.1-flash-lite-preview | ✅ | 15 | 500 | Triagem, lotes, contexto longo — **padrão T2** |
-| **Gemlux** | gemini-2.5-flash-lite | ✅ | 10 | 20 | Fallback leve quando Gemflite esgota |
-| **Gemtrin** | gemini-3-flash-preview | ✅ | 5 | 20 | Raciocínio mais capaz, uso pontual |
-| **Gemflash** | gemini-2.5-flash | ✅ (instável) | 5 | 20 | Qualidade máxima T2; intermitente |
-| **Gemvoice** | gemini-2.5-flash-preview-tts | ✅ testado | 3 | 10 | TTS → WAV; `gemini_tts.py` |
-| **Gemvoice-Pro** | gemini-2.5-pro-preview-tts | ✅ (mesmo script) | — | — | TTS qualidade máxima |
-| **Gemvision** | gemini-2.5-flash-image | ✅ (quota diária) | — | — | Texto→Imagem; `gemini_image.py` |
-| **Gempic** | gemini-3-pro-image-preview | ✅ (quota diária) | — | — | Imagem qualidade pro |
-| **Gemart** | gemini-3.1-flash-image-preview | ✅ (quota diária) | — | — | Imagem mais recente |
-| **Lyria** | lyria-3-clip-preview / lyria-3-pro-preview | ✅ (quota diária) | — | — | Geração de música |
-| **Imago** | imagen-4.0-generate-001 | ❌ paid only | — | 25 | `imagen_run.py` — requer billing |
-| **Imago-Ultra** | imagen-4.0-ultra-generate-001 | ❌ paid only | — | — | Qualidade máxima Imagen |
-| **Imago-Flash** | imagen-4.0-fast-generate-001 | ❌ paid only | — | — | Imagen mais rápido |
-| **Gemwave** | gemini-2.5-flash-native-audio-latest | ⚠️ WebSocket | ∞ | ∞ | API Live; `gemini_live_skeleton.py` |
-| **Gemlive** | gemini-3.1-flash-live-preview | ⚠️ WebSocket | ∞ | ∞ | API Live bidirecional |
-| **Tigon** | gemma-4-26b-a4b-it / gemma-4-31b-it | ✅ | 15 | 1500 | Tarefas curtas repetitivas, TPM ilimitado |
-| **Triton** | gemma-3-{1b,4b,12b,27b}-it | ✅ | 30 | 14400 | Triagem e logs (TPM baixo: 15K) |
-
-> **Gemini:** `GEMINI_API_KEY` presente no env. Free tier ativo — **sem billing necessário**.
-> Cadeia de fallback automática (texto): Gemflite → Gemlux → Gemtrin → Gemflash.
-> Cadeia de fallback (imagem): Gemvision → Gempic → Gemart.
-> Scripts: `gemini_run.py` (texto) · `gemini_tts.py` (áudio) · `gemini_image.py` (imagem) · `imagen_run.py` (Imagen, paid) · `gemini_live_skeleton.py` (WebSocket)
-> ~~gemini-2.0-flash~~ — não incluído no plano atual, não usar.
-
-## Agentes Locais (Ollama — custo zero)
-
-| Modelo | Tamanho | Status | Micro-test | Usar quando |
-|--------|---------|--------|-----------|-------------|
-| llama3.2:3b | 2.0GB | ✅ testado | JSON format ✅ | Formatação mecânica, latência <2s |
-| deepseek-coder:6.7b | 3.8GB | ✅ testado | Python code ✅ | Boilerplate, snippets simples |
-| qwen2.5-coder:7b | ~4.7GB | ✅ testado | Flatten list ✅ | Código qualidade — melhor que deepseek-coder |
-| llama3.1:8b | 4.9GB | ✅ testado | Conceito PT ✅ | Raciocínio geral, textos em PT |
-| deepseek-coder-v2 | 8.9GB | ✅ testado | Retry decorator ✅ | Código complexo (RAM offload, ~2min) |
-| nomic-embed-text | 274MB | ✅ testado | Similaridade ✅ | Embeddings, busca semântica, RAG |
-| faster-whisper | ~1GB | ❌ não instalado | — | STT local — transcrição de aulas, reuniões, áudios |
-
-> `llama3:latest` removido (era redundante com llama3.1:8b, liberou 4.7GB).
-> `llama3.1:latest` = mesmo arquivo que `llama3.1:8b` (hard link, não ocupa espaço extra).
-
-## CLIs
+## CLIs disponíveis
 
 | Ferramenta | Status | Propósito |
 |------------|--------|-----------|
-| pandoc | ✅ | Conversão md↔docx↔html↔pdf |
-| ffmpeg | ✅ | Áudio/vídeo processing |
-| jq | ✅ | Parsing/transformação de JSON |
-| imagemagick | ❌ | Manipulação de imagem batch |
-| rclone | ❌ | Sync de arquivos com cloud |
+| pandoc | ✅ | md ↔ docx ↔ html ↔ pdf |
+| ffmpeg | ✅ | Áudio/vídeo |
+| jq | ✅ | JSON |
+| imagemagick | ❌ | Imagem batch |
+| rclone | ❌ | Cloud sync |
 
-## MCPs ativos (nesta sessão)
+## MCPs ativos
 
 | Serviço | Propósito |
 |---------|-----------|
-| Notion | CRUD páginas de disciplinas e notas |
-| Gmail | Leitura e triagem de emails |
-| Figma | Design, diagramas, code connect |
+| Notion | CRUD páginas |
+| Gmail | Leitura e triagem |
+| Figma | Design, diagramas |
 
-## Como chamar Gemini / Ollama em scripts
+## Scripts Gemini
 
-```python
-# Gemini — nomes canônicos: gemflite (padrão), gemlux, gemtrin, gemflash
-import urllib.request, json, os
-MODEL_ALIASES = {
-    "gemflite": "gemini-3.1-flash-lite-preview",
-    "gemlux":   "gemini-2.5-flash-lite",
-    "gemtrin":  "gemini-3-flash-preview",
-    "gemflash": "gemini-2.5-flash",
-}
-def gemini(prompt, model="gemflite"):
-    key = os.environ["GEMINI_API_KEY"]
-    model_id = MODEL_ALIASES.get(model, model)
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent?key={key}"
-    body = json.dumps({"contents":[{"parts":[{"text":prompt}]}]}).encode()
-    req = urllib.request.Request(url, data=body, headers={"Content-Type":"application/json"})
-    return json.loads(urllib.request.urlopen(req).read())["candidates"][0]["content"]["parts"][0]["text"]
-
-# Ollama (sempre disponível)
-def ollama(prompt, model="llama3.2:3b"):
-    url = "http://localhost:11434/api/generate"
-    body = json.dumps({"model": model, "prompt": prompt, "stream": False}).encode()
-    req = urllib.request.Request(url, data=body, headers={"Content-Type":"application/json"})
-    return json.loads(urllib.request.urlopen(req).read())["response"]
-
-# Embeddings
-def embed(text, model="nomic-embed-text"):
-    url = "http://localhost:11434/api/embeddings"
-    body = json.dumps({"model": model, "prompt": text}).encode()
-    req = urllib.request.Request(url, data=body, headers={"Content-Type":"application/json"})
-    return json.loads(urllib.request.urlopen(req).read())["embedding"]
-```
+| Script | Função | Agente |
+|--------|--------|--------|
+| `meta/scripts/gemini_run.py` | Texto (Gemflite padrão, fallback automático) | Gemflite→Gemflash |
+| `meta/scripts/gemini_tts.py` | Texto → WAV | Gemvoice |
+| `meta/scripts/gemini_image.py` | Texto → PNG | Gemvision→Gemart |
+| `meta/scripts/imagen_run.py` | Imagen 4 (requer billing) | Imago |
+| `meta/scripts/gemini_live_skeleton.py` | WebSocket skeleton | Gemwave/Gemlive |
