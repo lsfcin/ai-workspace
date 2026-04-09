@@ -14,17 +14,22 @@
 
 ## Agentes Cloud
 
-| Ferramenta | Status | Usar quando |
-|------------|--------|-------------|
-| Claude Opus 4.6 | ✅ ativo | Arquitetura, raciocínio complexo, code gen novo |
-| Claude Sonnet 4.6 | ✅ ativo | Escrita, análise, qualidade sem gênio |
-| Claude Haiku 4.5 | ✅ ativo | Fallback barato quando Gemini offline |
-| Gemini 3.1 Flash Lite | ✅ ativo (free tier) | Triagem em lote, contexto longo, multimodal — quota: 15 RPM / 500 RPD |
-| Gemini 2.5 Flash Lite | ✅ ativo (free tier) | Alternativa com mais capacidade — quota: ver AI Studio |
-| Gemini 3 Flash | ⚠️ alta demanda | Mais capaz, mas frequentemente indisponível no free tier |
+| Agente | Modelo real | Status | RPM | RPD | Usar quando |
+|--------|-------------|--------|-----|-----|-------------|
+| Opus | claude-opus-4-6 | ✅ | — | — | Arquitetura, raciocínio complexo, code gen novo |
+| Sonnet | claude-sonnet-4-6 | ✅ | — | — | Escrita, análise, qualidade sem gênio |
+| Haiku | claude-haiku-4-5-20251001 | ✅ | — | — | Fallback pago leve quando Gemini offline |
+| **Gemflite** | gemini-3.1-flash-lite-preview | ✅ | 15 | 500 | Triagem, lotes, contexto longo — **padrão T2** |
+| **Gemlux** | gemini-2.5-flash-lite | ✅ | 10 | 20 | Fallback leve quando Gemflite esgota |
+| **Gemtrin** | gemini-3-flash-preview | ✅ | 5 | 20 | Raciocínio mais capaz, uso pontual |
+| **Gemflash** | gemini-2.5-flash | ✅ (instável) | 5 | 20 | Qualidade máxima T2; intermitente |
+| **Gemvoice** | gemini-2.5-flash-preview-tts | ⚠️ | 3 | 10 | TTS — geração de áudio |
+| **Tigon** | gemma-4-26b-a4b-it / gemma-4-31b-it | ✅ | 15 | 1500 | Tarefas curtas repetitivas, TPM ilimitado |
+| **Triton** | gemma-3-{1b,4b,12b,27b}-it | ✅ | 30 | 14400 | Triagem e logs (TPM baixo: 15K) |
 
 > **Gemini:** `GEMINI_API_KEY` presente no env. Free tier ativo — **sem billing necessário**.
-> Modelo padrão: `gemini-3.1-flash-lite-preview` (mais quota). Fallback: `gemini-2.5-flash-lite`.
+> Cadeia de fallback automática: Gemflite → Gemlux → Gemtrin → Gemflash.
+> Script: `python meta/scripts/gemini_run.py --model <nome> "<prompt>"`
 > ~~gemini-2.0-flash~~ — não incluído no plano atual, não usar.
 
 ## Agentes Locais (Ollama — custo zero)
