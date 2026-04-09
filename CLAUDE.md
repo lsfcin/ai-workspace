@@ -78,20 +78,25 @@ Exceção: Grep/Glob direto quando alvo é conhecido e ≤2 buscas.
 
 **Roster de agentes:**
 
-| Nome | O que é | Tier |
-|------|---------|------|
-| **Pygit** | Python scripts + Git + ops de arquivo | T0 |
-| **Bashman** | Shell/CLI executor (pandoc, ffmpeg, jq…) | T0 |
-| **Llama** | Ollama local (llama3.1, qwen2.5-coder…) | T1 |
-| **Gemini** | Gemini Flash Lite | T2 |
-| **Haiku** | Claude Haiku 4.5 | T3 |
-| **Sonnet** | Claude Sonnet 4.6 | T4 |
-| **Opus** | Claude Opus 4.6 | T5 |
+| Nome | O que é | Tier | RPD |
+|------|---------|------|-----|
+| **Pygit** | Python scripts + Git + ops de arquivo | T0 | ∞ |
+| **Bashman** | Shell/CLI executor (pandoc, ffmpeg, jq…) | T0 | ∞ |
+| **Llama** | Ollama local (llama3.1, qwen2.5-coder…) | T1 | ∞ |
+| **Gemflite** | Gemini 3.1 Flash Lite — padrão T2 | T2 | 500 |
+| **Gemlux** | Gemini 2.5 Flash Lite — fallback leve | T2 | 20 |
+| **Gemtrin** | Gemini 3 Flash — raciocínio pontual | T2 | 20 |
+| **Gemflash** | Gemini 2.5 Flash — qualidade máx T2 | T2 | 20 |
+| **Tigon** | Gemma 4 (26B/31B) — lotes curtos | T2 | 1500 |
+| **Triton** | Gemma 3 (1B–27B) — alta freq, curtos | T2 | 14400 |
+| **Haiku** | Claude Haiku 4.5 | T3 | — |
+| **Sonnet** | Claude Sonnet 4.6 | T4 | — |
+| **Opus** | Claude Opus 4.6 | T5 | — |
 
 Ordem de prioridade:
 1. **Tier 0** — Pygit / Bashman (zero tokens)
 2. **Tier 1** — Llama (zero tokens, requer `ollama serve`)
-3. **Tier 2** — Gemini (custo mínimo; Claude lê só o output)
+3. **Tier 2** — Gemflite → Gemlux → Gemtrin → Gemflash (custo mínimo; Claude lê só o output)
 4. **Tier 3** — Haiku (fallback pago leve)
 5. **Tier 4** — Sonnet (qualidade geral)
 6. **Tier 5** — Opus (arquitetura, raciocínio complexo)
