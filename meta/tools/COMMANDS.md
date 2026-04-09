@@ -64,26 +64,27 @@ for p in pathlib.Path('<DIR>').glob('<PATTERN>'):
 ## Tier 1 — Ollama Local (zero tokens, requer `ollama serve`)
 
 > Verificar disponibilidade: `curl -s http://localhost:11434/api/tags | jq '.models[].name'`
+> **Nota:** `ollama run` emite escape codes ANSI no bash. Para capturar output limpo, pipe para `sed 's/\x1b\[[0-9;]*[a-zA-Z]//g'` (ver exemplos abaixo).
 
 ### Geração de texto / rascunho em PT-BR
 **Quando:** rascunhos, reformulações, resumos simples sem alta qualidade
 **Modelo:** `llama3.1:8b`
 ```bash
-ollama run llama3.1:8b "<PROMPT>"
+ollama run llama3.1:8b "<PROMPT>" | sed 's/\x1b\[[0-9;]*[a-zA-Z]//g'
 ```
 
 ### Geração de código (boilerplate / utilitários)
 **Quando:** scaffolding, funções simples, scripts Python/TS
 **Modelo:** `qwen2.5-coder:7b` (qualidade) · `deepseek-coder:6.7b` (mais rápido)
 ```bash
-ollama run qwen2.5-coder:7b "<PROMPT_DE_CODIGO>"
+ollama run qwen2.5-coder:7b "<PROMPT_DE_CODIGO>" | sed 's/\x1b\[[0-9;]*[a-zA-Z]//g'
 ```
 
 ### Classificação / formatação estruturada → JSON
 **Quando:** extrair campos, converter texto → JSON, categorizar em labels fixos
 **Modelo:** `llama3.2:3b` (mais leve, <2s)
 ```bash
-ollama run llama3.2:3b "Responda SOMENTE com JSON válido. <PROMPT>"
+ollama run llama3.2:3b "Responda SOMENTE com JSON válido. <PROMPT>" | sed 's/\x1b\[[0-9;]*[a-zA-Z]//g'
 ```
 
 ### Via Python (para capturar output em script)
