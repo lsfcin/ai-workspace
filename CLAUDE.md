@@ -50,16 +50,21 @@ Exceção: Grep/Glob direto quando alvo é conhecido e ≤2 buscas.
 
 ## Delegação de execução
 
-Antes de usar LLM pago, respeite a ordem:
+Para qualquer tarefa com processamento de dados, análise ou geração: consulte `/meta/tools/COMMANDS.md` e use o tier mais baixo aplicável.
 
-1. Script Python / CLI → sem LLM
-2. Ollama local → grátis, offline
-3. Gemini Flash Lite → grátis, volume/contexto longo
-4. Claude Haiku → fallback pago leve
-5. Claude Sonnet → qualidade geral
-6. Claude Opus → design, arquitetura, raciocínio complexo
+**Verbose obrigatório** — imprimir antes de executar:
+- Ao usar tier 0-2: `[CRONO | Tier N — ferramenta] descrição`
+- Ao pular um tier: `[SKIP Tier N — motivo]`
 
-Ver catálogo completo: `/meta/tools/TOOLS.md`
+Ordem de prioridade:
+1. **Tier 0** — Script Python / CLI (zero tokens)
+2. **Tier 1** — Ollama local (zero tokens, requer `ollama serve`)
+3. **Tier 2** — Gemini Flash Lite (custo mínimo; Crono lê só o output)
+4. **Tier 3** — Claude Haiku (fallback pago leve)
+5. **Tier 4** — Claude Sonnet (qualidade geral)
+6. **Tier 5** — Claude Opus (arquitetura, raciocínio complexo)
+
+Catálogo de ferramentas: `/meta/tools/TOOLS.md`
 
 ## Protocolos
 
