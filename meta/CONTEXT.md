@@ -15,7 +15,7 @@ Melhorar o próprio AI Workspace:
 
 | Subdir | Papel |
 |--------|-------|
-| `tools/` | Hub de delegação — catálogo de agentes, comandos e tiers |
+| `tools/` | Hub de delegação — routing em `CONTEXT.md`, task files em `tasks/`, glossário em `AGENTS.md` |
 | `templates/` | Templates de CONTEXT, SPECS, ADR |
 | `hooks/` | Scripts de automação (auto-commit) |
 | `referencias/` | Clief notes e referências de método |
