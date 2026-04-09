@@ -78,6 +78,50 @@ Motivos válidos: (T0) tarefa requer semântica; (T1) Ollama offline ou qualidad
 **Quando:** geração de áudio TTS; não usar para texto comum  
 **Verbose:** `[Claude → Gemvoice | T2]`
 
+### Gemvoice
+**Modelo:** `gemini-2.5-flash-preview-tts` · 3 RPM / 10 RPD · ✅ testado  
+**Script:** `python meta/scripts/gemini_tts.py "<TEXTO>" -o saida.wav [--voice Aoede]`  
+**Vozes:** Aoede, Charon, Fenrir, Kore, Puck (e mais na versão Pro)  
+**Quando:** síntese de voz para aulas, materiais de áudio, notificações faladas  
+**Verbose:** `[Claude → Gemvoice | T2]`
+
+### Gemvoice-Pro
+**Modelo:** `gemini-2.5-pro-preview-tts` · mesmo script, `--model gemvoice-pro`  
+**Quando:** TTS de qualidade máxima (mais lento)  
+**Verbose:** `[Claude → Gemvoice-Pro | T2]`
+
+### Gemvision / Gempic / Gemart — geração de imagem
+**Modelos:** gemini-2.5-flash-image / gemini-3-pro-image-preview / gemini-3.1-flash-image-preview  
+**Status:** ✅ free tier com quota diária (esgota rápido — usar com parcimônia)  
+**Script:** `python meta/scripts/gemini_image.py "<PROMPT>" -o saida.png [--model gemvision|gempic|gemart]`  
+**Quando:** gerar diagramas, ilustrações para slides, imagens conceituais  
+**Verbose:** `[Claude → Gemvision | T2]` / `[Claude → Gempic | T2]` / `[Claude → Gemart | T2]`
+
+### Lyria — geração de música
+**Modelos:** `lyria-3-clip-preview` / `lyria-3-pro-preview` · ✅ free tier com quota diária  
+**Script:** usar inline `gemini_run.py` (retorna áudio base64)  
+**Quando:** trilhas para vídeos, ambient para sessões de RPG, experimentos sonoros  
+**Verbose:** `[Claude → Lyria | T2]`
+
+### Imago / Imago-Ultra / Imago-Flash — Imagen 4
+**Modelos:** imagen-4.0-{generate,ultra-generate,fast-generate}-001  
+**Status:** ❌ requer billing ativo (paid only no free tier)  
+**Script:** `python meta/scripts/imagen_run.py "<PROMPT>" --model imago|imago-ultra|imago-flash`  
+**Quando:** imagens fotorrealistas de alta qualidade (quando billing disponível)  
+**Verbose:** `[Claude → Imago | T2]`
+
+### Gemwave — API Live (áudio bidirecional)
+**Modelo:** `gemini-2.5-flash-native-audio-latest` · RPM/RPD ilimitados · TPM 1M  
+**Status:** ⚠️ requer WebSocket (`bidiGenerateContent`) — não executável via script simples  
+**Skeleton:** `meta/scripts/gemini_live_skeleton.py`  
+**Quando:** conversação de voz em tempo real, Heartbeat, controle por smartphone  
+**Verbose:** `[Claude → Gemwave | T2]`
+
+### Gemlive — API Live (texto/multimodal bidirecional)
+**Modelo:** `gemini-3.1-flash-live-preview` · RPM/RPD ilimitados · TPM 65K  
+**Status:** ⚠️ requer WebSocket — mesmo skeleton que Gemwave  
+**Verbose:** `[Claude → Gemlive | T2]`
+
 ### Tigon
 **Modelos:** `gemma-4-26b-a4b-it` / `gemma-4-31b-it` · 15 RPM / 1.5K RPD · TPM ilimitado  
 **Quando:** tarefas curtas e repetitivas em lote; prompts <500 tokens  
