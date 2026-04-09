@@ -132,11 +132,11 @@ print(f'dims={len(emb)} amostra={emb[:4]}')
 
 ---
 
-## Tier 2 — Gemini Flash Lite (custo mínimo; Crono lê apenas o resultado)
+## Tier 2 — Gemini Flash Lite (custo mínimo; Claude lê apenas o resultado)
 
 > Quota free tier: ~500 req/dia · ~15 RPM  
 > Modelo padrão: `gemini-3.1-flash-lite-preview` · fallback: `gemini-2.5-flash-lite`  
-> Custo para Crono: **somente tokens de leitura do output**.
+> Custo para Claude: **somente tokens de leitura do output**.
 
 ### Script utilitário (prompt inline)
 ```bash
