@@ -24,6 +24,7 @@ TRACKED_PATTERNS = [
     r"[/\\]meta[/\\]tools[/\\].+\.md$",
     r"[/\\]meta[/\\]referencias[/\\]clief-notes[/\\]",
     r"[/\\]meta[/\\]hooks[/\\]",
+    r"[/\\]meta[/\\]scripts[/\\]",
     r"README\.md$",
     r"LICENSE$",
     r"\.gitignore$",
