@@ -108,12 +108,18 @@ Motivos válidos: (T0) tarefa requer semântica; (T1) Ollama offline ou qualidad
 
 ## Referência rápida
 
-| Agente | Tier | Comando / entrada |
-|--------|------|-------------------|
-| Pygit | T0 | `python ...` / `git ...` |
-| Bashman | T0 | `bash ...` / CLI |
-| Llama | T1 | `ollama run <modelo> "<prompt>"` |
-| Gemini | T2 | `python meta/scripts/gemini_run.py "<prompt>"` |
-| Haiku | T3 | Agent tool / API `claude-haiku-4-5-20251001` |
-| Sonnet | T4 | Agent tool / API `claude-sonnet-4-6` |
-| Opus | T5 | Agent tool / API `claude-opus-4-6` |
+| Agente | Tier | RPD | Comando / entrada |
+|--------|------|-----|-------------------|
+| Pygit | T0 | ∞ | `python ...` / `git ...` |
+| Bashman | T0 | ∞ | `bash ...` / CLI |
+| Llama | T1 | ∞ | `ollama run <modelo> "<prompt>"` |
+| **Gemflite** | T2 | 500 | `python meta/scripts/gemini_run.py --model gemflite "<prompt>"` |
+| **Gemlux** | T2 | 20 | `python meta/scripts/gemini_run.py --model gemlux "<prompt>"` |
+| **Gemtrin** | T2 | 20 | `python meta/scripts/gemini_run.py --model gemtrin "<prompt>"` |
+| **Gemflash** | T2 | 20 | `python meta/scripts/gemini_run.py --model gemflash "<prompt>"` |
+| **Gemvoice** | T2 | 10 | API direta (TTS) |
+| **Tigon** | T2 | 1500 | `python meta/scripts/gemini_run.py --model gemma-4-26b-a4b-it "<prompt>"` |
+| **Triton** | T2 | 14400 | `python meta/scripts/gemini_run.py --model gemma-3-12b-it "<prompt>"` |
+| Haiku | T3 | — | Agent tool / API `claude-haiku-4-5-20251001` |
+| Sonnet | T4 | — | Agent tool / API `claude-sonnet-4-6` |
+| Opus | T5 | — | Agent tool / API `claude-opus-4-6` |
