@@ -68,11 +68,18 @@
 ## Como chamar Gemini / Ollama em scripts
 
 ```python
-# Gemini (requer billing ativo)
+# Gemini — nomes canônicos: gemflite (padrão), gemlux, gemtrin, gemflash
 import urllib.request, json, os
-def gemini(prompt, model="gemini-3.1-flash-lite-preview"):
+MODEL_ALIASES = {
+    "gemflite": "gemini-3.1-flash-lite-preview",
+    "gemlux":   "gemini-2.5-flash-lite",
+    "gemtrin":  "gemini-3-flash-preview",
+    "gemflash": "gemini-2.5-flash",
+}
+def gemini(prompt, model="gemflite"):
     key = os.environ["GEMINI_API_KEY"]
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}"
+    model_id = MODEL_ALIASES.get(model, model)
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent?key={key}"
     body = json.dumps({"contents":[{"parts":[{"text":prompt}]}]}).encode()
     req = urllib.request.Request(url, data=body, headers={"Content-Type":"application/json"})
     return json.loads(urllib.request.urlopen(req).read())["candidates"][0]["content"]["parts"][0]["text"]
