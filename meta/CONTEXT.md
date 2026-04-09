@@ -23,16 +23,12 @@ Melhorar o próprio AI Workspace:
 ## Responsabilidades
 
 - Identificar ineficiências e propor melhorias
-- Refatorar contextos, otimização de tokens nos contextos e nas ações
-- Sugerir novas estruturas
+- Refatorar contextos, otimizar tokens nos contextos e nas ações
 - Criar novos workspaces e ctx files (usar templates em `/meta/templates/`)
-- Revisar ctx files existentes quando detectado no backlog
 - Avaliar e integrar novas ferramentas (modelos, MCPs, CLIs)
-- Não modificar arquivos estruturais diretamente
-- Sempre propor mudanças via /_meta/changes/
-- Manter `/meta/backlog.md` triado e priorizado
-- Documentar decisões sobre o sistema em `/meta/decisions/`
-- Versionar no Github as pastas e os arquivos exclusivamente relevantes ao AI Workspace (CONTEXT.md, SPECS.md, etc). Ignorar todos os demais arquivos.
+- Versionar no Github os arquivos relevantes ao AI Workspace (CONTEXT.md, SPECS.md, etc)
+
+> Melhorias são aplicadas diretamente na sessão — ver git log para histórico de decisões.
 
 ## Princípios (baseados em Clief Notes)
 
