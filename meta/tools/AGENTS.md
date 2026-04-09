@@ -161,7 +161,15 @@ Motivos válidos: (T0) tarefa requer semântica; (T1) Ollama offline ou qualidad
 | **Gemlux** | T2 | 20 | `python meta/scripts/gemini_run.py --model gemlux "<prompt>"` |
 | **Gemtrin** | T2 | 20 | `python meta/scripts/gemini_run.py --model gemtrin "<prompt>"` |
 | **Gemflash** | T2 | 20 | `python meta/scripts/gemini_run.py --model gemflash "<prompt>"` |
-| **Gemvoice** | T2 | 10 | API direta (TTS) |
+| **Gemvoice** | T2 | 10 | `python meta/scripts/gemini_tts.py "<texto>" -o saida.wav` |
+| **Gemvoice-Pro** | T2 | — | `python meta/scripts/gemini_tts.py "<texto>" --model gemvoice-pro` |
+| **Gemvision** | T2 | diária | `python meta/scripts/gemini_image.py "<prompt>" -o saida.png` |
+| **Gempic** | T2 | diária | `python meta/scripts/gemini_image.py "<prompt>" --model gempic` |
+| **Gemart** | T2 | diária | `python meta/scripts/gemini_image.py "<prompt>" --model gemart` |
+| **Lyria** | T2 | diária | inline — retorna áudio base64 |
+| **Imago** | T2 | ❌ paid | `python meta/scripts/imagen_run.py "<prompt>"` |
+| **Gemwave** | T2 | ∞ | WebSocket — `gemini_live_skeleton.py` |
+| **Gemlive** | T2 | ∞ | WebSocket — `gemini_live_skeleton.py` |
 | **Tigon** | T2 | 1500 | `python meta/scripts/gemini_run.py --model gemma-4-26b-a4b-it "<prompt>"` |
 | **Triton** | T2 | 14400 | `python meta/scripts/gemini_run.py --model gemma-3-12b-it "<prompt>"` |
 | Haiku | T3 | — | Agent tool / API `claude-haiku-4-5-20251001` |
