@@ -96,7 +96,7 @@ Ordem de prioridade:
 5. **Tier 4** — Sonnet (qualidade geral)
 6. **Tier 5** — Opus (arquitetura, raciocínio complexo)
 
-Catálogo de ferramentas: `/meta/tools/TOOLS.md`
+Catálogo completo de comandos e agentes → leia ctx chain: `meta/` → `meta/tools/`
 
 ## Protocolos
 
