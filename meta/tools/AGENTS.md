@@ -48,13 +48,45 @@ Motivos válidos: (T0) tarefa requer semântica; (T1) Ollama offline ou qualidad
 
 ---
 
-## Agentes Tier 2 — Custo mínimo
+## Agentes Tier 2 — Gemini (custo mínimo; Claude lê só o output)
 
-### Gemini
-**O que é:** Gemini Flash Lite via API (licença acadêmica).  
-**Modelo padrão:** `gemini-3.1-flash-lite-preview`  
-**Script:** `python meta/scripts/gemini_run.py "<PROMPT>"`  
-**Quando:** sumarização de docs longos (>5 páginas), triagem em lote, semântica além do Tier 1, contextos >8k tokens
+> Cadeia de fallback automática no script: Gemflite → Gemlux → Gemtrin → Gemflash  
+> Script: `python meta/scripts/gemini_run.py --model <nome> "<PROMPT>"`
+
+### Gemflite ← padrão T2
+**Modelo:** `gemini-3.1-flash-lite-preview` · 15 RPM / **500 RPD**  
+**Quando:** triagem em lote, sumarização, classificação recorrente — alta disponibilidade  
+**Verbose:** `[Claude → Gemflite | T2]`
+
+### Gemlux
+**Modelo:** `gemini-2.5-flash-lite` · 10 RPM / 20 RPD  
+**Quando:** fallback leve quando Gemflite esgota; semântica levemente acima do Tier 1  
+**Verbose:** `[Claude → Gemlux | T2]`
+
+### Gemtrin
+**Modelo:** `gemini-3-flash-preview` · 5 RPM / 20 RPD  
+**Quando:** raciocínio mais capaz que Gemflite; uso pontual (20 RPD — economizar)  
+**Verbose:** `[Claude → Gemtrin | T2]`
+
+### Gemflash
+**Modelo:** `gemini-2.5-flash` · 5 RPM / 20 RPD · ⚠️ intermitente  
+**Quando:** qualidade máxima T2; tarefas que exigem mais raciocínio sem chegar ao T3  
+**Verbose:** `[Claude → Gemflash | T2]`
+
+### Gemvoice
+**Modelo:** `gemini-2.5-flash-preview-tts` · 3 RPM / 10 RPD  
+**Quando:** geração de áudio TTS; não usar para texto comum  
+**Verbose:** `[Claude → Gemvoice | T2]`
+
+### Tigon
+**Modelos:** `gemma-4-26b-a4b-it` / `gemma-4-31b-it` · 15 RPM / 1.5K RPD · TPM ilimitado  
+**Quando:** tarefas curtas e repetitivas em lote; prompts <500 tokens  
+**Verbose:** `[Claude → Tigon | T2]`
+
+### Triton
+**Modelos:** `gemma-3-{1b,4b,12b,27b}-it` · 30 RPM / 14.4K RPD · TPM 15K (baixo!)  
+**Quando:** triagem de emails, logs, prompts muito curtos e repetitivos  
+**Verbose:** `[Claude → Triton | T2]`
 
 ---
 
