@@ -1,6 +1,26 @@
 # Catálogo de Comandos — Delegação por Tier
 
+> **Documento vivo.** Ao usar um comando não listado aqui que seja delegável (zero-token ou Gemini), adicione-o na seção correspondente. O objetivo é que este arquivo cresça como biblioteca de automações do workspace.
+
 **Consultar ANTES de qualquer resposta que envolva processamento de dados, geração de texto ou análise.**
+
+## Tabela de direcionamento rápido
+
+| Tipo de tarefa | Tier | Seção |
+|----------------|------|-------|
+| Métricas de arquivo (palavras, linhas, chars) | 0 | Tier 0 → Contar |
+| Buscar padrão / string em arquivos | 0 | Tier 0 → Buscar |
+| Extrair / filtrar JSON | 0 | Tier 0 → JSON |
+| Converter formato de documento | 0 | Tier 0 → Converter |
+| Processar áudio / vídeo | 0 | Tier 0 → Áudio/vídeo |
+| Listar / mover / renomear arquivos | 0 | Tier 0 → Arquivos |
+| Rascunho / texto em PT-BR | 1 | Tier 1 → Texto |
+| Gerar código (boilerplate / utilitários) | 1 | Tier 1 → Código |
+| Classificar / extrair → JSON estruturado | 1 | Tier 1 → JSON |
+| Similaridade semântica / RAG | 1 | Tier 1 → Embeddings |
+| Sumarizar documento longo (>5 páginas) | 2 | Tier 2 → Sumarização |
+| Triagem / classificação em lote | 2 | Tier 2 → Lote |
+| Análise semântica além da capacidade Tier 1 | 2 | Tier 2 → Inline |
 
 A cada execução, imprimir no chat:
 ```
