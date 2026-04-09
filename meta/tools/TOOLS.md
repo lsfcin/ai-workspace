@@ -23,13 +23,24 @@
 | **Gemlux** | gemini-2.5-flash-lite | ✅ | 10 | 20 | Fallback leve quando Gemflite esgota |
 | **Gemtrin** | gemini-3-flash-preview | ✅ | 5 | 20 | Raciocínio mais capaz, uso pontual |
 | **Gemflash** | gemini-2.5-flash | ✅ (instável) | 5 | 20 | Qualidade máxima T2; intermitente |
-| **Gemvoice** | gemini-2.5-flash-preview-tts | ⚠️ | 3 | 10 | TTS — geração de áudio |
+| **Gemvoice** | gemini-2.5-flash-preview-tts | ✅ testado | 3 | 10 | TTS → WAV; `gemini_tts.py` |
+| **Gemvoice-Pro** | gemini-2.5-pro-preview-tts | ✅ (mesmo script) | — | — | TTS qualidade máxima |
+| **Gemvision** | gemini-2.5-flash-image | ✅ (quota diária) | — | — | Texto→Imagem; `gemini_image.py` |
+| **Gempic** | gemini-3-pro-image-preview | ✅ (quota diária) | — | — | Imagem qualidade pro |
+| **Gemart** | gemini-3.1-flash-image-preview | ✅ (quota diária) | — | — | Imagem mais recente |
+| **Lyria** | lyria-3-clip-preview / lyria-3-pro-preview | ✅ (quota diária) | — | — | Geração de música |
+| **Imago** | imagen-4.0-generate-001 | ❌ paid only | — | 25 | `imagen_run.py` — requer billing |
+| **Imago-Ultra** | imagen-4.0-ultra-generate-001 | ❌ paid only | — | — | Qualidade máxima Imagen |
+| **Imago-Flash** | imagen-4.0-fast-generate-001 | ❌ paid only | — | — | Imagen mais rápido |
+| **Gemwave** | gemini-2.5-flash-native-audio-latest | ⚠️ WebSocket | ∞ | ∞ | API Live; `gemini_live_skeleton.py` |
+| **Gemlive** | gemini-3.1-flash-live-preview | ⚠️ WebSocket | ∞ | ∞ | API Live bidirecional |
 | **Tigon** | gemma-4-26b-a4b-it / gemma-4-31b-it | ✅ | 15 | 1500 | Tarefas curtas repetitivas, TPM ilimitado |
 | **Triton** | gemma-3-{1b,4b,12b,27b}-it | ✅ | 30 | 14400 | Triagem e logs (TPM baixo: 15K) |
 
 > **Gemini:** `GEMINI_API_KEY` presente no env. Free tier ativo — **sem billing necessário**.
-> Cadeia de fallback automática: Gemflite → Gemlux → Gemtrin → Gemflash.
-> Script: `python meta/scripts/gemini_run.py --model <nome> "<prompt>"`
+> Cadeia de fallback automática (texto): Gemflite → Gemlux → Gemtrin → Gemflash.
+> Cadeia de fallback (imagem): Gemvision → Gempic → Gemart.
+> Scripts: `gemini_run.py` (texto) · `gemini_tts.py` (áudio) · `gemini_image.py` (imagem) · `imagen_run.py` (Imagen, paid) · `gemini_live_skeleton.py` (WebSocket)
 > ~~gemini-2.0-flash~~ — não incluído no plano atual, não usar.
 
 ## Agentes Locais (Ollama — custo zero)
