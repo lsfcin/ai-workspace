@@ -37,3 +37,7 @@
 !meta/hooks/
 !meta/hooks/*.py
 !meta/hooks/*.sh
+
+# ── Scripts utilitários (Tier 0-2) ──────────────────────────
+!meta/scripts/
+!meta/scripts/*.py
