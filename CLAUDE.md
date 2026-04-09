@@ -147,7 +147,7 @@ ctx=context, ws=workspace, ADR=architecture decision record
 
 ## Versionamento
 
-- Repo público: https://github.com/lucasfigueiredo08/ai-workspace *(atualizar após criação)*
+- Repo público: https://github.com/lsfcin/ai-workspace
 - Licença: MIT
 - Rastreados: `CLAUDE.md`, `**/CONTEXT.md`, `**/SPECS.md`, `meta/templates/`, `meta/tools/`, `meta/referencias/clief-notes/`, `README.md`, `LICENSE`, `.gitignore`, `meta/hooks/`
 - **Não rastreados**: dados de projetos, fichas pessoais, materiais de aula, backlog.md
