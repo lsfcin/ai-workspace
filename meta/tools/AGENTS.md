@@ -1,177 +1,37 @@
-# Roster de Agentes — AI Workspace
+# Roster de Agentes
 
-Catálogo de todos os agentes e ferramentas nomeadas que Claude pode acionar.
-Cada delegação deve aparecer no verbose usando o nome canônico abaixo.
+Glossário técnico. **Não é lido durante routing** — use `tasks/*.md` para isso.
 
 ## Formato de verbose
 
 ```
 [Claude → Agente | TN] o que foi pedido
 [Agente → Claude] resultado ou resumo
-```
-
-Ao pular tier:
-```
 [SKIP TN — motivo]
 ```
 
-Motivos válidos: (T0) tarefa requer semântica; (T1) Ollama offline ou qualidade insuficiente; (T2) quota Gemini esgotada ou resposta inline obrigatória.
+## Tabela de agentes
 
----
-
-## Agentes Tier 0 — Zero tokens, zero custo
-
-### Pygit
-**O que é:** Executor de scripts Python + operações Git + manipulação de arquivos.  
-**Cobre:** `python -c`, `python script.py`, `git *`, `pathlib`, `shutil`, `json`, `jq`  
-**Quando:** métricas de texto, transformação de JSON, operações de arquivo, commits, git log
-
-### Bashman
-**O que é:** Executor de comandos shell/CLI.  
-**Cobre:** `grep`, `find`, `pandoc`, `ffmpeg`, `curl`, qualquer CLI sem semântica  
-**Quando:** conversão de documentos, processamento de mídia, buscas por padrão, pipelines shell
-
----
-
-## Agentes Tier 1 — Ollama local (requer `ollama serve`)
-
-### Llama
-**O que é:** Interface para modelos Ollama locais.  
-**Modelos cobertos:**
-- `llama3.1:8b` — texto/rascunho em PT-BR
-- `qwen2.5-coder:7b` — código boilerplate
-- `deepseek-coder:6.7b` — código, mais rápido
-- `llama3.2:3b` — classificação/JSON leve
-- `nomic-embed-text` — embeddings/RAG
-
-**Quando:** rascunhos, boilerplate, classificação, embeddings sem custo de API
-
----
-
-## Agentes Tier 2 — Gemini (custo mínimo; Claude lê só o output)
-
-> Cadeia de fallback automática no script: Gemflite → Gemlux → Gemtrin → Gemflash  
-> Script: `python meta/scripts/gemini_run.py --model <nome> "<PROMPT>"`
-
-### Gemflite ← padrão T2
-**Modelo:** `gemini-3.1-flash-lite-preview` · 15 RPM / **500 RPD**  
-**Quando:** triagem em lote, sumarização, classificação recorrente — alta disponibilidade  
-**Verbose:** `[Claude → Gemflite | T2]`
-
-### Gemlux
-**Modelo:** `gemini-2.5-flash-lite` · 10 RPM / 20 RPD  
-**Quando:** fallback leve quando Gemflite esgota; semântica levemente acima do Tier 1  
-**Verbose:** `[Claude → Gemlux | T2]`
-
-### Gemtrin
-**Modelo:** `gemini-3-flash-preview` · 5 RPM / 20 RPD  
-**Quando:** raciocínio mais capaz que Gemflite; uso pontual (20 RPD — economizar)  
-**Verbose:** `[Claude → Gemtrin | T2]`
-
-### Gemflash
-**Modelo:** `gemini-2.5-flash` · 5 RPM / 20 RPD · ⚠️ intermitente  
-**Quando:** qualidade máxima T2; tarefas que exigem mais raciocínio sem chegar ao T3  
-**Verbose:** `[Claude → Gemflash | T2]`
-
-### Gemvoice
-**Modelo:** `gemini-2.5-flash-preview-tts` · 3 RPM / 10 RPD  
-**Quando:** geração de áudio TTS; não usar para texto comum  
-**Verbose:** `[Claude → Gemvoice | T2]`
-
-### Gemvoice
-**Modelo:** `gemini-2.5-flash-preview-tts` · 3 RPM / 10 RPD · ✅ testado  
-**Script:** `python meta/scripts/gemini_tts.py "<TEXTO>" -o saida.wav [--voice Aoede]`  
-**Vozes:** Aoede, Charon, Fenrir, Kore, Puck (e mais na versão Pro)  
-**Quando:** síntese de voz para aulas, materiais de áudio, notificações faladas  
-**Verbose:** `[Claude → Gemvoice | T2]`
-
-### Gemvoice-Pro
-**Modelo:** `gemini-2.5-pro-preview-tts` · mesmo script, `--model gemvoice-pro`  
-**Quando:** TTS de qualidade máxima (mais lento)  
-**Verbose:** `[Claude → Gemvoice-Pro | T2]`
-
-### Gemvision / Gempic / Gemart — geração de imagem
-**Modelos:** gemini-2.5-flash-image / gemini-3-pro-image-preview / gemini-3.1-flash-image-preview  
-**Status:** ✅ free tier com quota diária (esgota rápido — usar com parcimônia)  
-**Script:** `python meta/scripts/gemini_image.py "<PROMPT>" -o saida.png [--model gemvision|gempic|gemart]`  
-**Quando:** gerar diagramas, ilustrações para slides, imagens conceituais  
-**Verbose:** `[Claude → Gemvision | T2]` / `[Claude → Gempic | T2]` / `[Claude → Gemart | T2]`
-
-### Lyria — geração de música
-**Modelos:** `lyria-3-clip-preview` / `lyria-3-pro-preview` · ✅ free tier com quota diária  
-**Script:** usar inline `gemini_run.py` (retorna áudio base64)  
-**Quando:** trilhas para vídeos, ambient para sessões de RPG, experimentos sonoros  
-**Verbose:** `[Claude → Lyria | T2]`
-
-### Imago / Imago-Ultra / Imago-Flash — Imagen 4
-**Modelos:** imagen-4.0-{generate,ultra-generate,fast-generate}-001  
-**Status:** ❌ requer billing ativo (paid only no free tier)  
-**Script:** `python meta/scripts/imagen_run.py "<PROMPT>" --model imago|imago-ultra|imago-flash`  
-**Quando:** imagens fotorrealistas de alta qualidade (quando billing disponível)  
-**Verbose:** `[Claude → Imago | T2]`
-
-### Gemwave — API Live (áudio bidirecional)
-**Modelo:** `gemini-2.5-flash-native-audio-latest` · RPM/RPD ilimitados · TPM 1M  
-**Status:** ⚠️ requer WebSocket (`bidiGenerateContent`) — não executável via script simples  
-**Skeleton:** `meta/scripts/gemini_live_skeleton.py`  
-**Quando:** conversação de voz em tempo real, Heartbeat, controle por smartphone  
-**Verbose:** `[Claude → Gemwave | T2]`
-
-### Gemlive — API Live (texto/multimodal bidirecional)
-**Modelo:** `gemini-3.1-flash-live-preview` · RPM/RPD ilimitados · TPM 65K  
-**Status:** ⚠️ requer WebSocket — mesmo skeleton que Gemwave  
-**Verbose:** `[Claude → Gemlive | T2]`
-
-### Tigon
-**Modelos:** `gemma-4-26b-a4b-it` / `gemma-4-31b-it` · 15 RPM / 1.5K RPD · TPM ilimitado  
-**Quando:** tarefas curtas e repetitivas em lote; prompts <500 tokens  
-**Verbose:** `[Claude → Tigon | T2]`
-
-### Triton
-**Modelos:** `gemma-3-{1b,4b,12b,27b}-it` · 30 RPM / 14.4K RPD · TPM 15K (baixo!)  
-**Quando:** triagem de emails, logs, prompts muito curtos e repetitivos  
-**Verbose:** `[Claude → Triton | T2]`
-
----
-
-## Agentes Tier 3–5 — Claude (custo normal)
-
-### Haiku
-**Modelo:** `claude-haiku-4-5-20251001`  
-**Quando:** fallback pago leve; Gemini offline; tarefas simples que precisam de Claude
-
-### Sonnet
-**Modelo:** `claude-sonnet-4-6` (instância atual do orquestrador)  
-**Quando:** qualidade geral, análise contextual, implementação, explicações
-
-### Opus
-**Modelo:** `claude-opus-4-6`  
-**Quando:** arquitetura, design de sistema, raciocínio de alta complexidade, decisões críticas
-
----
-
-## Referência rápida
-
-| Agente | Tier | RPD | Comando / entrada |
-|--------|------|-----|-------------------|
-| Pygit | T0 | ∞ | `python ...` / `git ...` |
-| Bashman | T0 | ∞ | `bash ...` / CLI |
-| Llama | T1 | ∞ | `ollama run <modelo> "<prompt>"` |
-| **Gemflite** | T2 | 500 | `python meta/scripts/gemini_run.py --model gemflite "<prompt>"` |
-| **Gemlux** | T2 | 20 | `python meta/scripts/gemini_run.py --model gemlux "<prompt>"` |
-| **Gemtrin** | T2 | 20 | `python meta/scripts/gemini_run.py --model gemtrin "<prompt>"` |
-| **Gemflash** | T2 | 20 | `python meta/scripts/gemini_run.py --model gemflash "<prompt>"` |
-| **Gemvoice** | T2 | 10 | `python meta/scripts/gemini_tts.py "<texto>" -o saida.wav` |
-| **Gemvoice-Pro** | T2 | — | `python meta/scripts/gemini_tts.py "<texto>" --model gemvoice-pro` |
-| **Gemvision** | T2 | diária | `python meta/scripts/gemini_image.py "<prompt>" -o saida.png` |
-| **Gempic** | T2 | diária | `python meta/scripts/gemini_image.py "<prompt>" --model gempic` |
-| **Gemart** | T2 | diária | `python meta/scripts/gemini_image.py "<prompt>" --model gemart` |
-| **Lyria** | T2 | diária | inline — retorna áudio base64 |
-| **Imago** | T2 | ❌ paid | `python meta/scripts/imagen_run.py "<prompt>"` |
-| **Gemwave** | T2 | ∞ | WebSocket — `gemini_live_skeleton.py` |
-| **Gemlive** | T2 | ∞ | WebSocket — `gemini_live_skeleton.py` |
-| **Tigon** | T2 | 1500 | `python meta/scripts/gemini_run.py --model gemma-4-26b-a4b-it "<prompt>"` |
-| **Triton** | T2 | 14400 | `python meta/scripts/gemini_run.py --model gemma-3-12b-it "<prompt>"` |
-| Haiku | T3 | — | Agent tool / API `claude-haiku-4-5-20251001` |
-| Sonnet | T4 | — | Agent tool / API `claude-sonnet-4-6` |
-| Opus | T5 | — | Agent tool / API `claude-opus-4-6` |
+| Nome | Modelo / executor | Tier | RPD | Verbose |
+|------|-------------------|------|-----|---------|
+| Pygit | python / git | T0 | ∞ | `[Claude → Pygit \| T0]` |
+| Bashman | bash / CLI | T0 | ∞ | `[Claude → Bashman \| T0]` |
+| Llama | ollama local | T1 | ∞ | `[Claude → Llama \| T1]` |
+| Gemflite | gemini-3.1-flash-lite-preview | T2 | 500 | `[Claude → Gemflite \| T2]` |
+| Gemlux | gemini-2.5-flash-lite | T2 | 20 | `[Claude → Gemlux \| T2]` |
+| Gemtrin | gemini-3-flash-preview | T2 | 20 | `[Claude → Gemtrin \| T2]` |
+| Gemflash | gemini-2.5-flash | T2 | 20 | `[Claude → Gemflash \| T2]` |
+| Gemvoice | gemini-2.5-flash-preview-tts | T2 | 10 | `[Claude → Gemvoice \| T2]` |
+| Gemvoice-Pro | gemini-2.5-pro-preview-tts | T2 | — | `[Claude → Gemvoice-Pro \| T2]` |
+| Gemvision | gemini-2.5-flash-image | T2 | diária | `[Claude → Gemvision \| T2]` |
+| Gempic | gemini-3-pro-image-preview | T2 | diária | `[Claude → Gempic \| T2]` |
+| Gemart | gemini-3.1-flash-image-preview | T2 | diária | `[Claude → Gemart \| T2]` |
+| Lyria | lyria-3-{clip,pro}-preview | T2 | diária | `[Claude → Lyria \| T2]` |
+| Imago | imagen-4.0-generate-001 | T2 | ❌ paid | `[Claude → Imago \| T2]` |
+| Gemwave | gemini-2.5-flash-native-audio-latest | T2 | ∞ WS | `[Claude → Gemwave \| T2]` |
+| Gemlive | gemini-3.1-flash-live-preview | T2 | ∞ WS | `[Claude → Gemlive \| T2]` |
+| Tigon | gemma-4-26b-a4b-it | T2 | 1500 | `[Claude → Tigon \| T2]` |
+| Triton | gemma-3-12b-it | T2 | 14400 | `[Claude → Triton \| T2]` |
+| Haiku | claude-haiku-4-5-20251001 | T3 | — | `[Claude → Haiku \| T3]` |
+| Sonnet | claude-sonnet-4-6 | T4 | — | `[Claude → Sonnet \| T4]` |
+| Opus | claude-opus-4-6 | T5 | — | `[Claude → Opus \| T5]` |
