@@ -24,11 +24,12 @@
 
 A cada execução, imprimir no chat:
 ```
-[CRONO | Tier N — ferramenta] descrição da ação
+[Claude → Agente | TN] descrição da ação
+[Agente → Claude] resumo do resultado
 ```
 Se pular um tier, imprimir:
 ```
-[SKIP Tier N — motivo]
+[SKIP TN — motivo]
 ```
 Motivos válidos de skip: (0) tarefa requer semântica; (1) Ollama offline ou qualidade insuficiente; (2) quota Gemini esgotada ou resposta inline obrigatória.
 
