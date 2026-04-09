@@ -1,6 +1,18 @@
 # Catálogo de Comandos — Delegação por Tier
 
-> **Documento vivo.** Ao usar um comando não listado aqui que seja delegável (zero-token ou Gemini), adicione-o na seção correspondente. O objetivo é que este arquivo cresça como biblioteca de automações do workspace.
+> **Documento vivo.** Ao usar um comando não listado aqui que seja delegável (zero-token ou Gemini), adicione-o na seção correspondente.
+
+## GATE DE DECISÃO — ler antes de qualquer ação
+
+```
+A operação é T0-ável? (replace, grep, git, métricas, conversão, mídia)
+  → SIM: use Pygit ou Bashman. Printe verbose. NÃO leia o arquivo antes.
+  → NÃO: precisa de semântica/composição?
+       → SIM até T1: use Llama
+       → precisa de qualidade: use Gemini (T2), depois Haiku (T3), Sonnet (T4), Opus (T5)
+```
+
+**Regra de ouro:** `Read` só quando precisar entender semântica. Para tudo mecânico → T0.
 
 **Consultar ANTES de qualquer resposta que envolva processamento de dados, geração de texto ou análise.**
 
