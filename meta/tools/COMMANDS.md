@@ -145,15 +145,27 @@ print(f'dims={len(emb)} amostra={emb[:4]}')
 
 ---
 
-## Tier 2 — Gemini Flash Lite (custo mínimo; Claude lê apenas o resultado)
+## Tier 2 — Gemini (custo mínimo; Claude lê apenas o resultado)
 
-> Quota free tier: ~500 req/dia · ~15 RPM  
-> Modelo padrão: `gemini-3.1-flash-lite-preview` · fallback: `gemini-2.5-flash-lite`  
+> Cadeia de fallback automática: **Gemflite → Gemlux → Gemtrin → Gemflash**  
+> Script: `python meta/scripts/gemini_run.py --model <nome> "<PROMPT>"`  
 > Custo para Claude: **somente tokens de leitura do output**.
+
+### Roster de agentes T2 — Gemini
+
+| Nome | Modelo | RPM | RPD | Uso ideal |
+|------|--------|-----|-----|-----------|
+| **Gemflite** | gemini-3.1-flash-lite-preview | 15 | 500 | Padrão — lotes, triagem, sumarização recorrente |
+| **Gemlux** | gemini-2.5-flash-lite | 10 | 20 | Fallback leve; semântica além do T1 |
+| **Gemtrin** | gemini-3-flash-preview | 5 | 20 | Raciocínio pontual (economizar RPD) |
+| **Gemflash** | gemini-2.5-flash | 5 | 20 | Qualidade máxima T2; ⚠️ intermitente |
+| **Tigon** | gemma-4-26b-a4b-it | 15 | 1500 | Lotes curtos; TPM ilimitado |
+| **Triton** | gemma-3-12b-it | 30 | 14400 | Alta frequência, prompts curtos (TPM 15K) |
 
 ### Script utilitário (prompt inline)
 ```bash
-python meta/scripts/gemini_run.py "<PROMPT>"
+python meta/scripts/gemini_run.py "<PROMPT>"                        # usa Gemflite
+python meta/scripts/gemini_run.py --model gemtrin "<PROMPT>"       # especifica agente
 ```
 
 ### Script utilitário (arquivo como contexto)
@@ -161,25 +173,26 @@ python meta/scripts/gemini_run.py "<PROMPT>"
 python meta/scripts/gemini_run.py --file "<ARQUIVO>" --prompt "<INSTRUCAO>"
 ```
 
-### Inline (sem depender do script utilitário)
+### Inline rápido
 ```python
 python -c "
-import urllib.request, json, os
+import urllib.request, json, os, sys
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 key = os.environ['GEMINI_API_KEY']
-prompt = '<PROMPT>'
-model = 'gemini-3.1-flash-lite-preview'
+aliases = {'gemflite':'gemini-3.1-flash-lite-preview','gemlux':'gemini-2.5-flash-lite','gemtrin':'gemini-3-flash-preview','gemflash':'gemini-2.5-flash'}
+model = aliases.get('<NOME>', '<NOME>')
 url = f'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}'
-body = json.dumps({'contents':[{'parts':[{'text':prompt}]}]}).encode()
+body = json.dumps({'contents':[{'parts':[{'text':'<PROMPT>'}]}]}).encode()
 req = urllib.request.Request(url, data=body, headers={'Content-Type':'application/json'})
 print(json.loads(urllib.request.urlopen(req).read())['candidates'][0]['content']['parts'][0]['text'])
 "
 ```
 
-**Casos de uso típicos:**
-- Sumarizar documento longo (>5 páginas)
-- Classificar/triar lista de itens em lote
-- Análise semântica de texto que o Tier 1 não tem qualidade suficiente
-- Qualquer contexto >8k tokens (Ollama degrada)
+**Casos de uso por agente:**
+- **Gemflite:** sumarizar doc longo, classificar lote, análise recorrente (500 RPD = margem confortável)
+- **Gemtrin:** raciocínio estruturado, planejamento de aula, análise pontual
+- **Gemflash:** quando Gemtrin não chega; qualidade máxima sem Claude
+- **Tigon/Triton:** triagem de emails em lote, logs, prompts muito curtos e repetitivos
 
 ---
 
