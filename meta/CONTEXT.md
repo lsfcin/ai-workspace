@@ -11,6 +11,15 @@ Melhorar o próprio AI Workspace:
 - Ferramentas funcionais e de qualidade
 - Fluxos de trabalho
 
+## Sub-contextos
+
+| Subdir | Papel |
+|--------|-------|
+| `tools/` | Hub de delegação — catálogo de agentes, comandos e tiers |
+| `templates/` | Templates de CONTEXT, SPECS, ADR |
+| `hooks/` | Scripts de automação (auto-commit) |
+| `referencias/` | Clief notes e referências de método |
+
 ## Responsabilidades
 
 - Identificar ineficiências e propor melhorias
