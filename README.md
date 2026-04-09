@@ -2,13 +2,13 @@
 
 Workspace hierárquico para orquestração de contextos com IA, desenvolvido e mantido por **Lucas Silva Figueiredo** — Prof. de Ciência da Computação (UFRPE / CIn-UFPE), pesquisador em Inteligência Híbrida, Mechanism Design, AR e 3D Computer Vision.
 
-O agente que navega este workspace chama-se **Crono**.
+O agente que navega este workspace chama-se **Claude**.
 
 ## Estrutura
 
 ```
 AI-Workspace/
-├── CLAUDE.md                  # Identidade, protocolo e routing do Crono
+├── CLAUDE.md                  # Identidade, protocolo e routing do Claude
 ├── academia/                  # Disciplinas, materiais, slides
 ├── dev/                       # Projetos de software
 ├── lih-dd/                    # Lab LIH.DD — papers, manifestos
@@ -39,7 +39,7 @@ Dados de projetos específicos, fichas pessoais e materiais de aula **não são 
 
 ## Protocolo de contexto
 
-O Crono segue uma cadeia de carregamento: ao receber uma tarefa, identifica o workspace-alvo pela tabela de routing em `CLAUDE.md` e lê os `CONTEXT.md` do nível 1 até a folha, sem carregar ramos não relacionados.
+O Claude segue uma cadeia de carregamento: ao receber uma tarefa, identifica o workspace-alvo pela tabela de routing em `CLAUDE.md` e lê os `CONTEXT.md` do nível 1 até a folha, sem carregar ramos não relacionados.
 
 ## Auto-versionamento
 
