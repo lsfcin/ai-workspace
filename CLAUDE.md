@@ -50,9 +50,28 @@ Exceção: Grep/Glob direto quando alvo é conhecido e ≤2 buscas.
 
 ## Delegação de execução
 
-Para qualquer tarefa com processamento de dados, análise ou geração: consulte `/meta/tools/COMMANDS.md` e use o tier mais baixo aplicável.
+**GATE OBRIGATÓRIO — antes de qualquer tool call:**
+> "Esta operação é T0-ável?" → Se sim: delegate para Pygit/Bashman e printe verbose. NUNCA execute inline o que um agente zero-token pode fazer.
 
-**Verbose obrigatório** — imprimir antes de executar, formato conversacional:
+### Operações PROIBIDAS inline (sempre delegar)
+
+| Operação | Agente correto | NUNCA fazer assim |
+|----------|---------------|-------------------|
+| Substituir string em arquivo | Bashman (`sed`) | `Read` + `Edit` para replace simples |
+| Contar palavras / linhas / chars | Pygit (`python -c`) | `Read` só para métricas |
+| Buscar padrão em arquivos | Bashman (`grep -r`) | tool Grep sem verbose |
+| Listar arquivos por padrão | Bashman (`find`) | tool Glob sem verbose |
+| Operações git (log, status, diff, commit) | Pygit | Bash sem verbose |
+| Converter documentos | Bashman (`pandoc`) | inline |
+| Processar mídia | Bashman (`ffmpeg`) | inline |
+
+### Quando `Read` é permitido
+- Edição **estrutural** (não é substituição de string literal)
+- Precisa entender lógica/semântica antes de editar
+- **Sempre com offset+limit** — nunca ler arquivo inteiro quando só precisa de uma seção
+
+### Verbose obrigatório — sem verbose, não executa
+
 - Delegação: `[Claude → Agente | TN] descrição`
 - Resposta recebida: `[Agente → Claude] resumo do resultado`
 - Ao pular um tier: `[SKIP TN — motivo]`
