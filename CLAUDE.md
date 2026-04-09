@@ -52,17 +52,30 @@ Exceção: Grep/Glob direto quando alvo é conhecido e ≤2 buscas.
 
 Para qualquer tarefa com processamento de dados, análise ou geração: consulte `/meta/tools/COMMANDS.md` e use o tier mais baixo aplicável.
 
-**Verbose obrigatório** — imprimir antes de executar:
-- Ao usar tier 0-2: `[CRONO | Tier N — ferramenta] descrição`
-- Ao pular um tier: `[SKIP Tier N — motivo]`
+**Verbose obrigatório** — imprimir antes de executar, formato conversacional:
+- Delegação: `[Claude → Agente | TN] descrição`
+- Resposta recebida: `[Agente → Claude] resumo do resultado`
+- Ao pular um tier: `[SKIP TN — motivo]`
+
+**Roster de agentes:**
+
+| Nome | O que é | Tier |
+|------|---------|------|
+| **Pygit** | Python scripts + Git + ops de arquivo | T0 |
+| **Bashman** | Shell/CLI executor (pandoc, ffmpeg, jq…) | T0 |
+| **Llama** | Ollama local (llama3.1, qwen2.5-coder…) | T1 |
+| **Gemini** | Gemini Flash Lite | T2 |
+| **Haiku** | Claude Haiku 4.5 | T3 |
+| **Sonnet** | Claude Sonnet 4.6 | T4 |
+| **Opus** | Claude Opus 4.6 | T5 |
 
 Ordem de prioridade:
-1. **Tier 0** — Script Python / CLI (zero tokens)
-2. **Tier 1** — Ollama local (zero tokens, requer `ollama serve`)
-3. **Tier 2** — Gemini Flash Lite (custo mínimo; Crono lê só o output)
-4. **Tier 3** — Claude Haiku (fallback pago leve)
-5. **Tier 4** — Claude Sonnet (qualidade geral)
-6. **Tier 5** — Claude Opus (arquitetura, raciocínio complexo)
+1. **Tier 0** — Pygit / Bashman (zero tokens)
+2. **Tier 1** — Llama (zero tokens, requer `ollama serve`)
+3. **Tier 2** — Gemini (custo mínimo; Claude lê só o output)
+4. **Tier 3** — Haiku (fallback pago leve)
+5. **Tier 4** — Sonnet (qualidade geral)
+6. **Tier 5** — Opus (arquitetura, raciocínio complexo)
 
 Catálogo de ferramentas: `/meta/tools/TOOLS.md`
 
