@@ -162,60 +162,23 @@ MUST use Agent tool in the following cases — do NOT do inline:
 
 Exception: use Grep/Glob directly when target is known and ≤2 searches.
 
-## Execution delegation - routing
+## Routing
 
-**MANDATORY GATE — before any tool call:**
-> "Is this operation T0-able?" → If yes: delegate to Pygit/Bashman and print verbose. NEVER execute inline what a zero-token agent can do.
+Check in order — use the first match. See `tools/INVOKE.md` for exact commands.
 
-### Operations FORBIDDEN inline (always delegate)
+| Condition | Executor | Tier |
+|-----------|----------|------|
+| file / git / shell / media op | Bashman or Pygit | T0 |
+| code generation (isolated, well-scoped) | Ollama `qwen2.5-coder` | T1 |
+| long doc / search / summarize / bulk gen | Gemini `tools/gemini.py` | T2 |
+| codebase exploration (>2 searches) | Agent: Explore | T4 |
+| web research / multi-step task | Agent: general-purpose | T4 |
+| architecture / critical reasoning / review | Agent: Opus | T5 |
+| everything else | inline Sonnet | T4 |
 
-| Operation | Correct agent | NEVER do this |
-|-----------|--------------|---------------|
-| Replace string in file | Bashman (`sed`) | `Read` + `Edit` for simple replace |
-| Count words / lines / chars | Pygit (`python -c`) | `Read` just for metrics |
-| Search pattern in files | Bashman (`grep -r`) | Grep tool without verbose |
-| List files by pattern | Bashman (`find`) | Glob tool without verbose |
-| Git operations (log, status, diff, commit) | Pygit | Bash without verbose |
-| Convert documents | Bashman (`pandoc`) | inline |
-| Process media | Bashman (`ffmpeg`) | inline |
+**Read is allowed only for** structural editing or semantic understanding. Always use `offset+limit`.
 
-### When `Read` is allowed
-- **Structural** editing (not a literal string replacement)
-- Need to understand logic/semantics before editing
-- **Always with offset+limit** — never read the entire file when only a section is needed
-
-### Mandatory verbose — no verbose, no execution
-
-- Delegation: `[Turin → Agent | TN] description`
-- Response received: `[Agent → Turin] result summary`
-- When skipping a tier: `[SKIP TN — reason]`
-
-**Agent roster:**
-
-| Name | What it is | Tier | RPD |
-|------|-----------|------|-----|
-| **Pygit** | Python scripts + Git + file ops | T0 | ∞ |
-| **Bashman** | Shell/CLI executor (pandoc, ffmpeg, jq…) | T0 | ∞ |
-| **Llama** | Ollama local (llama3.1, qwen2.5-coder…) | T1 | ∞ |
-| **Gemflite** | Gemini 3.1 Flash Lite — T2 default | T2 | 500 |
-| **Gemlux** | Gemini 2.5 Flash Lite — light fallback | T2 | 20 |
-| **Gemtrin** | Gemini 3 Flash — point reasoning | T2 | 20 |
-| **Gemflash** | Gemini 2.5 Flash — max T2 quality | T2 | 20 |
-| **Tigon** | Gemma 4 (26B/31B) — short batches | T2 | 1500 |
-| **Triton** | Gemma 3 (1B–27B) — high freq, short | T2 | 14400 |
-| **Haiku** | Claude Haiku 4.5 | T3 | — |
-| **Sonnet** | Claude Sonnet 4.6 | T4 | — |
-| **Opus** | Claude Opus 4.6 | T5 | — |
-
-Priority order:
-1. **Tier 0** — Pygit / Bashman (zero tokens)
-2. **Tier 1** — Llama (zero tokens, requires `ollama serve`)
-3. **Tier 2** — Gemflite → Gemlux → Gemtrin → Gemflash (minimal cost; Claude reads output only)
-4. **Tier 3** — Haiku (light paid fallback)
-5. **Tier 4** — Sonnet (general quality)
-6. **Tier 5** — Opus (architecture, complex reasoning)
-
-Full agent and command catalog → read ctx chain: `tools/` → `tools/agents/`
+When delegating, declare: `[Turin → Executor | TN] description`
 
 ## Protocols
 
