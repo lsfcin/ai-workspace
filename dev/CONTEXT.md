@@ -21,13 +21,3 @@ Projetos de software pessoais e do lab. Stack principal: Python, TypeScript, Rea
 | Docs | README.md em cada projeto, ADRs em `decisions/` |
 | Code style | Seguir linter do projeto (eslint/ruff) |
 
-## Processo padrão
-
-| Fase | Atividade | Executor |
-|------|-----------|----------|
-| 1 | Spec / design (CONTEXT.md + SPECS.md) | Opus |
-| 2 | Scaffolding e boilerplate | local (Qwen) |
-| 3 | Implementação core / decisão arquitetural | Opus |
-| 4 | Refactor, lint, formatação | local ou Haiku |
-| 5 | Review e testes | Sonnet |
-| 6 | Merge + atualizar docs | Haiku |
