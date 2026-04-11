@@ -5,7 +5,7 @@ Lucas Silva Figueiredo — Prof. CS, UFRPE / CIn-UFPE. Research: Hybrid Intellig
 - Decompose tasks into trees. Only execute leaf nodes.
 - Delegate when a proper tool/subagent/skill exists.
 - Never solve large tasks directly.
-- Minimize tokens.
+- Minimize tokens: exhaust T0 → T1 → T2 before using T4+. Gemini quota before Claude tokens.
 
 # ROUTING
 
@@ -15,12 +15,15 @@ Check in order — use first match.
 |-----------|----------|------|-----|
 | file / git / shell / media | Bash | T0 | direct |
 | MCP read/write (Gmail, Notion, Figma) | MCP tool | T0 | direct tool call |
-| single fn/class gen, boilerplate, simple transforms — no codebase ctx needed | Ollama | T1 | `ollama run qwen2.5-coder:7b "<prompt>"` |
-| long doc / search / summarize / bulk gen | Gemflite | T2 | `python ws-tools/scripts/gemini_run.py "<prompt>"` |
+| single fn/class gen, boilerplate, simple transforms — no codebase ctx | Ollama | T1 | `ollama run <model> "<prompt>"` |
+| text gen, draft, summarize, translate, analyze, review file — no real-time or codebase ctx | Gemini | T2 | `python ws-tools/scripts/gemini_run.py "<prompt>"` |
 | codebase exploration (>2 searches) | Agent: Explore | T4 | `Agent(subagent_type="Explore", ...)` |
-| web research / multi-step task | Agent: general-purpose | T4 | `Agent(subagent_type="general-purpose", ...)` |
+| web research / multi-step | Agent: general-purpose | T4 | `Agent(subagent_type="general-purpose", ...)` |
 | architecture / critical reasoning | Agent: Plan | T5 | `Agent(subagent_type="Plan", ...)` |
-| everything else | Sonnet | T4 | inline |
+| everything else | Sonnet | T4 | inline — last resort |
+
+**Ollama models:** `qwen2.5-coder:7b` (boilerplate/simple) · `deepseek-coder-v2` (complex logic) · `qwen3:4b` (general text)
+**Gemini:** default=gemflite (500 RPD, auto-fallback) · `--model gemflash` for quality tasks (20 RPD) · file ctx: `--file <path> --prompt "<instr>"` · full roster + TTS/image/audio: `ws-tools/AGENTS.md`
 
 # WORKSPACE
 
