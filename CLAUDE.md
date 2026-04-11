@@ -25,12 +25,13 @@ Lucas Silva Figueiredo — Prof. CS, UFRPE / CIn-UFPE. Research: Hybrid Intellig
 3. **T2 — Is this analysis/review/text with no real-time or codebase context?**
    - Analyze or review an existing file → `gemini_run.py --file <path> --prompt "<instr>"`
    - Text gen, draft, summarize, translate → `python ws-meta/scripts/gemini_run.py "<prompt>"`
+   - Web search (any query) → `python ws-meta/scripts/web_search.py "<query>"` (cascade: Exa → Tavily → DDG)
    - Gemini: default=gemflite (500 RPD) · `--model gemflash` for quality (20 RPD)
-   - If yes: use Gemini. Stop here.
+   - If yes: use the appropriate script. Stop here.
 
 4. **T4 — Only if T0–T2 cannot handle it:**
    - Codebase exploration (>2 searches) → `Agent(subagent_type="Explore", ...)`
-   - Web research / multi-step → `Agent(subagent_type="general-purpose", ...)`
+   - Web research requiring synthesis / multi-step reasoning → `Agent(subagent_type="general-purpose", ...)`
    - Architecture / critical reasoning → `Agent(subagent_type="Plan", ...)`
    - Everything else → inline Sonnet (last resort — justify why T0–T2 failed)
 
