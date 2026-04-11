@@ -1,6 +1,6 @@
 # AppTime
 
-Android app that reduces phone addiction through awareness — a native floating overlay shows real-time session counts and cumulative screen time for the active app, without blocking or punishing.
+Android app to reduce phone addiction through awareness — a native floating overlay shows real-time session counts and cumulative screen time for the active app, without blocking or punishing. Personalized analytics help understand 
 
 ## Setup
 
@@ -21,7 +21,6 @@ Full module breakdown, interfaces, and constraints → SPECS.md
 | `decisions/` | ADRs for architectural choices |
 | `SPECS.md` | Full setup, architecture, constraints, feature specs |
 | `ROADMAP.md` | Active and upcoming milestones |
-| `HISTORY.md` | Completed milestone detail (regression reference) |
 
 ## Core features
 
