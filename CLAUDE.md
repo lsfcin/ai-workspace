@@ -170,7 +170,7 @@ Check in order — use the first match. See `tools/INVOKE.md` for exact commands
 |-----------|----------|------|
 | file / git / shell / media op | Bashman or Pygit | T0 |
 | code generation (isolated, well-scoped) | Ollama `qwen2.5-coder` | T1 |
-| long doc / search / summarize / bulk gen | Gemini `tools/gemini.py` | T2 |
+| long doc / search / summarize / bulk gen | `meta/scripts/gemini_run.py --model gemflite` | T2 |
 | codebase exploration (>2 searches) | Agent: Explore | T4 |
 | web research / multi-step task | Agent: general-purpose | T4 |
 | architecture / critical reasoning / review | Agent: Opus | T5 |
@@ -178,7 +178,9 @@ Check in order — use the first match. See `tools/INVOKE.md` for exact commands
 
 **Read is allowed only for** structural editing or semantic understanding. Always use `offset+limit`.
 
-When delegating, declare: `[Turin → Executor | TN] description`
+When delegating, declare: `[Turin → Agent | TN] description`
+
+Full catalog (TTS, image, live, tasks): `meta/tools/CONTEXT.md`
 
 ## Protocols
 
