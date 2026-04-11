@@ -96,8 +96,8 @@ Abbrevs: FE/BE/DB, deps, req, impl, cfg, spec, conv, ctx, ws, ADR.
 # VERSIONING
 
 - Repo: https://github.com/lsfcin/ai-workspace (MIT)
-- Tracked: `CLAUDE.md`, `AGENTS.md`, `**/CONTEXT.md`, `**/SPECS.md`, `scripts/`, `hooks/`, `templates/`, `references/clief-notes/`, `README.md`, `LICENSE`, `.gitignore`
-- Auto-commit: PostToolUse hook → `hooks/auto_commit.py`
+- Tracked: `CLAUDE.md`, `ws-tools/AGENTS.md`, `**/CONTEXT.md`, `**/SPECS.md`, `ws-tools/scripts/`, `ws-tools/hooks/`, `ws-tools/templates/`, `ws-tools/references/clief-notes/`, `README.md`, `LICENSE`, `.gitignore`
+- Auto-commit: PostToolUse hook → `ws-tools/hooks/auto_commit.py`
 - Push: manual (`git push origin master`)
 
 # TECHNICAL CONTEXT
