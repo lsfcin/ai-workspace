@@ -16,7 +16,8 @@ Check in order — use first match.
 | file / git / shell / media | Bash | T0 | direct |
 | MCP read/write (Gmail, Notion, Figma) | MCP tool | T0 | direct tool call |
 | single fn/class gen, boilerplate, simple transforms — no codebase ctx | Ollama | T1 | `ollama run <model> "<prompt>"` |
-| text gen, draft, summarize, translate, analyze, review file — no real-time or codebase ctx | Gemini | T2 | `python ws-meta/scripts/gemini_run.py "<prompt>"` |
+| analyze / review an existing file — no real-time or codebase ctx | Gemini | T2 | `gemini_run.py --file <path> --prompt "<instr>"` |
+| text gen, draft, summarize, translate — no real-time or codebase ctx | Gemini | T2 | `python ws-meta/scripts/gemini_run.py "<prompt>"` |
 | codebase exploration (>2 searches) | Agent: Explore | T4 | `Agent(subagent_type="Explore", ...)` |
 | web research / multi-step | Agent: general-purpose | T4 | `Agent(subagent_type="general-purpose", ...)` |
 | architecture / critical reasoning | Agent: Plan | T5 | `Agent(subagent_type="Plan", ...)` |
