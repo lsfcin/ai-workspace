@@ -10,7 +10,6 @@ App que permite cidadãos entenderem o match entre suas posições e as votaçõ
 | Público | Cidadãos brasileiros, foco inicial em Recife/PE |
 | Fase | Planejamento — definindo MVP |
 | Plataforma alvo | Mobile (React Native) + Web |
-| Última atualização | 2026-04-08 |
 
 ## Conceito do MVP
 
