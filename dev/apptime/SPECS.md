@@ -1,26 +1,10 @@
 # AppTime — Specs
 
-> Referência de arquitetura e decisões para impl. Snippets de código: ver código-fonte.
+> Load when writing code, debugging, or checking constraints. For milestones → ROADMAP.md.
 
-## Arquitetura
+## Setup
 
-```
-Flutter App (UI)
-    ↕ SharedPreferences
-MonitoringService (Kotlin, foreground) — detecta app atual via UsageStatsManager, rastreia sessões
-    └── OverlayService (Kotlin) — View nativa, lê SharedPreferences a cada 500ms
-```
-
-**Decisões críticas (não mudar sem ADR):**
-- Flutter só faz UI. Overlay e monitoramento são Kotlin puro.
-- Comunicação via SharedPreferences (pull), não EventChannel — evita zombie state da Flutter engine.
-- Sem `flutter_overlay_window` / `flutter_background_service` — overlay usa `WindowManager.addView()` nativo com `START_STICKY`.
-- Nunca usar `totalTimeInForeground` da API Android — não inclui sessão ativa. Rastrear sessões manualmente.
-- Launchers (MIUI home, Nexus, etc.) tratados como modo especial, não como "app".
-- Tela off detectada via eventos tipo 8 (`SCREEN_NON_INTERACTIVE`) — parar contagem.
-
-## Stack
-
+**Stack**
 ```
 Flutter (Dart) — Android only, min SDK 21
 shared_preferences: ^2.3.3
@@ -29,57 +13,69 @@ fl_chart: ^0.70.2
 flutter_launcher_icons: ^0.14.3 (dev)
 ```
 
-## Permissões Android
-
+**Android permissions**
 `SYSTEM_ALERT_WINDOW`, `PACKAGE_USAGE_STATS`, `FOREGROUND_SERVICE`,
 `FOREGROUND_SERVICE_SPECIAL_USE`, `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`, `POST_NOTIFICATIONS`
 
-## SharedPreferences — estrutura de dados
+## Architecture
 
-| Chave | Tipo | Descrição |
-|-------|------|-----------|
-| `overlay_text` | String | Texto exibido no overlay |
-| `overlay_visible` | Boolean | Se overlay deve aparecer |
-| `overlay_anchor`, `overlay_font_size`, `overlay_top_dp`, `overlay_h_pct` | Mixed | Posição e estilo |
-| `daily_ms_{pkg}_{date}` | Long | Ms acumulados do app no dia |
-| `open_count_{pkg}_{date}` | Int | Aberturas do app no dia |
-| `unlock_count_{date}` | Int | Desbloqueios do dispositivo |
-| `device_daily_ms_{date}` | Long | Uso total do dispositivo no dia |
-| `disabled_apps` | StringSet | Apps com overlay desabilitado |
+**Module map**
+```
+Flutter App (UI)
+    ↕ SharedPreferences
+MonitoringService (Kotlin, foreground) — detects active app via UsageStatsManager, tracks sessions
+    └── OverlayService (Kotlin) — native View, polls SharedPreferences every 500ms
+```
 
-## Overlay — lógica de exibição
+**Critical constraints — do not change without ADR**
+- Flutter handles UI only. Overlay and monitoring are pure Kotlin.
+- Communication via SharedPreferences (pull), not EventChannel — avoids zombie state from Flutter engine.
+- No `flutter_overlay_window` / `flutter_background_service` — overlay uses `WindowManager.addView()` natively with `START_STICKY`.
+- Never use `totalTimeInForeground` from Android API — excludes active session. Track sessions manually.
+- Launchers (MIUI home, Nexus, etc.) treated as special mode, not as "app".
+- Screen off detected via event type 8 (`SCREEN_NON_INTERACTIVE`) — stop counting.
 
-- **Phase 0** (primeiros 5s após abertura): `"13x"` — contagem de aberturas do app
-- **Phase 1** (depois): `"0:45"` — tempo acumulado (`M:SS` se <1h, `H:MM` se ≥1h)
-- **No launcher**: phase 0 = desbloqueios (`"86x"`), phase 1 = uso total do dispositivo (`"2.3h"`)
+**SharedPreferences schema**
 
-Flutter controla `OverlayService` via `MethodChannel("apptime/service")`: `startMonitoring`, `stopMonitoring`, `isRunning`, `requestOverlayPermission`, `requestUsagePermission`.
+| Key | Type | Description |
+|-----|------|-------------|
+| `overlay_text` | String | Text shown in overlay |
+| `overlay_visible` | Boolean | Whether overlay should appear |
+| `overlay_anchor`, `overlay_font_size`, `overlay_top_dp`, `overlay_h_pct` | Mixed | Position and style |
+| `daily_ms_{pkg}_{date}` | Long | Accumulated ms for app on that day |
+| `open_count_{pkg}_{date}` | Int | App opens on that day |
+| `unlock_count_{date}` | Int | Device unlocks on that day |
+| `device_daily_ms_{date}` | Long | Total device usage on that day |
+| `disabled_apps` | StringSet | Apps with overlay disabled |
 
-## Telas Flutter
+**Overlay display logic**
+- Phase 0 (first 5s after open): `"13x"` — open count for active app
+- Phase 1 (after): `"0:45"` — cumulative time (`M:SS` if <1h, `H:MM` if ≥1h)
+- On launcher — phase 0: unlocks (`"86x"`), phase 1: total device usage (`"2.3h"`)
 
-| Tela | Conteúdo |
-|------|----------|
-| HomeScreen | Card insight do dia (10 insights PT-BR, rotação 1min), permissões, toggle monitoramento |
-| SettingsScreen | Overlay (borda, fundo, fonte 10–18px), comportamento (por app, launcher, meta diária 0–360min), posicionamento |
-| PerAppScreen | Lista apps usados nos últimos 7 dias com toggle por app |
-| AnalyticsScreen | Period 1/7/30d: resumo geral, uso/hora (BarChart 24h), sessões rápidas/médias/buracos negros, ativo vs passivo, padrão de sono, uso diário, progresso vs período anterior, transições entre apps |
+**MethodChannel interface** — `"apptime/service"`
+`startMonitoring` · `stopMonitoring` · `isRunning` · `requestOverlayPermission` · `requestUsagePermission`
 
-## Tema
+## Features
 
+| Feature | Status |
+|---------|--------|
+| Native overlay (open count + time) | ✓ |
+| MonitoringService — session detection and tracking | ✓ |
+| Screen-off detection / launcher special mode | ✓ |
+| HomeScreen — permissions, monitoring toggle, daily insight | ✓ |
+| SettingsScreen — overlay position, font, goals, per-app | ✓ |
+| PerAppScreen — per-app overlay toggle | ✓ |
+| AnalyticsScreen — 1/7/30d charts and session breakdown | ✓ |
+| Polish — adaptive icon, edge cases, MIUI support | Planned |
+
+## Conventions
+
+**Theme**
 ```
 primary=0xFF4F6EF7  primaryDark=0xFF3A55D4
 surface=0xFFF7F8FC  surfaceDark=0xFF1A1D2E
 card=white / 0xFF242740   success=0xFF34D399   error=0xFFF87171
-Espaçamento XS=4 SM=8 MD=16 LG=24 XL=32 | Radius SM=8 MD=12 LG=16 XL=24
-Material3, light/dark auto, cards elevation:0 com borda fina
+Spacing XS=4 SM=8 MD=16 LG=24 XL=32 | Radius SM=8 MD=12 LG=16 XL=24
+Material3, light/dark auto, cards elevation:0 with thin border
 ```
-
-## Ordem de implementação
-
-1. Setup — `pubspec.yaml`, `AndroidManifest`, `AppTheme`, `StorageService`
-2. `OverlayService` (Kotlin) — View nativa, poll 500ms em SharedPreferences
-3. `MonitoringService` (Kotlin) — detecção de app, banco de sessões, escreve prefs
-4. `MethodChannel` — Flutter inicia/para serviços e consulta status
-5. `HomeScreen` — permissões + toggle monitoramento
-6. `SettingsScreen` + `PerAppScreen` — escrevem em prefs
-7. `AnalyticsService` + `AnalyticsScreen` — sessões via `queryEvents` (tipos 1/2/8)
