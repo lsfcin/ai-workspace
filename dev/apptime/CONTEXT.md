@@ -38,3 +38,4 @@ Full module breakdown, interfaces, and constraints → SPECS.md
 | Next | M7 Polish → v1.0 |
 
 # LATEST CHANGES
+- Official launcher icon added: dark bg (#1A1D2E), green timer arc (270°, #34D399) wrapping a white phone silhouette with brand-blue (#4F6EF7) screen. Source PNG at `assets/icon/app_icon.png`; all mipmap sizes (mdpi→xxxhdpi) generated via flutter_launcher_icons. Figma reference: https://www.figma.com/design/hXJFHj1HeDdXra5Z5zRB1g
