@@ -27,7 +27,7 @@ Lucas Silva Figueiredo — Prof. CS, UFRPE / CIn-UFPE. Research: Hybrid Intellig
    - Codebase exploration (>2 searches) → `Agent(subagent_type="Explore", ...)`
    - Web research requiring synthesis / multi-step reasoning → `Agent(subagent_type="general-purpose", ...)`
    - Architecture / critical reasoning → `Agent(subagent_type="Plan", ...)`
-   - Everything else → inline Sonnet (last resort — justify why T0–T2 failed)
+   - Everything else → inline Sonnet (last resort — justify why T0–T2 failed) 
 
 **TTS/image/audio model list:** `ws-meta/tools/AGENTS.md`
 **Figma workflow:** `ws-meta/references/figma_workflow.md`
@@ -40,7 +40,7 @@ Lucas Silva Figueiredo — Prof. CS, UFRPE / CIn-UFPE. Research: Hybrid Intellig
 | Personal (RPG, health, home, productivity) | `/personal/` |
 | Professional (classes, research, lab, bureaucracy) | `/professional/` |
 | Python scripts (Gemini, TTS, image) | `/ws-meta/scripts/` |
-| Hooks (auto-commit) | `/ws-meta/hooks/` |
+| Hooks (auto-commit, logging) | `/ws-meta/hooks/` |
 | File templates | `/ws-meta/templates/` |
 | Reference materials | `/ws-meta/references/` |
 | Agent roster + tool status | `/ws-meta/tools/` |
@@ -49,16 +49,13 @@ Lucas Silva Figueiredo — Prof. CS, UFRPE / CIn-UFPE. Research: Hybrid Intellig
 
 **Context:** read CONTEXT.md root → leaf. SPECS.md only for technical impl.
 **Consistency:** before changing stack/deps — cross-check SPECS.md. Conflict → present, await confirmation.
-**Context update:** at end of any response that changes project state, append one line to `# LATEST CHANGES` in the relevant CONTEXT.md. Silent — no proposal, no confirmation. Triggers: decision taken, phase advanced, dep/constraint changed. Non-triggers: brainstorming without conclusion, mechanical tasks.
 
 # GLOBAL RULES
 
-- Language: English. Portuguese only when explicitly requested.
-- Format: Markdown. LaTeX only for math/formal science.
+- Language: English. Portuguese if requested.
+- Format: Markdown.
 - Never fabricate academic references.
 
 # TECHNICAL CONTEXT
 
-- Stack: Python, TypeScript, React Native
-- Tools: VS Code, Notion, Google Slides, Foundry VTT
-- APIs: Claude Pro (active), Gemini Pro via academic license (active), no extra budget
+- APIs: Claude Pro + Gemini Pro (academic). No extra API budget — never suggest paid services.
