@@ -182,15 +182,7 @@ When delegating, declare: `[Turin → Executor | TN] description`
 
 ## Protocols
 
-**Routing (MANDATORY GATE — 1st action on any task):**
-Before any tool call, decompose the request into sub-tasks and classify each one:
-1. List identified sub-tasks
-2. For each: which tier? which agent? is there a relevant `tools/tasks/*.md` file?
-3. Execute from lowest to highest cost — never inline what a lower tier can do
-4. Declare the plan with verbose: `[Turin → Agent | TN] description`
-
-Correct example for "write a draft":
-→ sub-task = creative text generation → T1 Llama via `tasks/local.md` → DO NOT do inline
+**Routing:** decompose task → apply routing table above → execute lowest tier first.
 
 **Context:** read CONTEXT.md root → leaf for target workspace. SPECS.md only for technical implementation.
 
