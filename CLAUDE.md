@@ -9,22 +9,31 @@ Lucas Silva Figueiredo — Prof. CS, UFRPE / CIn-UFPE. Research: Hybrid Intellig
 
 # ROUTING
 
-Check in order — use first match.
+**MANDATORY: walk this checklist before every response. Do not skip steps.**
 
-| Condition | Executor | Tier | How |
-|-----------|----------|------|-----|
-| file / git / shell / media | Bash | T0 | direct |
-| MCP read/write (Gmail, Notion, Figma) | MCP tool | T0 | direct tool call |
-| single fn/class gen, boilerplate, simple transforms — no codebase ctx | Ollama | T1 | `ollama run <model> "<prompt>"` |
-| analyze / review an existing file — no real-time or codebase ctx | Gemini | T2 | `gemini_run.py --file <path> --prompt "<instr>"` |
-| text gen, draft, summarize, translate — no real-time or codebase ctx | Gemini | T2 | `python ws-meta/scripts/gemini_run.py "<prompt>"` |
-| codebase exploration (>2 searches) | Agent: Explore | T4 | `Agent(subagent_type="Explore", ...)` |
-| web research / multi-step | Agent: general-purpose | T4 | `Agent(subagent_type="general-purpose", ...)` |
-| architecture / critical reasoning | Agent: Plan | T5 | `Agent(subagent_type="Plan", ...)` |
-| everything else | Sonnet | T4 | inline — last resort |
+1. **T0 — Can Bash or an MCP tool handle it entirely?**
+   - File, git, shell, media → `Bash`
+   - Gmail, Notion, Figma read/write → MCP tool
+   - If yes: use it. Stop here.
 
-**Ollama models:** `qwen2.5-coder:7b` (boilerplate/simple) · `deepseek-coder-v2` (complex logic) · `qwen3:4b` (general text)
-**Gemini:** default=gemflite (500 RPD, auto-fallback) · `--model gemflash` for quality tasks (20 RPD) · file ctx: `--file <path> --prompt "<instr>"` · full roster + TTS/image/audio: `ws-meta/tools/AGENTS.md`
+2. **T1 — Is this isolated code gen with no codebase context needed?**
+   - Single fn/class, boilerplate, simple transform → `ollama run <model> "<prompt>"`
+   - Models: `qwen2.5-coder:7b` (simple) · `deepseek-coder-v2` (complex logic) · `qwen3:4b` (general text)
+   - If yes: use Ollama. Stop here.
+
+3. **T2 — Is this analysis/review/text with no real-time or codebase context?**
+   - Analyze or review an existing file → `gemini_run.py --file <path> --prompt "<instr>"`
+   - Text gen, draft, summarize, translate → `python ws-meta/scripts/gemini_run.py "<prompt>"`
+   - Gemini: default=gemflite (500 RPD) · `--model gemflash` for quality (20 RPD)
+   - If yes: use Gemini. Stop here.
+
+4. **T4 — Only if T0–T2 cannot handle it:**
+   - Codebase exploration (>2 searches) → `Agent(subagent_type="Explore", ...)`
+   - Web research / multi-step → `Agent(subagent_type="general-purpose", ...)`
+   - Architecture / critical reasoning → `Agent(subagent_type="Plan", ...)`
+   - Everything else → inline Sonnet (last resort — justify why T0–T2 failed)
+
+**Full tool roster + TTS/image/audio:** `ws-meta/tools/AGENTS.md`
 
 # WORKSPACE
 
