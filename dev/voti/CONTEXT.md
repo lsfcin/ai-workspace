@@ -31,7 +31,3 @@ App que permite cidadãos entenderem o match entre suas posições e as votaçõ
 - [ ] Definir como categorizar votações em temas compreensíveis
 - [ ] Definir escopo do MVP (só federal? inclui estadual?)
 
-## Refs
-
-- Inspirações: ver `refs/inspiracoes.md` (quando criado)
-- Dados da Câmara: ver `refs/api-camara.md` (quando criado)
