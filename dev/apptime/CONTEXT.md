@@ -1,41 +1,40 @@
 # AppTime
 
-App Android para redução do vício no celular via consciência e informação sobre uso real.
+Android app that reduces phone addiction through awareness — a native floating overlay shows real-time session counts and cumulative screen time for the active app, without blocking or punishing.
 
-## Missão e estratégia
+## Setup
 
-| Aspecto | Detalhe |
-|---------|---------|
-| Problema | Uso inconsciente e compulsivo do celular |
-| Abordagem | Visibilidade contínua do uso sem bloquear (nudge, não punição) |
-| Feature core | Overlay flutuante mostrando aberturas e tempo acumulado do app em uso |
-| Estratégias adicionais | Analytics comportamental, insights científicos, metas diárias, controle por app |
+Android only · min SDK 21 · Flutter (UI) + Kotlin (overlay + monitoring)
 
-## Estado atual
+## Architecture
 
-| Item | Status |
-|------|--------|
-| Fase | Em desenvolvimento — rewrite from scratch |
-| Plataforma | Android only (min SDK 21) |
-| Stack | Flutter (UI) + Kotlin (overlay e monitoramento) |
-| Última atualização | 2026-04-09 |
+`Flutter UI → SharedPreferences ← MonitoringService (Kotlin) → OverlayService (Kotlin)`
 
-## Arquitetura em uma linha
+Full module breakdown, interfaces, and constraints → SPECS.md
 
-Flutter UI → SharedPreferences ← `MonitoringService` Kotlin (rastreia sessões) → `OverlayService` Kotlin (View nativa, poll 500ms)
+## Structure
 
-## Features
+| Path | Content |
+|------|---------|
+| `lib/` | Flutter/Dart UI screens and services |
+| `android/.../kotlin/` | Native Kotlin services (overlay, monitoring) |
+| `decisions/` | ADRs for architectural choices |
+| `SPECS.md` | Full setup, architecture, constraints, feature specs |
+| `ROADMAP.md` | Milestones and implementation status |
 
-| Feature | Status |
-|---------|--------|
-| Overlay nativo (contagem de aberturas + tempo) | Planejado |
-| MonitoringService — detecção e rastreio de sessões | Planejado |
-| HomeScreen — permissões e toggle de monitoramento | Planejado |
-| SettingsScreen — posição, fonte, metas, per-app | Planejado |
-| AnalyticsScreen — gráficos 1/7/30 dias | Planejado |
+## Core features
 
-## Refs
+- Native floating overlay — open count + cumulative time for active app
+- Background monitoring — session tracking, screen-off detection, launcher handling
+- Per-app analytics — 1/7/30d usage breakdowns
+- Settings — overlay appearance, daily goals, per-app toggle
 
-- Arquitetura detalhada, stack, ordem de impl: ver SPECS.md
+## Status
+
+| Item | Value |
+|------|-------|
+| Phase | In dev — rewrite from scratch |
+| Last milestone | M6 Analytics ✓ |
+| Next | M7 Polish → v1.0 |
 
 # LATEST CHANGES
