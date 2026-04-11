@@ -38,7 +38,7 @@ Check in order — use first match.
 
 Read allowed only for structural/semantic editing. Always use `offset+limit`.
 When delegating: `[Turin → Executor | TN] description`
-Full agent roster + specialized commands (TTS, image, live): `AGENTS.md`
+Full agent roster + specialized commands (TTS, image, live): `ws-tools/AGENTS.md`
 
 # WORKSPACE
 
