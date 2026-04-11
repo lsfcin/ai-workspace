@@ -1,12 +1,6 @@
 # THIS IS ME
 Lucas Silva Figueiredo — Prof. CS, UFRPE / CIn-UFPE. Research: Hybrid Intelligence, Mechanism Design, AR, 3D CV. Lab: LIH.DD.
 
-# RULES
-- Decompose tasks into trees. Only execute leaf nodes.
-- Delegate when a proper tool/subagent/skill exists.
-- Never solve large tasks directly.
-- Minimize tokens: exhaust T0 → T1 → T2 before using T4+. Gemini quota before Claude tokens.
-
 # ROUTING
 
 **MANDATORY: walk this checklist before every response. Do not skip steps.**
@@ -14,7 +8,6 @@ Lucas Silva Figueiredo — Prof. CS, UFRPE / CIn-UFPE. Research: Hybrid Intellig
 1. **T0 — Can Bash or an MCP tool handle it entirely?**
    - File, git, shell, media → `Bash`
    - Gmail, Notion, Figma read/write → MCP tool
-   - **Figma workflow:** `whoami` (get planKey) → `create_new_file` → `use_figma` (draw via JS Plugin API) → `get_screenshot` (verify). Use `figma.createNodeFromSvg(svg)` for vector/icon drawing — it's the most reliable approach. For Android icons: also generate PNG via PIL + `flutter_launcher_icons` (Figma can't auto-export to disk).
    - If yes: use it. Stop here.
 
 2. **T1 — Is this isolated code gen with no codebase context needed?**
@@ -23,9 +16,10 @@ Lucas Silva Figueiredo — Prof. CS, UFRPE / CIn-UFPE. Research: Hybrid Intellig
    - If yes: use Ollama. Stop here.
 
 3. **T2 — Is this analysis/review/text with no real-time or codebase context?**
-   - Analyze or review an existing file → `gemini_run.py --file <path> --prompt "<instr>"`
+   - Analyze or review an existing file → `gemini_run.py --file <path> --prompt "<instr>"` — never Read then summarize inline
    - Text gen, draft, summarize, translate → `python ws-meta/scripts/gemini_run.py "<prompt>"`
    - Web search (any query) → `python ws-meta/scripts/web_search.py "<query>"` (cascade: Exa → Tavily → DDG)
+   - After web_search.py, always pipe results to gemini_run.py for synthesis — never summarize search results inline
    - Gemini: default=gemflite (500 RPD) · `--model gemflash` for quality (20 RPD)
    - If yes: use the appropriate script. Stop here.
 
@@ -36,6 +30,7 @@ Lucas Silva Figueiredo — Prof. CS, UFRPE / CIn-UFPE. Research: Hybrid Intellig
    - Everything else → inline Sonnet (last resort — justify why T0–T2 failed)
 
 **Full tool roster + TTS/image/audio:** `ws-meta/tools/AGENTS.md`
+**Figma workflow:** `ws-meta/references/figma_workflow.md`
 
 # WORKSPACE
 
@@ -62,16 +57,8 @@ Lucas Silva Figueiredo — Prof. CS, UFRPE / CIn-UFPE. Research: Hybrid Intellig
 - Format: Markdown. LaTeX only for math/formal science.
 - Never fabricate academic references.
 
-# VERSIONING
-
-- Repo: https://github.com/lsfcin/ai-workspace (MIT)
-- Auto-commit: PostToolUse hook → `ws-meta/hooks/auto_commit.py`
-- Push: manual (`git push origin master`)
-
 # TECHNICAL CONTEXT
 
 - Stack: Python, TypeScript, React Native
 - Tools: VS Code, Notion, Google Slides, Foundry VTT
 - APIs: Claude Pro (active), Gemini Pro via academic license (active), no extra budget
-- Health check: `python ws-meta/scripts/health_check.py` → `ws-meta/tools/tools_status.md`
-- Local hardware: Dell G15, 16GB RAM, Mobile RTX 3050 with 7.8GB VRAM
