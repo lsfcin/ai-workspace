@@ -55,3 +55,5 @@ Base teórica para a arquitetura deste AI Workspace.
 8. IA é componente (10%), valor está na arquitetura ao redor (90%)
 9. Spec é o ponto de alavancagem — quanto mais preciso, melhor o output
 10. Constraints não limitam, focam. Style guide e component registry são constraints encodadas como arquivos
+
+# LATEST CHANGES

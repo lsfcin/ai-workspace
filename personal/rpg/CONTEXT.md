@@ -31,3 +31,5 @@ Fichas completas: ver `/rpg/player/`
 ## Permissões
 
 auto_update_context: true
+
+# LATEST CHANGES

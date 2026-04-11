@@ -37,3 +37,5 @@ Flutter UI → SharedPreferences ← `MonitoringService` Kotlin (rastreia sessõ
 ## Refs
 
 - Arquitetura detalhada, stack, ordem de impl: ver SPECS.md
+
+# LATEST CHANGES

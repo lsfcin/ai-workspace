@@ -21,3 +21,4 @@ Projetos de software pessoais e do lab. Stack principal: Python, TypeScript, Rea
 | Docs | README.md em cada projeto, ADRs em `decisions/` |
 | Code style | Seguir linter do projeto (eslint/ruff) |
 
+# LATEST CHANGES

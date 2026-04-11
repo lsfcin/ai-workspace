@@ -31,3 +31,4 @@ App que permite cidadãos entenderem o match entre suas posições e as votaçõ
 - [ ] Definir como categorizar votações em temas compreensíveis
 - [ ] Definir escopo do MVP (só federal? inclui estadual?)
 
+# LATEST CHANGES
