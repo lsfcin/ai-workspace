@@ -13,26 +13,21 @@ Personal and lab software projects. Primary stack: Python, TypeScript, React Nat
 
 ## Development lifecycle
 
-All projects follow this flow in order — do not skip phases:
+`Goals → Concept (→decisions/) → Stack (→SPECS.md) → Architecture → Minimal increment → Test+debug (auto) → Refactor → Commit`
 
-1. **Goals** — define problem, target user, success criteria
-2. **Concept** — discuss approaches, trade-offs, decisions (no code yet)
-3. **Stack** — choose platforms, libs, APIs → record in SPECS.md
-4. **Architecture** — plan high-level modules and data flow → Plan agent
-5. **Minimal increment** — implement the smallest testable slice
-6. **Verify** — auto-test + verbose debug; check autonomously before reporting done
-7. **Refactor** — clean up, remove debug verbosity
-8. **Commit** — conventional commit, push when stable
+- Steps 5–7 repeat per increment until feature is stable.
+- "Test+debug (auto)" means: run tests, read output, iterate — never declare done without verifying.
+- Concept phase must produce at least one ADR entry in `decisions/`.
 
 ## General conventions
 
 | Aspect | Convention |
 |--------|------------|
-| Versioning | Git, conventional commits |
+| Versioning | Each project has its own git repo (`git init` in project folder) + GitHub remote |
 | Branches | `main`, `dev`, `feat/name`, `fix/name` |
 | Tests | Required before merging to main |
 | Docs | README.md per project, ADRs in `decisions/` |
 | Code style | Follow project linter (eslint / ruff) |
-| GitHub | Each project under `dev/` must have its own GitHub repo — URL recorded in this table |
+| GitHub | URL must be recorded in the Active projects table above |
 
 # LATEST CHANGES
