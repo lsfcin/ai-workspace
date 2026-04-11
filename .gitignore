@@ -41,3 +41,4 @@
 # ── Scripts utilitários (Tier 0-2) ──────────────────────────
 !meta/scripts/
 !meta/scripts/*.py
+.env
