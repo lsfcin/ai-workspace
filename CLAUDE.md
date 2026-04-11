@@ -14,6 +14,7 @@ Lucas Silva Figueiredo — Prof. CS, UFRPE / CIn-UFPE. Research: Hybrid Intellig
 1. **T0 — Can Bash or an MCP tool handle it entirely?**
    - File, git, shell, media → `Bash`
    - Gmail, Notion, Figma read/write → MCP tool
+   - **Figma workflow:** `whoami` (get planKey) → `create_new_file` → `use_figma` (draw via JS Plugin API) → `get_screenshot` (verify). Use `figma.createNodeFromSvg(svg)` for vector/icon drawing — it's the most reliable approach. For Android icons: also generate PNG via PIL + `flutter_launcher_icons` (Figma can't auto-export to disk).
    - If yes: use it. Stop here.
 
 2. **T1 — Is this isolated code gen with no codebase context needed?**
