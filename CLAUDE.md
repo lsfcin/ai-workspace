@@ -60,3 +60,4 @@ Check in order — use first match.
 - Stack: Python, TypeScript, React Native
 - Tools: VS Code, Notion, Google Slides, Foundry VTT
 - APIs: Claude Pro (active), Gemini Pro via academic license (active), no extra budget
+- Local hardware: Dell G15, 16GB RAM, Mobile RTX 3050 with 7.8GB VRAM
