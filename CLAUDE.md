@@ -30,7 +30,7 @@ Check in order — use first match.
 | file / git / shell / media | Bash | T0 | `bash: <cmd>` |
 | MCP read/write (Gmail, Notion, Figma) | MCP tool | T0 | direct tool call |
 | code gen (isolated, well-scoped) | Ollama | T1 | `ollama run qwen2.5-coder:7b "<prompt>"` |
-| long doc / search / summarize / bulk gen | Gemflite | T2 | `python scripts/gemini_run.py "<prompt>"` |
+| long doc / search / summarize / bulk gen | Gemflite | T2 | `python ws-tools/scripts/gemini_run.py "<prompt>"` |
 | codebase exploration (>2 searches) | Agent: Explore | T4 | `Agent(subagent_type="Explore", ...)` |
 | web research / multi-step task | Agent: general-purpose | T4 | `Agent(subagent_type="general-purpose", ...)` |
 | architecture / critical reasoning | Agent: Opus | T5 | `Agent(subagent_type="Plan", ...)` |
@@ -49,10 +49,10 @@ Full agent roster + specialized commands (TTS, image, live): `AGENTS.md`
 | Software projects | `/dev/` |
 | Personal (RPG, health, home, productivity) | `/personal/` |
 | Professional (classes, research, lab, bureaucracy) | `/professional/` |
-| Python scripts (Gemini, TTS, image) | `/scripts/` |
-| Hooks (auto-commit) | `/hooks/` |
-| File templates | `/templates/` |
-| Reference materials | `/references/` |
+| Python scripts (Gemini, TTS, image) | `/ws-tools/scripts/` |
+| Hooks (auto-commit) | `/ws-tools/hooks/` |
+| File templates | `/ws-tools/templates/` |
+| Reference materials | `/ws-tools/references/` |
 
 ## Context-tree
 
