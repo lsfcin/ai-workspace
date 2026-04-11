@@ -13,11 +13,11 @@ Personal and lab software projects. Primary stack: Python, TypeScript, React Nat
 
 ## Development lifecycle
 
-`Goals → Concept (→decisions/) → Stack (→SPECS.md) → Architecture → Minimal increment → Test+debug (auto) → Refactor → Commit`
+`Goals → Concept → Stack → Architecture → ↺(Increment → Test+debug → Refactor) → Commit`
 
-- Steps 5–7 repeat per increment until feature is stable.
-- "Test+debug (auto)" means: run tests, read output, iterate — never declare done without verifying.
-- Concept phase must produce at least one ADR entry in `decisions/`.
+- **Concept** decisions → update CONTEXT.md directly. Architectural decisions → `decisions/` ADR.
+- **Stack** → record in SPECS.md. **Architecture** → Plan agent.
+- **Test+debug**: run tests, read output, iterate — never declare done without verifying.
 
 ## General conventions
 
