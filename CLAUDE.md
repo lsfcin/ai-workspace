@@ -71,7 +71,7 @@ ctx chain = CONTEXT.md root → leaf. Ignore unrelated branches.
 
 **Context:** read CONTEXT.md root → leaf. SPECS.md only for technical impl.
 **Consistency:** before changing stack/deps — cross-check SPECS.md. Conflict → present, await confirmation.
-**Context update:** propose diff after tasks that change deps/scope/decisions. Wait for "ok".
+**Context update:** at end of any response that changes project state, append one line to `# LATEST CHANGES` in the relevant CONTEXT.md. Silent — no proposal, no confirmation. Git auto-captures it. Triggers: decision taken, phase advanced, dep/constraint changed. Non-triggers: brainstorming without conclusion, mechanical tasks.
 **Meta-rule:** missing route or unmapped tool → log in `backlog.md` and continue.
 
 # CONVENTIONS
