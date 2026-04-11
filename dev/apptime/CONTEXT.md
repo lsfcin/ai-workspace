@@ -20,7 +20,8 @@ Full module breakdown, interfaces, and constraints → SPECS.md
 | `android/.../kotlin/` | Native Kotlin services (overlay, monitoring) |
 | `decisions/` | ADRs for architectural choices |
 | `SPECS.md` | Full setup, architecture, constraints, feature specs |
-| `ROADMAP.md` | Milestones and implementation status |
+| `ROADMAP.md` | Active and upcoming milestones |
+| `HISTORY.md` | Completed milestone detail (regression reference) |
 
 ## Core features
 
