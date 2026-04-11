@@ -29,7 +29,7 @@ Lucas Silva Figueiredo — Prof. CS, UFRPE / CIn-UFPE. Research: Hybrid Intellig
    - Architecture / critical reasoning → `Agent(subagent_type="Plan", ...)`
    - Everything else → inline Sonnet (last resort — justify why T0–T2 failed)
 
-**Full tool roster + TTS/image/audio:** `ws-meta/tools/AGENTS.md`
+**TTS/image/audio model list:** `ws-meta/tools/AGENTS.md`
 **Figma workflow:** `ws-meta/references/figma_workflow.md`
 
 # WORKSPACE
