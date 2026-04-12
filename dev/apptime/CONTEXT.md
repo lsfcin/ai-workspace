@@ -9,14 +9,16 @@ Android only · min SDK 21 · Flutter (UI) + Kotlin (overlay + monitoring)
 ## Architecture
 
 `Flutter UI → SharedPreferences ← MonitoringService (Kotlin) → OverlayService (Kotlin)`
+`BootReceiver (Kotlin) → starts MonitoringService on device reboot`
 
 Full module breakdown, interfaces, and constraints → [SPECS.md](SPECS.md)
 Roadmap and pending milestones → [ROADMAP.md](ROADMAP.md)
+Completed milestones → [HISTORY.md](HISTORY.md)
 
 ## Status
 
 | Item | Value |
 |------|-------|
-| Phase | In dev — rewrite from scratch |
-| Last milestone | M6 Analytics ✓ |
-| Next | M7 Polish → v1.0 |
+| Phase | In dev |
+| Last milestone | M12 Permissions Onboarding ✓ |
+| Next | M13 Language Support |
