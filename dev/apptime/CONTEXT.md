@@ -11,6 +11,7 @@ Android only · min SDK 21 · Flutter (UI) + Kotlin (overlay + monitoring)
 `Flutter UI → SharedPreferences ← MonitoringService (Kotlin) → OverlayService (Kotlin)`
 
 Full module breakdown, interfaces, and constraints → SPECS.md
+Roadmap and pending milestones → ROADMAP.md
 
 ## Status
 
