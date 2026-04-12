@@ -1,59 +1,57 @@
-# Clief Notes — Referência de Método
+# Clief Notes — Method Reference
 
-Material do curso "The Foundation" por Jake Van Clief (Clief Notes / Skool).
-Base teórica para a arquitetura deste AI Workspace.
+Material from the "The Foundation" course by Jake Van Clief (Clief Notes / Skool).
+Theoretical foundation for the architecture of this AI Workspace.
 
-## Quando consultar
+## When to consult
 
-- Ao criar ou revisar CONTEXT.md, SPECS.md, routing tables
-- Ao avaliar se a estrutura de pastas está seguindo os princípios
-- Ao explicar o sistema para terceiros
+- When creating or reviewing CONTEXT.md, SPECS.md, routing tables
+- When evaluating whether the folder structure follows the principles
+- When explaining the system to others
 
-## Arquivos por prioridade
+## Files by priority
 
-### Essenciais (ler primeiro)
+### Essential (read first)
 
-| Arquivo | Conteúdo-chave |
-|---------|---------------|
-| 3.1 The Full Walkthrough | Sistema de 3 camadas: Map (CLAUDE.md) → Rooms (CONTEXT.md) → Tools. Routing table. Naming conventions |
-| 3.2 Customizing for Your Use Case | 3 exemplos reais (content creator, freelancer, developer). Como adaptar layers ao seu trabalho |
-| 3.3 Common Mistakes | 7 erros: ctx longo, sem routing table, ws demais, ctx sobre IA em vez do trabalho, ctx desatualizado, pasta flat, over-engineering |
-| 1.3 How to Structure Any Prompt | Framework 5 partes: Identity, Task, Context, Constraints, Output Format. Chunking |
+| File | Key content |
+|------|-------------|
+| 3.1 The Full Walkthrough | 3-layer system: Map (CLAUDE.md) → Rooms (CONTEXT.md) → Tools. Routing table. Naming conventions |
+| 3.2 Customizing for Your Use Case | 3 real examples (content creator, freelancer, developer). How to adapt layers to your work |
+| 3.3 Common Mistakes | 7 errors: long ctx, no routing table, too many workspaces, ctx about AI instead of work, stale ctx, flat folder, over-engineering |
+| 1.3 How to Structure Any Prompt | 5-part framework: Identity, Task, Context, Constraints, Output Format. Chunking |
 
-### Úteis (consultar quando relevante)
+### Useful (consult when relevant)
 
-| Arquivo | Conteúdo-chave |
-|---------|---------------|
-| 1.2 Your First Folder | Setup mínimo: 3 arquivos (CLAUDE.md, CONTEXT.md, REFERENCES.md) |
+| File | Key content |
+|------|-------------|
+| 1.2 Your First Folder | Minimal setup: 3 files (CLAUDE.md, CONTEXT.md, REFERENCES.md) |
 | 4.2 Claude Code in Practice | Loop Read→Think→Write→Check→Adjust. Desktop vs Code. Token math (200K ctx, ~2K/doc) |
-| 2.5 Clawdbot (Moltbot) | Orquestração vs inteligência. Framework 60/30/10. Onde vive o valor |
-| 2.6 Video as Code | Pipeline: spec.md → style guide → component registry → Remotion → CapCut. Separation of concerns aplicada a trabalho criativo. Constraints melhoram output |
-| 2.2 One Line of Python | 7 camadas: Python→bytecode→C→assembly→machine code→hardware→elétrons. Toda camada começou não-confiável e virou confiável via arquitetura. IA = próxima camada |
+| 2.5 Clawdbot (Moltbot) | Orchestration vs intelligence. 60/30/10 framework. Where value lives |
+| 2.6 Video as Code | Pipeline: spec.md → style guide → component registry → Remotion → CapCut. Separation of concerns applied to creative work. Constraints improve output |
+| 2.2 One Line of Python | 7 layers: Python→bytecode→C→assembly→machine code→hardware→electrons. Every layer started unreliable and became reliable via architecture. AI = next layer |
 
-### Contexto teórico (consultar para entendimento profundo)
+### Theoretical context (consult for deep understanding)
 
-| Arquivo | Conteúdo-chave |
-|---------|---------------|
-| 2.1 Video Text Guide | Mapa da série de 6 vídeos. Throughline: IA = próxima camada de 70+ anos de stack |
-| 2.3 How a 1953 Word Game Explains AI Memory | Context window = working memory. Em LLMs, código e dados são a mesma coisa. Por isso prompt injection funciona e por isso ctx estruturado importa |
-| 2.4 The Ladder That Explains Every AI Failure | Valor vive acima do que foi commoditizado. Não automatize na camada errada |
-| 1.1 What You Need | Setup: Claude account (Free/Pro/Max), VS Code ou Cursor, Node.js para Claude Code |
+| File | Key content |
+|------|-------------|
+| 2.1 Video Text Guide | Map of the 6-video series. Throughline: AI = next layer of 70+ years of stack |
+| 2.3 How a 1953 Word Game Explains AI Memory | Context window = working memory. In LLMs, code and data are the same thing. Why prompt injection works and why structured ctx matters |
+| 2.4 The Ladder That Explains Every AI Failure | Value lives above what was commoditized. Don't automate at the wrong layer |
+| 1.1 What You Need | Setup: Claude account (Free/Pro/Max), VS Code or Cursor, Node.js for Claude Code |
 
-### PDFs não mepeados neste arquivo de contexto
+### PDFs not mapped in this context file
 
 2.7, 4.1, 4.3, 4.4, 4.5, 5.1
 
-## Princípios-chave extraídos
+## Key extracted principles
 
-1. CLAUDE.md é mapa, não enciclopédia. Cabe em 1 tela
-2. Routing table: task → pasta → o que ler. Elimina ambiguidade
-3. CONTEXT.md descreve o trabalho, não a personalidade da IA (80/20)
-4. Comece mínimo, cresça por uso. 15 min na v1
-5. Trate ctx files como notas de trabalho — edite sempre
-6. Mais de 8-10 arquivos no mesmo nível → precisa de subpastas
-7. Se em dúvida se algo merece ws próprio → não merece. Subfolder
-8. IA é componente (10%), valor está na arquitetura ao redor (90%)
-9. Spec é o ponto de alavancagem — quanto mais preciso, melhor o output
-10. Constraints não limitam, focam. Style guide e component registry são constraints encodadas como arquivos
-
-# LATEST CHANGES
+1. CLAUDE.md is a map, not an encyclopedia. Fits on 1 screen
+2. Routing table: task → folder → what to read. Eliminates ambiguity
+3. CONTEXT.md describes the work, not the AI's personality (80/20)
+4. Start minimal, grow through use. 15 min on v1
+5. Treat ctx files as working notes — edit constantly
+6. More than 8-10 files at the same level → needs subfolders
+7. If unsure whether something deserves its own workspace → it doesn't. Use a subfolder
+8. AI is a component (10%), value lies in the surrounding architecture (90%)
+9. Spec is the leverage point — the more precise, the better the output
+10. Constraints don't limit, they focus. Style guide and component registry are constraints encoded as files
