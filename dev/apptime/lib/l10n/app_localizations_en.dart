@@ -160,4 +160,29 @@ class AppLocalizationsEn extends AppLocalizations {
   @override String get insightsTitle => 'Insights';
   @override String get tabAlerts => 'Alerts';
   @override String get tabSolutions => 'Solutions';
+
+  @override String get goalScreenTitle => 'Usage goals';
+  @override String get goalLevelSectionTitle => 'Goal level';
+  @override String get goalLevelNone => 'None';
+  @override String get goalLevelMinimal => 'Minimal';
+  @override String get goalLevelNormal => 'Normal';
+  @override String get goalLevelExtensive => 'Extensive';
+  @override String get goalRationaleNone =>
+      'Awareness only — no active feedback. Great for understanding '
+      'your patterns without pressure.';
+  @override String get goalRationaleMinimal =>
+      'Strict limits based on digital wellbeing research. '
+      'Recommended for users aiming to significantly cut screen time.';
+  @override String get goalRationaleNormal =>
+      'Balance between productivity and digital leisure. Aligns with '
+      'mental health expert recommendations for adults.';
+  @override String get goalRationaleExtensive =>
+      'Relaxed limits with active feedback. Ideal for users who want '
+      'monitoring without strict restrictions.';
+  @override String get goalPerAppTitle => 'Per-app goals';
+  @override String get goalPerAppSub =>
+      'Override the global goal for specific apps.';
+  @override String get goalOverrideGlobal => 'Global';
+  @override String get goalSettingsTile => 'Usage goals';
+  @override String get goalSettingsSub => 'Feedback levels and per-app limits';
 }

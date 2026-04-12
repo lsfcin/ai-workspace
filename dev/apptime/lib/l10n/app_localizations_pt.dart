@@ -163,4 +163,29 @@ class AppLocalizationsPt extends AppLocalizations {
   @override String get insightsTitle => 'Insights';
   @override String get tabAlerts => 'Alertas';
   @override String get tabSolutions => 'Soluções';
+
+  @override String get goalScreenTitle => 'Metas de uso';
+  @override String get goalLevelSectionTitle => 'Nível de meta';
+  @override String get goalLevelNone => 'Nenhum';
+  @override String get goalLevelMinimal => 'Mínimo';
+  @override String get goalLevelNormal => 'Normal';
+  @override String get goalLevelExtensive => 'Extensivo';
+  @override String get goalRationaleNone =>
+      'Apenas consciência — sem feedback ativo. Ideal para começar a '
+      'entender seus padrões sem pressão.';
+  @override String get goalRationaleMinimal =>
+      'Limites rigorosos baseados em pesquisas sobre bem-estar digital. '
+      'Recomendado para quem quer reduzir o uso significativamente.';
+  @override String get goalRationaleNormal =>
+      'Equilíbrio entre produtividade e lazer digital. Alinha-se com '
+      'recomendações de especialistas em saúde mental para adultos.';
+  @override String get goalRationaleExtensive =>
+      'Limites relaxados, mas com feedback ativo. Ideal para quem quer '
+      'monitorar sem restrições severas.';
+  @override String get goalPerAppTitle => 'Metas por app';
+  @override String get goalPerAppSub =>
+      'Substitua a meta global para apps específicos.';
+  @override String get goalOverrideGlobal => 'Global';
+  @override String get goalSettingsTile => 'Metas de uso';
+  @override String get goalSettingsSub => 'Níveis de feedback e limites por app';
 }

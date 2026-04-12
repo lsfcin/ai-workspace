@@ -59,20 +59,24 @@ Show a selector for the core/global goal level (choose how to display it, it can
 
 ### 4. Bullet ToDo List
 
-- StorageService: goal level + per-app goal level keys
-- GoalConfig data class + goal tier constants (thresholds per metric per level)
-- F.PM message tables (PT-BR + EN) for each trigger scenario
-- OverlayService: read goal level + current metrics, compute active feedbacks
-- OverlayService: F.BN — random breathing cycle (fade in/stay/fade out) with Handler
-- OverlayService: F.VW — scale factor on WindowManager params based on % of limit
-- OverlayService: F.PM — fade-in message overlay, 10s on, fade out, 1min cooldown
-- OverlayService: sleeping-hours and wakeup-window detection
-- OverlayService: per-app goal evaluation (app-specific limit overrides global)
-- GoalScreen (Flutter): level selector with research rationale + per-app goal table
-- l10n: add new strings for GoalScreen + F.PM messages to both ARB classes
-- Wire GoalScreen into SettingsScreen or NavigationBar
-- Commit all
+- x StorageService: goal level + per-app goal level keys
+- x GoalConfig data class + goal tier constants (thresholds per metric per level)
+- x F.PM message tables (PT-BR + EN) for each trigger scenario
+- x OverlayService: read goal level + current metrics, compute active feedbacks
+- x OverlayService: F.BN — random breathing cycle (fade in/stay/fade out) with Handler
+- x OverlayService: F.VW — scale factor on WindowManager params based on % of limit
+- x OverlayService: F.PM — fade-in message overlay, 10s on, fade out, 1min cooldown
+- x OverlayService: sleeping-hours and wakeup-window detection
+- x OverlayService: per-app goal evaluation (app-specific limit overrides global)
+- x GoalScreen (Flutter): level selector with research rationale + per-app goal table
+- x l10n: add new strings for GoalScreen + F.PM messages to both ARB classes
+- x Wire GoalScreen into SettingsScreen or NavigationBar
+- x Commit all
 
 ## M15 — Prepare to PlayStore submission
 
 . Review what we need to do for such purpose and write a list down here.
+
+## M16 — Small fixes
+
+- Avoid counting as opening automatic app reinitializations (e.g., app reinitializes after asking for permissions or after a small update). Can we set a tolerance margin of 1 or 2 seconds? Maybe a full minute is enough, as for example user is zapping between apps to copy and paste content, share, etc. So ideally we would start the tolerance timestamp on the app exit/unfocus, give 2 minutes, and if the app is opened within that 2-minute period we do not count as an extra opening. Is there a real/official/scientific metric for it, if there is you can use it, maybe reconfigure the tolerance margin, you decide.

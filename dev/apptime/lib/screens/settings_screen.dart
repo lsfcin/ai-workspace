@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
+import 'goal_screen.dart';
 import 'per_app_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -81,14 +82,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               children: [
                 ListTile(
-                  title: Text(l10n.dailyGoalTitle),
-                  subtitle: Text(
-                    _s.dailyGoalMinutes == 0
-                        ? l10n.noGoalSet
-                        : l10n.goalMinutesPerDay(_s.dailyGoalMinutes),
-                  ),
+                  title: Text(l10n.goalSettingsTile),
+                  subtitle: Text(l10n.goalSettingsSub),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () => _showGoalDialog(l10n),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => GoalScreen(storage: _s),
+                    ),
+                  ),
                 ),
                 ListTile(
                   title: Text(l10n.perAppControlTitle),
@@ -137,48 +138,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     widget.onLocaleChange(code);
   }
 
-  void _showGoalDialog(AppLocalizations l10n) {
-    int tempGoal = _s.dailyGoalMinutes;
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setLocal) => AlertDialog(
-          title: Text(l10n.dialogDailyGoalTitle),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                tempGoal == 0
-                    ? l10n.dialogNoGoal
-                    : l10n.dialogGoalMinDay(tempGoal),
-                style: Theme.of(ctx).textTheme.headlineSmall,
-              ),
-              Slider(
-                min: 0,
-                max: 360,
-                divisions: 24,
-                value: tempGoal.toDouble(),
-                onChanged: (v) => setLocal(() => tempGoal = v.round()),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(l10n.cancel),
-            ),
-            FilledButton(
-              onPressed: () {
-                setState(() => _s.dailyGoalMinutes = tempGoal);
-                Navigator.pop(ctx);
-              },
-              child: Text(l10n.save),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+
 }
 
 class _SectionHeader extends StatelessWidget {

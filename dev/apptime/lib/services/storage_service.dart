@@ -177,6 +177,20 @@ class StorageService {
     }
   }
 
+  // ── Goal level ──
+  // 0 = none, 1 = minimal, 2 = normal, 3 = extensive.
+  // Mirrors GoalLevel enum index.
+
+  int get goalLevel => _prefs.getInt('goal_level') ?? 0;
+  set goalLevel(int v) => _prefs.setInt('goal_level', v);
+
+  /// Per-app goal override. 0 = inherit global.
+  int getAppGoalLevel(String packageName) =>
+      _prefs.getInt('app_goal_$packageName') ?? 0;
+
+  void setAppGoalLevel(String packageName, int level) =>
+      _prefs.setInt('app_goal_$packageName', level);
+
   // ── Query helpers ──
 
   /// Retorna packages que têm dados de uso para a data dada (formato YYYY-MM-DD).

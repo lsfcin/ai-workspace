@@ -99,6 +99,7 @@ class MonitoringService : Service() {
             prefs.edit()
                 .putString("flutter.overlay_text", "")
                 .putBoolean("flutter.overlay_visible", false)
+                .remove("flutter.current_pkg")
                 .apply()
             return
         }
@@ -130,6 +131,9 @@ class MonitoringService : Service() {
         prefs.edit()
             .putString("flutter.overlay_text", overlayText)
             .putBoolean("flutter.overlay_visible", true)
+            // Expose raw values for OverlayService feedback evaluation
+            .putString("flutter.current_pkg", current)
+            .putLong("flutter.current_session_start_ms", sessionStartMs)
             .apply()
     }
 

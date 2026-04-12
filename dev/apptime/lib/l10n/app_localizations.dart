@@ -142,6 +142,23 @@ abstract class AppLocalizations {
   String get insightsTitle;
   String get tabAlerts;
   String get tabSolutions;
+
+  // ── GoalScreen ───────────────────────────────────────────────────────────────
+  String get goalScreenTitle;
+  String get goalLevelSectionTitle;
+  String get goalLevelNone;
+  String get goalLevelMinimal;
+  String get goalLevelNormal;
+  String get goalLevelExtensive;
+  String get goalRationaleNone;
+  String get goalRationaleMinimal;
+  String get goalRationaleNormal;
+  String get goalRationaleExtensive;
+  String get goalPerAppTitle;
+  String get goalPerAppSub;
+  String get goalOverrideGlobal;
+  String get goalSettingsTile;
+  String get goalSettingsSub;
 }
 
 // ─── Delegate ────────────────────────────────────────────────────────────────
