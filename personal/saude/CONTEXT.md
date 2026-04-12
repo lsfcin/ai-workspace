@@ -1,7 +1,5 @@
-﻿# Saude -- placeholder
+# Saude — placeholder
 
-> Contexto nao preenchido. Preencher quando este workspace for usado pela primeira vez.
+> Context not filled in. Fill when this workspace is first used.
 
-Registros de saude, calistenia, pesquisa baseada em evidencia. Arquivo: YYYY-MM-DD_saude.md.
-
-# LATEST CHANGES
+Health records, calisthenics, evidence-based research. File naming: YYYY-MM-DD_saude.md.
