@@ -55,8 +55,13 @@ to the interval since the last write (≤ the watchdog period, currently 30s).
 | `hourly_unlocks_{date}_{h}` | Int | Device unlocks in hour h |
 | `session_bucket_{i}_{date}` | Int | Session count for bucket i (0=<1m 1=1-5m 2=5-15m 3=>15m) |
 | `disabled_apps` | StringList | Packages with overlay disabled |
-| `daily_goal_minutes` | Int | User's daily screen-time goal |
+| `daily_goal_minutes` | Int | Legacy per-device goal (superseded by `goal_level`) |
 | `onboarding_done` | Boolean | Whether onboarding has been completed |
+| `language_code` | String? | `null`=system · `"pt"` · `"en"` |
+| `goal_level` | Int | 0=none 1=minimal 2=normal 3=extensive |
+| `app_goal_{pkg}` | Int | Per-app goal override; 0=inherit global |
+| `current_pkg` | String | Foreground package right now (written each tick) |
+| `current_session_start_ms` | Long | Epoch ms when current session began |
 
 **Overlay display**
 - Phase 0 (first 5s after open): open count → `"13x"`
