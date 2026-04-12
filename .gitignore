@@ -47,6 +47,8 @@
 !dev/apptime/ROADMAP.md
 !dev/apptime/lib/
 !dev/apptime/lib/**
+!dev/apptime/lib/data/
+!dev/apptime/lib/data/**
 !dev/apptime/android/app/src/main/kotlin/
 !dev/apptime/android/app/src/main/kotlin/**
 !dev/apptime/android/app/src/main/AndroidManifest.xml
