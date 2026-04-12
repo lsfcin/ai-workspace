@@ -53,6 +53,33 @@ class StorageService {
   int getDeviceDailyMs({String? date}) =>
       _prefs.getInt('device_daily_ms_${date ?? _todayKey()}') ?? 0;
 
+  // ── Hourly breakdown ──
+
+  int getDeviceHourlyMs({required String date, required int hour}) =>
+      _prefs.getInt('device_hourly_ms_${date}_$hour') ?? 0;
+
+  int getHourlyUnlocks({required String date, required int hour}) =>
+      _prefs.getInt('hourly_unlocks_${date}_$hour') ?? 0;
+
+  int getHourlyOpens(String packageName, {required String date, required int hour}) =>
+      _prefs.getInt('hourly_opens_${packageName}_${date}_$hour') ?? 0;
+
+  /// 24-element list — index = hour of day (0–23), value = device ms in that hour.
+  List<int> getDeviceHourlyBreakdown(String date) =>
+      List.generate(24, (h) => getDeviceHourlyMs(date: date, hour: h));
+
+  /// 24-element list — index = hour of day (0–23), value = unlock count.
+  List<int> getHourlyUnlockBreakdown(String date) =>
+      List.generate(24, (h) => getHourlyUnlocks(date: date, hour: h));
+
+  // ── Session duration buckets ──
+  // Bucket 0: < 1 min · 1: 1–5 min · 2: 5–15 min · 3: > 15 min
+
+  /// Returns [bucket0, bucket1, bucket2, bucket3] counts for the given date.
+  List<int> getSessionBuckets({String? date}) =>
+      List.generate(4, (i) =>
+          _prefs.getInt('session_bucket_${i}_${date ?? _todayKey()}') ?? 0);
+
   // ── Rolling 24h helpers ──
   // Since data is stored per calendar day we approximate the rolling 24h window
   // as: yesterday's total * fraction still within the window + all of today's total.

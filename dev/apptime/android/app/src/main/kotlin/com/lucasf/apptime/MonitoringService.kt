@@ -30,9 +30,14 @@ class MonitoringService : Service() {
     private val unlockReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action == Intent.ACTION_USER_PRESENT) {
-                val key = "flutter.unlock_count_${today()}"
-                val current = prefs.getInt(key, 0)
-                prefs.edit().putInt(key, current + 1).apply()
+                val date = today()
+                val hour = currentHour()
+                // Daily total
+                val key = "flutter.unlock_count_${date}"
+                prefs.edit().putInt(key, prefs.getInt(key, 0) + 1).apply()
+                // Hourly count
+                val hourKey = "flutter.hourly_unlocks_${date}_${hour}"
+                prefs.edit().putInt(hourKey, prefs.getInt(hourKey, 0) + 1).apply()
             }
         }
     }
@@ -163,20 +168,43 @@ class MonitoringService : Service() {
             c.get(java.util.Calendar.MONTH) + 1, c.get(java.util.Calendar.DAY_OF_MONTH))
     }
 
-    private fun accumulateDailyMs(pkg: String, duration: Long) {
-        val key = "flutter.daily_ms_${pkg}_${today()}"
-        val current = prefs.getLong(key, 0L)
-        prefs.edit().putLong(key, current + duration).apply()
+    private fun currentHour(): Int =
+        java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
 
-        val deviceKey = "flutter.device_daily_ms_${today()}"
-        val deviceCurrent = prefs.getLong(deviceKey, 0L)
-        prefs.edit().putLong(deviceKey, deviceCurrent + duration).apply()
+    private fun accumulateDailyMs(pkg: String, duration: Long) {
+        val date = today()
+        val hour = currentHour()
+
+        // Daily totals (per-app + device)
+        val key = "flutter.daily_ms_${pkg}_${date}"
+        prefs.edit().putLong(key, prefs.getLong(key, 0L) + duration).apply()
+        val deviceKey = "flutter.device_daily_ms_${date}"
+        prefs.edit().putLong(deviceKey, prefs.getLong(deviceKey, 0L) + duration).apply()
+
+        // Hourly breakdown (per-app + device)
+        val hourKey = "flutter.hourly_ms_${pkg}_${date}_${hour}"
+        prefs.edit().putLong(hourKey, prefs.getLong(hourKey, 0L) + duration).apply()
+        val deviceHourKey = "flutter.device_hourly_ms_${date}_${hour}"
+        prefs.edit().putLong(deviceHourKey, prefs.getLong(deviceHourKey, 0L) + duration).apply()
+
+        // Session duration bucket
+        val bucketIdx = when {
+            duration < 60_000L  -> 0   // < 1 min
+            duration < 300_000L -> 1   // 1–5 min
+            duration < 900_000L -> 2   // 5–15 min
+            else                -> 3   // > 15 min
+        }
+        val bucketKey = "flutter.session_bucket_${bucketIdx}_${date}"
+        prefs.edit().putInt(bucketKey, prefs.getInt(bucketKey, 0) + 1).apply()
     }
 
     private fun incrementOpenCount(pkg: String) {
-        val key = "flutter.open_count_${pkg}_${today()}"
-        val current = prefs.getInt(key, 0)
-        prefs.edit().putInt(key, current + 1).apply()
+        val date = today()
+        val hour = currentHour()
+        val key = "flutter.open_count_${pkg}_${date}"
+        prefs.edit().putInt(key, prefs.getInt(key, 0) + 1).apply()
+        val hourKey = "flutter.hourly_opens_${pkg}_${date}_${hour}"
+        prefs.edit().putInt(hourKey, prefs.getInt(hourKey, 0) + 1).apply()
     }
 
     private fun getDailyMs(pkg: String): Long =
