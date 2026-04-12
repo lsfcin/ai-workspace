@@ -79,7 +79,9 @@ to the interval since the last write (≤ the watchdog period, currently 30s).
 | `HomeScreen` | Rotating "Insight do dia" card + monitoring summary card |
 | `AnalyticsScreen` | 3-tab layout: 24h (sleep hygiene, impulsivity, focus, phubbing, opportunity cost) · 7d (trends, dopamine drain, engagement balance) · 30d (line chart, weekend spike heatmap) |
 | `InsightsScreen` | 2-tab layout: Alertas + Soluções — 40 PT-BR research-backed cards |
-| `SettingsScreen` | Overlay appearance, daily goal, per-app toggle |
+| `SettingsScreen` | Overlay appearance, per-app toggle, Goals tile |
+| `GoalScreen` | Global goal level selector (4 cards with rationale + threshold chips) + per-app goal override dropdown table |
+| `PerAppScreen` | Enable/disable overlay per package |
 
 ## Features
 
