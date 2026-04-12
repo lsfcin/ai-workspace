@@ -243,7 +243,7 @@ Reference: Pratt Institute Digital Wellbeing Journey Guidelines.
 
 Dynamic overlay behavior
 
-## M13 — Permissions Onboarding
+## M13 — Permissions Onboarding (done)
 
 . Define the best way the first-use should happen, how users should be directed towards allowing the permissions, popups? automatically?
 

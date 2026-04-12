@@ -155,6 +155,11 @@ class StorageService {
     disabledApps = apps;
   }
 
+  // ── Onboarding ──
+
+  bool get onboardingDone => _prefs.getBool('onboarding_done') ?? false;
+  set onboardingDone(bool v) => _prefs.setBool('onboarding_done', v);
+
   // ── Daily goal ──
 
   int get dailyGoalMinutes => _prefs.getInt('daily_goal_minutes') ?? 0;
