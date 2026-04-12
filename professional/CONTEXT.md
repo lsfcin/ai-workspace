@@ -1,7 +1,5 @@
-﻿# Academia -- placeholder
+# Professional — Academia
 
-> Contexto nao preenchido. Preencher quando este workspace for usado pela primeira vez.
+> Context not filled in. Fill when this workspace is first used.
 
-Subareas: IA4GOOD, IHM, slides.
-
-# LATEST CHANGES
+Sub-areas: IA4GOOD, IHM, slides.
