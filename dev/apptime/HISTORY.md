@@ -73,3 +73,21 @@ Industry-standard i18n via a manual `AppLocalizations` class (same interface as 
 - Auto-detects system locale on first launch (PT-BR unless system is `en`)
 - Settings → Language section (`RadioGroup`: System / Português / English); change is immediate (no restart)
 - All 6 screens migrated off hardcoded strings
+
+## M14 — Goals and Dynamic Overlay ✓
+
+**Goal tiers (Kotlin + Dart mirrors):**
+- `GoalThresholds.kt` + `goal_config.dart`: 3 tiers (minimal/normal/extensive) × 6 metrics (phone time, app time, unlocks, session, sleep cutoff, wakeup hour)
+- `PmMessages.kt`: 6 pre-defined PT-BR/EN message scenarios (phoneTimeExceeded, appLimitExceeded, sessionExceeded, sleepingHours, wakeupSocial, unlockExceeded)
+
+**Dynamic Overlay feedbacks (OverlayService rewrite):**
+- **F.BN Breathing Nudge:** random fade-in (2–3s) / stay (1–3s) / fade-out (2–3s) cycle using Handler-chained `ObjectAnimator`; activates when usage ≥ 100% of limit
+- **F.VW Visual Weight:** `scaleX/scaleY` grows from 1.0 to 1.2 as usage climbs from 80% to 200% of limit
+- **F.PM Personalized Message:** second `WindowManager` overlay at `Gravity.CENTER`; 3s fade-in → 10s on → 3s fade-out → 60s cooldown; triggers when usage doubles the limit, or immediately for sleep/wakeup/unlock scenarios
+- Feedback evaluation runs every 5 poll ticks (~2.5s); per-app goal overrides global
+
+**Flutter UI:**
+- `GoalScreen`: 4 selectable cards (None/Minimal/Normal/Extensive) with research rationale and threshold chips; per-app goal dropdown table for all apps seen in last 7 days
+- `SettingsScreen`: Goals tile navigates to `GoalScreen` (replaces old daily-goal dialog)
+- `StorageService`: `goal_level` Int + `app_goal_{pkg}` Int per-app override keys
+- l10n (PT+EN): 15 new GoalScreen strings in all three l10n files
