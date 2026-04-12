@@ -1,33 +1,33 @@
 # Voti
 
-App que permite cidadãos entenderem o match entre suas posições e as votações reais de políticos.
+App allowing citizens to understand the match between their positions and actual politicians' voting records.
 
-## Escopo
+## Scope
 
-| Aspecto | Detalhe |
-|---------|---------|
-| Objetivo | Transparência política via matching cidadão ↔ parlamentar |
-| Público | Cidadãos brasileiros, foco inicial em Recife/PE |
-| Fase | Planejamento — definindo MVP |
-| Plataforma alvo | Mobile (React Native) + Web |
+| Aspect | Detail |
+|--------|--------|
+| Goal | Political transparency via citizen ↔ representative matching |
+| Audience | Brazilian citizens, initial focus on Recife/PE |
+| Phase | Planning — defining MVP |
+| Target platform | Mobile (React Native) + Web |
 
-## Conceito do MVP
+## MVP concept
 
-- Usuário responde questionário sobre temas votados (sim/não/neutro)
-- Sistema compara com votações reais de parlamentares (dados abertos)
-- Gera ranking de match por parlamentar
-- Visualização simples: % de alinhamento + detalhamento por tema
+- User answers a questionnaire on voted topics (yes/no/neutral)
+- System compares against real representatives' votes (open data)
+- Generates a match ranking per representative
+- Simple visualization: % alignment + breakdown by topic
 
-## Fontes de dados
+## Data sources
 
 - Câmara dos Deputados API (dados.camara.leg.br)
-- Senado (dados abertos)
-- TSE (candidatos e partidos)
+- Senado (open data)
+- TSE (candidates and parties)
 
-## Decisões pendentes
+## Pending decisions
 
-- [ ] Definir stack BE (FastAPI vs Node)
-- [ ] Definir como categorizar votações em temas compreensíveis
-- [ ] Definir escopo do MVP (só federal? inclui estadual?)
+- [ ] Define BE stack (FastAPI vs Node)
+- [ ] Define how to categorize votes into understandable topics
+- [ ] Define MVP scope (federal only? include state level?)
 
-# LATEST CHANGES
+Specs → [SPECS.md](SPECS.md)
