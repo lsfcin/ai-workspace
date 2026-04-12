@@ -1,7 +1,5 @@
-﻿# Casa -- placeholder
+# Casa — placeholder
 
-> Contexto nao preenchido. Preencher quando este workspace for usado pela primeira vez.
+> Context not filled in. Fill when this workspace is first used.
 
-Construcao em Recife. Ver SPECS.md para detalhes.
-
-# LATEST CHANGES
+House construction in Recife. See [SPECS.md](SPECS.md) for details.
