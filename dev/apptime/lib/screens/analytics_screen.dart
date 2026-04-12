@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../l10n/app_localizations.dart';
 import '../services/analytics_service.dart';
 import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
@@ -46,15 +47,16 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Análise'),
+        title: Text(l10n.analysisTitle),
         bottom: TabBar(
           controller: _tabs,
-          tabs: const [
-            Tab(text: '24h'),
-            Tab(text: '7 dias'),
-            Tab(text: '30 dias'),
+          tabs: [
+            Tab(text: l10n.tab24h),
+            Tab(text: l10n.tab7d),
+            Tab(text: l10n.tab30d),
           ],
         ),
       ),
@@ -122,8 +124,7 @@ Widget _analysisCard({
   );
 }
 
-Widget _noData(BuildContext context, [String msg = 'Sem dados ainda.']) =>
-    Center(
+Widget _noData(BuildContext context, String msg) => Center(
       child: Text(msg,
           style: Theme.of(context)
               .textTheme
@@ -140,6 +141,7 @@ class _Tab24h extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final today = _todayStr();
     final summaries = analytics.getSummaries(1);
     final summary = summaries.isEmpty ? null : summaries.first;
@@ -154,106 +156,88 @@ class _Tab24h extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.md),
       children: [
-        // Summary row
         Row(children: [
-          Expanded(child: _StatCard(label: 'Uso total', value: _fmtDuration(totalMs))),
+          Expanded(child: _StatCard(label: l10n.statTotalUsage, value: _fmtDuration(totalMs))),
           const SizedBox(width: AppSpacing.sm),
-          Expanded(child: _StatCard(label: 'Desbloqueios', value: '$unlocks')),
+          Expanded(child: _StatCard(label: l10n.statUnlocks, value: '$unlocks')),
         ]),
         const SizedBox(height: AppSpacing.md),
 
-        // Block 1 — Sleep Hygiene
         _analysisCard(
           context: context,
           icon: Icons.bedtime_outlined,
-          title: 'Higiene do sono',
+          title: l10n.blockSleepTitle,
           chartHeight: 150,
           chart: hasHourly
               ? _HourlyBarChart(values: hourlyMs, highlightHours: {22, 23, 0, 1, 2, 3, 4, 5})
-              : _noData(context, 'Coletando dados — volte mais tarde.'),
-          text: _sleepText(hourlyMs, totalMs),
+              : _noData(context, l10n.collectingData),
+          text: _sleepText(l10n, hourlyMs, totalMs),
         ),
 
-        // Block 2 — Impulsivity
         _analysisCard(
           context: context,
           icon: Icons.bolt_outlined,
-          title: 'Índice de impulsividade',
+          title: l10n.blockImpulsivityTitle,
           chart: hasHourly
               ? _HourlyBarChart(values: hourlyUnlocks, color: AppColors.error)
-              : _noData(context, 'Coletando dados — volte mais tarde.'),
-          text: 'Você desbloqueou o celular $unlocks vezes hoje. '
-              'A frequência de desbloqueios é um preditor mais forte de ansiedade '
-              'e baixa qualidade de sono do que o tempo total de tela.',
+              : _noData(context, l10n.collectingData),
+          text: l10n.blockImpulsivityText(unlocks),
         ),
 
-        // Block 3 — Focus Fragmentation
         _analysisCard(
           context: context,
           icon: Icons.grid_view_outlined,
-          title: 'Fragmentação do foco',
+          title: l10n.blockFocusTitle,
           chart: sessionBuckets.any((v) => v > 0)
               ? _SessionHistogram(buckets: sessionBuckets)
-              : _noData(context, 'Coletando dados — volte mais tarde.'),
-          text: _focusText(sessionBuckets),
+              : _noData(context, l10n.collectingData),
+          text: _focusText(l10n, sessionBuckets),
         ),
 
-        // Block 7 — Opportunity Cost
         _analysisCard(
           context: context,
           icon: Icons.hourglass_empty_outlined,
-          title: 'Custo de oportunidade',
+          title: l10n.blockOpportunityTitle,
           chartHeight: 80,
-          chart: _OpportunityCostWidget(totalMs: totalMs),
-          text: 'Cada hora de uso passivo é uma hora que poderia ser '
-              'dedicada a sono reparador, exercício ou conexão presencial.',
+          chart: _OpportunityCostWidget(totalMs: totalMs, l10n: l10n),
+          text: l10n.blockOpportunityText,
         ),
 
-        // Block 9 — Phubbing
         _analysisCard(
           context: context,
           icon: Icons.group_outlined,
-          title: 'Alerta de phubbing',
+          title: l10n.blockPhubbingTitle,
           chart: hasHourly
               ? _HourlyBarChart(
                   values: hourlyUnlocks,
                   highlightHours: {12, 13, 14, 19, 20, 21},
                   color: AppColors.primary,
                 )
-              : _noData(context, 'Coletando dados — volte mais tarde.'),
-          text: _phubbingText(hourlyUnlocks),
+              : _noData(context, l10n.collectingData),
+          text: _phubbingText(l10n, hourlyUnlocks),
         ),
       ],
     );
   }
 
-  String _sleepText(List<int> hourly, int totalMs) {
+  String _sleepText(AppLocalizations l10n, List<int> hourly, int totalMs) {
     final lateMs = [22, 23, 0, 1, 2, 3, 4, 5]
         .fold<int>(0, (sum, h) => sum + hourly[h]);
     final pct = totalMs > 0 ? (lateMs / totalMs * 100).round() : 0;
-    return 'Seu uso entre 22h e 6h representa $pct% do tempo total. '
-        'A luz azul nesse período pode atrasar a secreção de melatonina '
-        'em até 30 minutos, prejudicando a fase REM do sono.';
+    return l10n.blockSleepText(pct);
   }
 
-  String _focusText(List<int> buckets) {
+  String _focusText(AppLocalizations l10n, List<int> buckets) {
     final total = buckets.fold(0, (a, b) => a + b);
-    if (total == 0) return 'Nenhuma sessão registrada ainda.';
-    final micro = buckets[0];
-    final pct = (micro / total * 100).round();
-    return '$pct% das suas sessões duraram menos de 60 segundos. '
-        'Esse "hábito de checar" fragmenta a atenção e impede o estado de '
-        'foco profundo (Flow). Usuários com alta fragmentação levam até 20% '
-        'mais tempo para completar tarefas complexas.';
+    if (total == 0) return l10n.noSessions;
+    final pct = (buckets[0] / total * 100).round();
+    return l10n.blockFocusText(pct);
   }
 
-  String _phubbingText(List<int> hourlyUnlocks) {
+  String _phubbingText(AppLocalizations l10n, List<int> hourlyUnlocks) {
     final mealUnlocks = [12, 13, 14, 19, 20, 21]
         .fold<int>(0, (sum, h) => sum + hourlyUnlocks[h]);
-    return 'Você desbloqueou o celular $mealUnlocks vezes nos horários de '
-        'almoço e jantar. O phubbing — ignorar quem está presente para '
-        'olhar o celular — enfraquece laços sociais e aumenta sentimentos '
-        'de solidão a longo prazo.';
+    return l10n.blockPhubbingText(mealUnlocks);
   }
 }
 
@@ -266,6 +250,7 @@ class _Tab7d extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final summaries = analytics.getSummaries(7);
     final totalMs = summaries.fold<int>(0, (acc, s) => acc + s.totalMs);
     final totalUnlocks = summaries.fold<int>(0, (acc, s) => acc + s.unlockCount);
@@ -286,10 +271,8 @@ class _Tab7d extends StatelessWidget {
         .fold<int>(0, (s, a) => s + a.ms);
     final activeMs = totalMs - passiveMs;
 
-    // 7d daily bars
     final dailyBars = summaries.reversed.toList();
 
-    // Trend vs previous week
     final prevSummaries = _prevWeekSummaries();
     final prevAvgMs = prevSummaries.isEmpty
         ? 0
@@ -303,15 +286,14 @@ class _Tab7d extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.md),
       children: [
         Row(children: [
-          Expanded(child: _StatCard(label: 'Tempo total', value: _fmtDuration(totalMs))),
+          Expanded(child: _StatCard(label: l10n.statTotalTime, value: _fmtDuration(totalMs))),
           const SizedBox(width: AppSpacing.sm),
-          Expanded(child: _StatCard(label: 'Desbloqueios', value: '$totalUnlocks')),
+          Expanded(child: _StatCard(label: l10n.statUnlocks, value: '$totalUnlocks')),
         ]),
         const SizedBox(height: AppSpacing.md),
 
-        // Daily bar chart
         if (dailyBars.isNotEmpty) ...[
-          Text('Uso diário', style: Theme.of(context).textTheme.titleSmall),
+          Text(l10n.dailyUsageLabel, style: Theme.of(context).textTheme.titleSmall),
           const SizedBox(height: AppSpacing.sm),
           SizedBox(
             height: 120,
@@ -335,62 +317,54 @@ class _Tab7d extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
         ],
 
-        // Block 5 — Dopamine Drain
         _analysisCard(
           context: context,
           icon: Icons.psychology_outlined,
-          title: 'Dreno de dopamina',
+          title: l10n.blockDopamineTitle,
           chartHeight: topFive.isEmpty ? 60 : (topFive.length * 44.0),
           chart: topFive.isEmpty
-              ? _noData(context)
+              ? _noData(context, l10n.noData)
               : _HorizontalAppBars(apps: topFive, maxMs: topFive.first.ms),
           text: topFive.isEmpty
-              ? 'Nenhum dado ainda.'
-              : 'O app "${topFive.first.packageName.split('.').last}" foi seu '
-                  'maior gatilho: ${topFive.first.opens} aberturas em 7 dias. '
-                  'Apps de scroll infinito são projetados como "caça-níqueis" — '
-                  'recompensa intermitente que cria ciclos compulsivos difíceis de quebrar.',
+              ? l10n.blockDopamineNoData
+              : l10n.blockDopamineText(
+                  topFive.first.packageName.split('.').last,
+                  topFive.first.opens,
+                ),
         ),
 
-        // Block 4 — Engagement Balance
         _analysisCard(
           context: context,
           icon: Icons.balance_outlined,
-          title: 'Balanço de engajamento',
+          title: l10n.blockEngagementTitle,
           chartHeight: 160,
           chart: (passiveMs + activeMs) > 0
-              ? _DonutChart(passiveMs: passiveMs, activeMs: activeMs)
-              : _noData(context),
-          text: _engagementText(passiveMs, totalMs),
+              ? _DonutChart(passiveMs: passiveMs, activeMs: activeMs, l10n: l10n)
+              : _noData(context, l10n.noData),
+          text: _engagementText(l10n, passiveMs, totalMs),
         ),
 
-        // Block 6 — Trend
         _analysisCard(
           context: context,
           icon: Icons.trending_down_outlined,
-          title: 'Tendência semanal',
+          title: l10n.blockTrendTitle,
           chart: _TrendBars(
             thisWeek: dailyBars.map((s) => s.totalMs).toList(),
             prevAvgMs: prevAvgMs,
+            prevWeekLabel: l10n.prevWeekLabel,
           ),
           text: trendPct <= 0
-              ? 'Você reduziu seu uso em ${trendPct.abs()}% vs. a semana anterior. '
-                  'Manter essa tendência por 21 dias é o marco científico '
-                  'para a reformulação de hábitos neurais.'
-              : 'Seu uso aumentou $trendPct% vs. a semana anterior. '
-                  'Tente identificar os gatilhos que levaram ao aumento.',
+              ? l10n.blockTrendReduced(trendPct.abs())
+              : l10n.blockTrendIncreased(trendPct),
         ),
       ],
     );
   }
 
-  String _engagementText(int passiveMs, int totalMs) {
-    if (totalMs == 0) return 'Sem dados ainda.';
+  String _engagementText(AppLocalizations l10n, int passiveMs, int totalMs) {
+    if (totalMs == 0) return l10n.blockEngagementNoData;
     final pct = (passiveMs / totalMs * 100).round();
-    return 'Seu uso foi $pct% passivo esta semana. '
-        'O consumo passivo de feed (sem interagir) está ligado a ruminação '
-        'e sintomas de depressão, enquanto o uso ativo (mensagens reais) '
-        'pode ter efeito protetor na saúde mental.';
+    return l10n.blockEngagementText(pct);
   }
 
   List<int> _prevWeekSummaries() {
@@ -411,13 +385,13 @@ class _Tab30d extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final summaries = analytics.getSummaries(30);
     final totalMs = summaries.fold<int>(0, (acc, s) => acc + s.totalMs);
     final totalUnlocks = summaries.fold<int>(0, (acc, s) => acc + s.unlockCount);
 
     final dailyMs = summaries.reversed.map((s) => s.totalMs).toList();
 
-    // Weekend spike: Sat (6) and Sun (7) vs weekdays
     final today = DateTime.now();
     int weekendMs = 0, weekdayMs = 0, weekendDays = 0, weekdayDays = 0;
     for (int i = 0; i < summaries.length; i++) {
@@ -441,42 +415,34 @@ class _Tab30d extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.md),
       children: [
         Row(children: [
-          Expanded(child: _StatCard(label: 'Tempo total', value: _fmtDuration(totalMs))),
+          Expanded(child: _StatCard(label: l10n.statTotalTime, value: _fmtDuration(totalMs))),
           const SizedBox(width: AppSpacing.sm),
-          Expanded(child: _StatCard(label: 'Desbloqueios', value: '$totalUnlocks')),
+          Expanded(child: _StatCard(label: l10n.statUnlocks, value: '$totalUnlocks')),
         ]),
         const SizedBox(height: AppSpacing.md),
 
-        // Block 6 — 30d trend line
         _analysisCard(
           context: context,
           icon: Icons.show_chart_outlined,
-          title: 'Tendência 30 dias',
+          title: l10n.blockTrend30Title,
           chartHeight: 160,
           chart: dailyMs.isNotEmpty
               ? _LineChart30d(dailyMs: dailyMs)
-              : _noData(context),
-          text: 'Manter uma tendência de queda por 21 dias consecutivos é '
-              'o marco científico para a reformulação de circuitos de hábito '
-              'e fortalecimento do córtex pré-frontal.',
+              : _noData(context, l10n.noData),
+          text: l10n.blockTrend30Text,
         ),
 
-        // Block 8 — Weekend Spike / Heatmap
         _analysisCard(
           context: context,
           icon: Icons.beach_access_outlined,
-          title: 'Padrão de fim de semana',
+          title: l10n.blockWeekendTitle,
           chartHeight: 180,
           chart: summaries.isNotEmpty
               ? _HeatmapCalendar(summaries: summaries, storage: storage)
-              : _noData(context),
+              : _noData(context, l10n.noData),
           text: weekendSpike > 0
-              ? 'Seu uso aumenta ${weekendSpike.abs()}% nos finais de semana. '
-                  'Embora pareça lazer, o uso excessivo nos dias de descanso '
-                  'impede a recuperação cognitiva do estresse semanal.'
-              : 'Seu uso no fim de semana é similar ao dos dias úteis. '
-                  'Isso pode indicar um padrão de uso crônico ou '
-                  'uma rotina saudável e consistente.',
+              ? l10n.blockWeekendSpikeText(weekendSpike.abs())
+              : l10n.blockWeekendNoSpike,
         ),
       ],
     );
@@ -485,7 +451,6 @@ class _Tab30d extends StatelessWidget {
 
 // ─── Chart widgets ────────────────────────────────────────────────────────────
 
-/// 24-bar chart colored by hour; [highlightHours] shown in a different color.
 class _HourlyBarChart extends StatelessWidget {
   const _HourlyBarChart({
     required this.values,
@@ -526,8 +491,7 @@ class _HourlyBarChart extends StatelessWidget {
             getTitlesWidget: (v, _) {
               final h = v.toInt();
               if (h % 6 != 0) return const SizedBox.shrink();
-              return Text('${h}h',
-                  style: const TextStyle(fontSize: 9));
+              return Text('${h}h', style: const TextStyle(fontSize: 9));
             },
           ),
         ),
@@ -538,7 +502,6 @@ class _HourlyBarChart extends StatelessWidget {
   }
 }
 
-/// 4-bar histogram: <1min, 1-5min, 5-15min, >15min
 class _SessionHistogram extends StatelessWidget {
   const _SessionHistogram({required this.buckets});
   final List<int> buckets;
@@ -551,11 +514,10 @@ class _SessionHistogram extends StatelessWidget {
     return BarChart(BarChartData(
       maxY: maxVal > 0 ? maxVal * 1.2 : 1,
       barGroups: List.generate(4, (i) {
-        final isAlert = i == 0; // < 1 min = "micro-usage" alert
         return BarChartGroupData(x: i, barRods: [
           BarChartRodData(
             toY: buckets[i].toDouble(),
-            color: isAlert ? AppColors.error : AppColors.primary,
+            color: i == 0 ? AppColors.error : AppColors.primary,
             width: 36,
             borderRadius: BorderRadius.circular(4),
           ),
@@ -582,10 +544,10 @@ class _SessionHistogram extends StatelessWidget {
   }
 }
 
-/// Text-only infographic for opportunity cost.
 class _OpportunityCostWidget extends StatelessWidget {
-  const _OpportunityCostWidget({required this.totalMs});
+  const _OpportunityCostWidget({required this.totalMs, required this.l10n});
   final int totalMs;
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
@@ -596,9 +558,9 @@ class _OpportunityCostWidget extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        _CostItem(icon: Icons.menu_book_outlined, label: '$pages páginas'),
-        _CostItem(icon: Icons.directions_walk_outlined, label: '${km}km'),
-        _CostItem(icon: Icons.airline_seat_flat_outlined, label: '$sleepCycles ciclos'),
+        _CostItem(icon: Icons.menu_book_outlined, label: l10n.pagesLabel(pages)),
+        _CostItem(icon: Icons.directions_walk_outlined, label: l10n.kmLabel(km)),
+        _CostItem(icon: Icons.airline_seat_flat_outlined, label: l10n.sleepCyclesLabel(sleepCycles)),
       ],
     );
   }
@@ -619,7 +581,6 @@ class _CostItem extends StatelessWidget {
   }
 }
 
-/// Horizontal bar chart for top apps by opens.
 class _HorizontalAppBars extends StatelessWidget {
   const _HorizontalAppBars({required this.apps, required this.maxMs});
   final List<_AppAgg> apps;
@@ -653,8 +614,7 @@ class _HorizontalAppBars extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            Text('${a.opens}×',
-                style: Theme.of(context).textTheme.bodySmall),
+            Text('${a.opens}×', style: Theme.of(context).textTheme.bodySmall),
           ]),
         );
       }).toList(),
@@ -662,11 +622,15 @@ class _HorizontalAppBars extends StatelessWidget {
   }
 }
 
-/// Donut chart: active vs passive.
 class _DonutChart extends StatelessWidget {
-  const _DonutChart({required this.passiveMs, required this.activeMs});
+  const _DonutChart({
+    required this.passiveMs,
+    required this.activeMs,
+    required this.l10n,
+  });
   final int passiveMs;
   final int activeMs;
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
@@ -679,14 +643,14 @@ class _DonutChart extends StatelessWidget {
             PieChartSectionData(
               value: passiveMs.toDouble(),
               color: AppColors.error,
-              title: 'Passivo',
+              title: l10n.passive,
               radius: 48,
               titleStyle: const TextStyle(fontSize: 9, color: Colors.white),
             ),
             PieChartSectionData(
               value: activeMs.toDouble(),
               color: AppColors.success,
-              title: 'Ativo',
+              title: l10n.active,
               radius: 48,
               titleStyle: const TextStyle(fontSize: 9, color: Colors.white),
             ),
@@ -694,11 +658,15 @@ class _DonutChart extends StatelessWidget {
         )),
       ),
       const SizedBox(width: AppSpacing.md),
-      Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-        _Legend(color: AppColors.error, label: 'Passivo (${_fmtDuration(passiveMs)})'),
-        const SizedBox(height: 8),
-        _Legend(color: AppColors.success, label: 'Ativo (${_fmtDuration(activeMs)})'),
-      ]),
+      Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _Legend(color: AppColors.error, label: '${l10n.passive} (${_fmtDuration(passiveMs)})'),
+          const SizedBox(height: 8),
+          _Legend(color: AppColors.success, label: '${l10n.active} (${_fmtDuration(activeMs)})'),
+        ],
+      ),
     ]);
   }
 }
@@ -711,22 +679,30 @@ class _Legend extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(mainAxisSize: MainAxisSize.min, children: [
-      Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+      Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
       const SizedBox(width: 4),
       Text(label, style: Theme.of(context).textTheme.bodySmall),
     ]);
   }
 }
 
-/// Overlaid bars: each day this week + a horizontal reference line for prev avg.
 class _TrendBars extends StatelessWidget {
-  const _TrendBars({required this.thisWeek, required this.prevAvgMs});
+  const _TrendBars({
+    required this.thisWeek,
+    required this.prevAvgMs,
+    required this.prevWeekLabel,
+  });
   final List<int> thisWeek;
   final int prevAvgMs;
+  final String prevWeekLabel;
 
   @override
   Widget build(BuildContext context) {
-    final maxVal = [...thisWeek, prevAvgMs].fold(0, (a, b) => a > b ? a : b).toDouble();
+    final maxVal =
+        [...thisWeek, prevAvgMs].fold(0, (a, b) => a > b ? a : b).toDouble();
     return BarChart(BarChartData(
       maxY: maxVal > 0 ? maxVal * 1.2 : 1,
       barGroups: thisWeek.asMap().entries.map((e) {
@@ -748,7 +724,7 @@ class _TrendBars extends StatelessWidget {
           dashArray: [4, 4],
           label: HorizontalLineLabel(
             show: true,
-            labelResolver: (_) => 'semana anterior',
+            labelResolver: (_) => prevWeekLabel,
             style: const TextStyle(fontSize: 9),
           ),
         ),
@@ -760,7 +736,6 @@ class _TrendBars extends StatelessWidget {
   }
 }
 
-/// 30-day line chart.
 class _LineChart30d extends StatelessWidget {
   const _LineChart30d({required this.dailyMs});
   final List<int> dailyMs;
@@ -793,7 +768,6 @@ class _LineChart30d extends StatelessWidget {
   }
 }
 
-/// Calendar heatmap: 5 weeks × 7 days grid, color by usage intensity.
 class _HeatmapCalendar extends StatelessWidget {
   const _HeatmapCalendar({required this.summaries, required this.storage});
   final List<DaySummary> summaries;
@@ -801,7 +775,8 @@ class _HeatmapCalendar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final maxMs = summaries.fold<int>(1, (m, s) => s.totalMs > m ? s.totalMs : m);
+    final maxMs =
+        summaries.fold<int>(1, (m, s) => s.totalMs > m ? s.totalMs : m);
     final goal = storage.dailyGoalMinutes * 60 * 1000;
 
     return GridView.builder(
@@ -817,8 +792,10 @@ class _HeatmapCalendar extends StatelessWidget {
         final intensity = s.totalMs / maxMs;
         final overGoal = goal > 0 && s.totalMs > goal;
         final color = overGoal
-            ? Color.lerp(AppColors.error.withAlpha(80), AppColors.error, intensity)!
-            : Color.lerp(AppColors.primary.withAlpha(30), AppColors.primary, intensity)!;
+            ? Color.lerp(
+                AppColors.error.withAlpha(80), AppColors.error, intensity)!
+            : Color.lerp(
+                AppColors.primary.withAlpha(30), AppColors.primary, intensity)!;
         return Tooltip(
           message: '${s.date}: ${_fmtDuration(s.totalMs)}',
           child: Container(
@@ -852,7 +829,8 @@ class _StatCard extends StatelessWidget {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        child:
+            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(label, style: Theme.of(context).textTheme.bodySmall),
           const SizedBox(height: AppSpacing.xs),
           Text(value,

@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
 import 'per_app_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key, required this.storage});
+  const SettingsScreen({
+    super.key,
+    required this.storage,
+    required this.onLocaleChange,
+  });
 
   final StorageService storage;
+  final void Function(String?) onLocaleChange;
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -17,27 +23,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final currentCode = _s.languageCode;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Configurações')),
+      appBar: AppBar(title: Text(l10n.settingsTitle)),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.md),
         children: [
-          _SectionHeader('Overlay'),
+          _SectionHeader(l10n.sectionOverlay),
           Card(
             child: Column(
               children: [
                 SwitchListTile(
-                  title: const Text('Mostrar borda'),
+                  title: Text(l10n.showBorder),
                   value: _s.overlayShowBorder,
                   onChanged: (v) => setState(() => _s.overlayShowBorder = v),
                 ),
                 SwitchListTile(
-                  title: const Text('Mostrar fundo'),
+                  title: Text(l10n.showBackground),
                   value: _s.overlayShowBackground,
                   onChanged: (v) => setState(() => _s.overlayShowBackground = v),
                 ),
                 ListTile(
-                  title: Text('Tamanho da fonte: ${_s.overlayFontSize.round()}sp'),
+                  title: Text(l10n.fontSize(_s.overlayFontSize.round())),
                   subtitle: Slider(
                     min: 10,
                     max: 30,
@@ -50,13 +59,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          _SectionHeader('Posicionamento'),
+          _SectionHeader(l10n.sectionPositioning),
           Card(
             child: Column(
               children: [
                 ListTile(
-                  title: Text(
-                      'Posição vertical: ${_s.overlayTopDp.round()}dp'),
+                  title: Text(l10n.verticalPosition(_s.overlayTopDp.round())),
                   subtitle: Slider(
                     min: 0,
                     max: 300,
@@ -68,23 +76,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          _SectionHeader('Comportamento'),
+          _SectionHeader(l10n.sectionBehavior),
           Card(
             child: Column(
               children: [
                 ListTile(
-                  title: const Text('Meta diária de uso'),
+                  title: Text(l10n.dailyGoalTitle),
                   subtitle: Text(
                     _s.dailyGoalMinutes == 0
-                        ? 'Sem meta definida'
-                        : '${_s.dailyGoalMinutes} minutos / dia',
+                        ? l10n.noGoalSet
+                        : l10n.goalMinutesPerDay(_s.dailyGoalMinutes),
                   ),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: _showGoalDialog,
+                  onTap: () => _showGoalDialog(l10n),
                 ),
                 ListTile(
-                  title: const Text('Controle por app'),
-                  subtitle: const Text('Habilitar / desabilitar overlay por app'),
+                  title: Text(l10n.perAppControlTitle),
+                  subtitle: Text(l10n.perAppControlSub),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
@@ -95,23 +103,54 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ],
             ),
           ),
+          const SizedBox(height: AppSpacing.md),
+          _SectionHeader(l10n.sectionLanguage),
+          Card(
+            child: RadioGroup<String?>(
+              groupValue: currentCode,
+              onChanged: (code) => _changeLocale(code, l10n),
+              child: Column(
+                children: [
+                  RadioListTile<String?>(
+                    title: Text(l10n.languageSystem),
+                    value: null,
+                  ),
+                  RadioListTile<String?>(
+                    title: Text(l10n.languagePtBr),
+                    value: 'pt',
+                  ),
+                  RadioListTile<String?>(
+                    title: Text(l10n.languageEn),
+                    value: 'en',
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  void _showGoalDialog() {
+  void _changeLocale(String? code, AppLocalizations l10n) {
+    setState(() => _s.languageCode = code);
+    widget.onLocaleChange(code);
+  }
+
+  void _showGoalDialog(AppLocalizations l10n) {
     int tempGoal = _s.dailyGoalMinutes;
     showDialog<void>(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setLocal) => AlertDialog(
-          title: const Text('Meta diária'),
+          title: Text(l10n.dialogDailyGoalTitle),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                tempGoal == 0 ? 'Sem meta' : '$tempGoal min / dia',
+                tempGoal == 0
+                    ? l10n.dialogNoGoal
+                    : l10n.dialogGoalMinDay(tempGoal),
                 style: Theme.of(ctx).textTheme.headlineSmall,
               ),
               Slider(
@@ -126,14 +165,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancelar'),
+              child: Text(l10n.cancel),
             ),
             FilledButton(
               onPressed: () {
                 setState(() => _s.dailyGoalMinutes = tempGoal);
                 Navigator.pop(ctx);
               },
-              child: const Text('Salvar'),
+              child: Text(l10n.save),
             ),
           ],
         ),
@@ -149,8 +188,8 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(
-          left: AppSpacing.sm, bottom: AppSpacing.sm),
+      padding:
+          const EdgeInsets.only(left: AppSpacing.sm, bottom: AppSpacing.sm),
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelMedium?.copyWith(

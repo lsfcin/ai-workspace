@@ -165,6 +165,18 @@ class StorageService {
   int get dailyGoalMinutes => _prefs.getInt('daily_goal_minutes') ?? 0;
   set dailyGoalMinutes(int v) => _prefs.setInt('daily_goal_minutes', v);
 
+  // ── Language ──
+  // null = follow system locale; 'pt' or 'en' = explicit override.
+
+  String? get languageCode => _prefs.getString('language_code');
+  set languageCode(String? v) {
+    if (v == null) {
+      _prefs.remove('language_code');
+    } else {
+      _prefs.setString('language_code', v);
+    }
+  }
+
   // ── Query helpers ──
 
   /// Retorna packages que têm dados de uso para a data dada (formato YYYY-MM-DD).

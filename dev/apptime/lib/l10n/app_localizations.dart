@@ -1,0 +1,165 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'app_localizations_pt.dart';
+import 'app_localizations_en.dart';
+
+/// Hand-written localizations class — same contract as flutter gen-l10n output.
+/// Supports: pt (PT-BR default), en.
+abstract class AppLocalizations {
+  const AppLocalizations(this.locale);
+
+  final Locale locale;
+
+  static AppLocalizations of(BuildContext context) =>
+      Localizations.of<AppLocalizations>(context, AppLocalizations)!;
+
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
+
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = [
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+  ];
+
+  static const List<Locale> supportedLocales = [
+    Locale('pt'),
+    Locale('en'),
+  ];
+
+  // ── Navigation ───────────────────────────────────────────────────────────────
+  String get navHome;
+  String get navAnalysis;
+  String get navInsights;
+  String get navSettings;
+
+  // ── Common ───────────────────────────────────────────────────────────────────
+  String get cancel;
+  String get save;
+  String get noData;
+  String get collectingData;
+
+  // ── HomeScreen ───────────────────────────────────────────────────────────────
+  String get permFloatingWindow;
+  String get permUsageStats;
+  String get permGranted;
+  String get permRequired;
+  String get permGrant;
+  String get insightOfDay;
+  String get monitoringTitle;
+  String get monitoringActive;
+  String get monitoringInactive;
+  String get monitoringNoPerms;
+  String get monitoringDesc;
+  String get actionStart;
+  String get actionStop;
+
+  // ── OnboardingScreen ─────────────────────────────────────────────────────────
+  String get onboardWelcomeTitle;
+  String get onboardWelcomeBody;
+  String get onboardStart;
+  String get onboardPermOverlayTitle;
+  String get onboardPermOverlayDesc;
+  String get onboardPermUsageTitle;
+  String get onboardPermUsageDesc;
+  String get permGrantedLabel;
+  String get permSettingsHint;
+  String get openSettings;
+  String get continueAction;
+
+  // ── SettingsScreen ───────────────────────────────────────────────────────────
+  String get settingsTitle;
+  String get sectionOverlay;
+  String get showBorder;
+  String get showBackground;
+  String fontSize(int size);
+  String get sectionPositioning;
+  String verticalPosition(int dp);
+  String get sectionBehavior;
+  String get dailyGoalTitle;
+  String get noGoalSet;
+  String goalMinutesPerDay(int min);
+  String get perAppControlTitle;
+  String get perAppControlSub;
+  String get dialogDailyGoalTitle;
+  String get dialogNoGoal;
+  String dialogGoalMinDay(int min);
+  String get sectionLanguage;
+  String get languageSystem;
+  String get languagePtBr;
+  String get languageEn;
+
+  // ── PerAppScreen ─────────────────────────────────────────────────────────────
+  String get perAppTitle;
+  String get noAppsMsg;
+  String get overlayDisabled;
+  String get overlayActive;
+
+  // ── AnalyticsScreen ──────────────────────────────────────────────────────────
+  String get analysisTitle;
+  String get tab24h;
+  String get tab7d;
+  String get tab30d;
+  String get statTotalUsage;
+  String get statUnlocks;
+  String get statTotalTime;
+  String get noSessions;
+  String get dailyUsageLabel;
+  String get passive;
+  String get active;
+  String get prevWeekLabel;
+  String pagesLabel(int n);
+  String kmLabel(int n);
+  String sleepCyclesLabel(int n);
+
+  String get blockSleepTitle;
+  String blockSleepText(int pct);
+  String get blockImpulsivityTitle;
+  String blockImpulsivityText(int unlocks);
+  String get blockFocusTitle;
+  String blockFocusText(int pct);
+  String get blockOpportunityTitle;
+  String get blockOpportunityText;
+  String get blockPhubbingTitle;
+  String blockPhubbingText(int unlocks);
+  String get blockDopamineTitle;
+  String blockDopamineText(String app, int opens);
+  String get blockDopamineNoData;
+  String get blockEngagementTitle;
+  String blockEngagementText(int pct);
+  String get blockEngagementNoData;
+  String get blockTrendTitle;
+  String blockTrendReduced(int pct);
+  String blockTrendIncreased(int pct);
+  String get blockTrend30Title;
+  String get blockTrend30Text;
+  String get blockWeekendTitle;
+  String blockWeekendSpikeText(int pct);
+  String get blockWeekendNoSpike;
+
+  // ── InsightsScreen ───────────────────────────────────────────────────────────
+  String get insightsTitle;
+  String get tabAlerts;
+  String get tabSolutions;
+}
+
+// ─── Delegate ────────────────────────────────────────────────────────────────
+
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
+  const _AppLocalizationsDelegate();
+
+  @override
+  bool isSupported(Locale locale) =>
+      ['pt', 'en'].contains(locale.languageCode);
+
+  @override
+  Future<AppLocalizations> load(Locale locale) async {
+    if (locale.languageCode == 'pt') return AppLocalizationsPt(locale);
+    return AppLocalizationsEn(locale);
+  }
+
+  @override
+  bool shouldReload(_AppLocalizationsDelegate old) => false;
+}

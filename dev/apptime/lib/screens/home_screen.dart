@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../data/insights.dart';
+import '../l10n/app_localizations.dart';
 import '../services/service_channel.dart';
 import '../theme/app_theme.dart';
 
@@ -20,7 +21,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Timer? _insightTimer;
 
   static int _currentInsightIndex() {
-    // Rotate every 3 minutes based on wall-clock time so all sessions agree
     final minutes = DateTime.now().millisecondsSinceEpoch ~/ (3 * 60 * 1000);
     return minutes % kInsights.length;
   }
@@ -30,7 +30,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _insightIndex = _currentInsightIndex();
-    // Re-check every 30s so the switch happens within 30s of the 3-min boundary
     _insightTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       final next = _currentInsightIndex();
       if (next != _insightIndex) setState(() => _insightIndex = next);
@@ -79,28 +78,34 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(title: const Text('AppTime')),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.md),
         children: [
           _PermissionCard(
-            label: 'Janela flutuante',
+            label: l10n.permFloatingWindow,
             granted: _hasOverlayPermission,
-            onRequest: () async {
-              await ServiceChannel.requestOverlayPermission();
-            },
+            grantLabel: l10n.permGrant,
+            grantedLabel: l10n.permGranted,
+            requiredLabel: l10n.permRequired,
+            onRequest: ServiceChannel.requestOverlayPermission,
           ),
           const SizedBox(height: AppSpacing.sm),
           _PermissionCard(
-            label: 'Estatísticas de uso',
+            label: l10n.permUsageStats,
             granted: _hasUsagePermission,
-            onRequest: () async {
-              await ServiceChannel.requestUsagePermission();
-            },
+            grantLabel: l10n.permGrant,
+            grantedLabel: l10n.permGranted,
+            requiredLabel: l10n.permRequired,
+            onRequest: ServiceChannel.requestUsagePermission,
           ),
           const SizedBox(height: AppSpacing.md),
-          _InsightCard(insight: kInsights[_insightIndex]),
+          _InsightCard(
+            headerLabel: l10n.insightOfDay,
+            insight: kInsights[_insightIndex],
+          ),
           const SizedBox(height: AppSpacing.md),
           Card(
             child: Padding(
@@ -108,22 +113,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Contador',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
+                  Text(l10n.monitoringTitle,
+                      style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
                     _isRunning
-                        ? 'Ativo — overlay mostrando uso em tempo real.'
+                        ? l10n.monitoringActive
                         : _allPermissionsGranted
-                            ? 'Inativo. Toque em Iniciar.'
-                            : 'Conceda as permissões acima para iniciar.',
+                            ? l10n.monitoringInactive
+                            : l10n.monitoringNoPerms,
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
-                    'O overlay exibe quantas vezes você abriu o app (5s) e o tempo acumulado.',
+                    l10n.monitoringDesc,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(context).colorScheme.outline,
                         ),
@@ -132,10 +135,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   FilledButton.icon(
                     onPressed: _allPermissionsGranted ? _toggleMonitoring : null,
                     icon: Icon(_isRunning ? Icons.stop : Icons.play_arrow),
-                    label: Text(_isRunning ? 'Parar' : 'Iniciar'),
+                    label: Text(_isRunning ? l10n.actionStop : l10n.actionStart),
                     style: _isRunning
                         ? FilledButton.styleFrom(
-                            backgroundColor: Theme.of(context).colorScheme.error,
+                            backgroundColor:
+                                Theme.of(context).colorScheme.error,
                           )
                         : null,
                   ),
@@ -150,7 +154,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 }
 
 class _InsightCard extends StatelessWidget {
-  const _InsightCard({required this.insight});
+  const _InsightCard({required this.headerLabel, required this.insight});
+  final String headerLabel;
   final String insight;
 
   @override
@@ -166,7 +171,7 @@ class _InsightCard extends StatelessWidget {
                 const Icon(Icons.lightbulb_outline, size: 16),
                 const SizedBox(width: AppSpacing.xs),
                 Text(
-                  'Insight do dia',
+                  headerLabel,
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w600,
@@ -175,10 +180,7 @@ class _InsightCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.sm),
-            Text(
-              insight,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+            Text(insight, style: Theme.of(context).textTheme.bodySmall),
           ],
         ),
       ),
@@ -190,12 +192,18 @@ class _PermissionCard extends StatelessWidget {
   const _PermissionCard({
     required this.label,
     required this.granted,
+    required this.grantLabel,
+    required this.grantedLabel,
+    required this.requiredLabel,
     required this.onRequest,
   });
 
   final String label;
   final bool granted;
-  final VoidCallback onRequest;
+  final String grantLabel;
+  final String grantedLabel;
+  final String requiredLabel;
+  final Future<void> Function() onRequest;
 
   @override
   Widget build(BuildContext context) {
@@ -203,13 +211,18 @@ class _PermissionCard extends StatelessWidget {
       child: ListTile(
         leading: Icon(
           granted ? Icons.check_circle : Icons.warning_amber_rounded,
-          color: granted ? AppColors.success : Theme.of(context).colorScheme.error,
+          color: granted
+              ? AppColors.success
+              : Theme.of(context).colorScheme.error,
         ),
         title: Text(label),
-        subtitle: Text(granted ? 'Concedida' : 'Necessária'),
+        subtitle: Text(granted ? grantedLabel : requiredLabel),
         trailing: granted
             ? null
-            : TextButton(onPressed: onRequest, child: const Text('Conceder')),
+            : TextButton(
+                onPressed: onRequest,
+                child: Text(grantLabel),
+              ),
       ),
     );
   }

@@ -10,6 +10,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   shared_preferences: ^2.3.3
   permission_handler: ^12.0.1
   fl_chart: ^0.70.2
