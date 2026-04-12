@@ -1,35 +1,33 @@
 # RPG — D&D 5e
 
-Jogo D&D 5e como player e (futuro) como GM. Interesse em conteúdo visual para campanhas.
+D&D 5e as a player and (future) GM. Interest in visual content for campaigns.
 
-## Escopo
+## Scope
 
-| Aspecto | Detalhe |
-|---------|---------|
-| Sistema | D&D 5e |
-| Papel atual | Player em 2 campanhas |
-| Papel futuro | GM — planejando primeira campanha |
-| Ferramentas | Foundry VTT (planejado), geração de imagens/gifs |
-| Última atualização | 2026-04-08 |
+| Aspect | Detail |
+|--------|--------|
+| System | D&D 5e |
+| Current role | Player in 2 campaigns |
+| Future role | GM — planning first campaign |
+| Tools | Foundry VTT (planned), image/gif generation |
+| Last updated | 2026-04-08 |
 
-## Personagens ativos
+## Active characters
 
-| Nome | Classe | Raça | Campanha |
-|------|--------|------|----------|
-| Kanon | War Magic Wizard | Yuan-Ti | [nome da campanha] |
-| Cassian | Swashbuckler Rogue | [raça] | [nome da campanha] |
+| Name | Class | Race | Campaign |
+|------|-------|------|----------|
+| Kanon | War Magic Wizard | Yuan-Ti | [campaign name] |
+| Cassian | Swashbuckler Rogue | [race] | [campaign name] |
 
-Fichas completas: ver `/rpg/player/`
+Full sheets: see `/rpg/player/`
 
-## Interesses como GM
+## GM interests
 
-- Worldbuilding com foco narrativo
-- Mapas isométricos no Foundry VTT
-- Conteúdo visual gerado (tokens, cenas, items)
-- Trilha sonora e ambientação
+- Narrative-focused worldbuilding
+- Isometric maps in Foundry VTT
+- Generated visual content (tokens, scenes, items)
+- Soundtrack and ambiance
 
-## Permissões
+## Permissions
 
 auto_update_context: true
-
-# LATEST CHANGES
