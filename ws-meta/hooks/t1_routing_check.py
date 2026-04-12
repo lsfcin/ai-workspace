@@ -36,9 +36,9 @@ T1_EXCLUSIONS = [
 
 REMINDER = (
     "[T1-HOOK] ROUTING ALERT: This prompt matches T1 (isolated code generation).\n"
-    "MANDATORY: route through Ollama — do NOT write code inline.\n"
-    "  Simple/boilerplate  → ollama run qwen2.5-coder:7b \"<full prompt>\"\n"
-    "  Complex logic       → ollama run deepseek-coder-v2 \"<full prompt>\"\n"
+    "MANDATORY: route through Ollama -- do NOT write code inline.\n"
+    "  Simple/boilerplate  -> ollama run qwen2.5-coder:7b \"<full prompt>\"\n"
+    "  Complex logic       -> ollama run deepseek-coder-v2 \"<full prompt>\"\n"
     "Run the Bash command and return Ollama's output. Skipping this violates the routing protocol."
 )
 
