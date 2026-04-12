@@ -23,4 +23,3 @@
 | Docs | README.md per project, ADRs in `decisions/` |
 | GitHub | URL must be recorded in the Active projects table above |
 
-# LATEST CHANGES
