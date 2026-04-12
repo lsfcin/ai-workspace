@@ -1,5 +1,3 @@
-﻿# IHM -- placeholder
+# IHM — placeholder
 
-> Contexto nao preenchido. Preencher quando este workspace for usado pela primeira vez.
-
-# LATEST CHANGES
+> Context not filled in. Fill when this workspace is first used.
