@@ -17,7 +17,7 @@ x Change monitoring policy from "Today" to "24h" meaning we're reporting on the 
 
 - HomeScreen "Insight of the day": 50 PT-BR texts with high-citation recognized scientific references, 3min rotation
 x Adaptive icon (`flutter_launcher_icons`); Check it, I believe it is already done.
-- Edge cases: MIUI home, device reboot (service won't auto-start — document limitation), active session at day rollover
+x Edge cases: MIUI home, device reboot (service won't auto-start — document limitation), active session at day rollover
 
 ## M10 — Analysis Blocks
 
@@ -107,3 +107,7 @@ Analysis Text: "You opened your phone [X] times during lunch/dinner. 'Phubbing' 
 Implementation Tip: In the Roadmap, prioritize the Sleep Hygiene and Impulsivity Index blocks for the 24-hour tab, as they offer the most actionable and immediate feedback for the user. For the 30-day tab, focus on the Trend and Heat Map blocks, which help visualize the change in behavioral identity.
 
 ## M11 — Insights
+
+## M12 — Permissions Onboarding
+
+. Create

@@ -25,6 +25,7 @@ class MonitoringService : Service() {
     private var lastPackage: String? = null
     private var sessionStartMs: Long = 0L
     private var watchdogTick = 0
+    private var lastDate: String = ""
 
     private val unlockReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -49,6 +50,7 @@ class MonitoringService : Service() {
         startForeground(NOTIF_ID, buildNotification())
         usageStatsManager = getSystemService(USAGE_STATS_SERVICE) as UsageStatsManager
         prefs = getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
+        lastDate = today()
         registerReceiver(unlockReceiver, IntentFilter(Intent.ACTION_USER_PRESENT))
         handler.post(pollRunnable)
         return START_STICKY
@@ -68,6 +70,15 @@ class MonitoringService : Service() {
         if (++watchdogTick >= 30) {
             watchdogTick = 0
             startService(Intent(this, OverlayService::class.java))
+        }
+
+        // Day rollover: flush the active session so pre-midnight usage isn't
+        // attributed to the new calendar day. The in-flight duration is discarded
+        // (bounded loss: at most one session's worth of ms, typically seconds).
+        val currentDate = today()
+        if (currentDate != lastDate) {
+            lastPackage = null
+            lastDate = currentDate
         }
 
         val current = getCurrentApp()
