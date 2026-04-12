@@ -66,24 +66,35 @@ class MonitoringService : Service() {
         val current = getCurrentApp()
         val isLauncher = current != null && LAUNCHERS.contains(current)
 
-        if (current != null && current != lastPackage) {
-            // Fecha sessão anterior
+        if (current == null) {
+            // Screen off or no foreground app — close any open session immediately
+            if (lastPackage != null) {
+                val duration = System.currentTimeMillis() - sessionStartMs
+                accumulateDailyMs(lastPackage!!, duration)
+                lastPackage = null
+            }
+            prefs.edit()
+                .putString("flutter.overlay_text", "")
+                .putBoolean("flutter.overlay_visible", false)
+                .apply()
+            return
+        }
+
+        if (current != lastPackage) {
+            // App switch — close previous session, open new one
             if (lastPackage != null) {
                 val duration = System.currentTimeMillis() - sessionStartMs
                 accumulateDailyMs(lastPackage!!, duration)
             }
-            // Abre nova sessão
             lastPackage = current
             sessionStartMs = System.currentTimeMillis()
             if (!isLauncher) incrementOpenCount(current)
         }
 
         val overlayText = when {
-            current == null -> ""
             isLauncher -> {
                 val unlocks = getUnlockCount()
                 val totalMs = getDeviceDailyMs()
-                // Alterna fase baseado em tempo desde último unlock (simplificado: usa tempo fixo)
                 if (shouldShowCount()) "$unlocks×" else formatTime(totalMs)
             }
             else -> {
@@ -95,7 +106,7 @@ class MonitoringService : Service() {
 
         prefs.edit()
             .putString("flutter.overlay_text", overlayText)
-            .putBoolean("flutter.overlay_visible", current != null)
+            .putBoolean("flutter.overlay_visible", true)
             .apply()
     }
 
