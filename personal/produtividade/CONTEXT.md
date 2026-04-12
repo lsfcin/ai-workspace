@@ -1,7 +1,5 @@
-﻿# Produtividade -- placeholder
+# Produtividade — placeholder
 
-> Contexto nao preenchido. Preencher quando este workspace for usado pela primeira vez.
+> Context not filled in. Fill when this workspace is first used.
 
-CRM pessoal, triagem email, agenda, prioridades.
-
-# LATEST CHANGES
+Personal CRM, email triage, schedule, priorities.
