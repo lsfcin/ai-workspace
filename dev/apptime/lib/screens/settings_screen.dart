@@ -37,11 +37,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onChanged: (v) => setState(() => _s.overlayShowBackground = v),
                 ),
                 ListTile(
-                  title: Text('Tamanho da fonte: ${_s.overlayFontSize.round()}px'),
+                  title: Text('Tamanho da fonte: ${_s.overlayFontSize.round()}sp'),
                   subtitle: Slider(
                     min: 10,
-                    max: 18,
-                    divisions: 8,
+                    max: 30,
+                    divisions: 20,
                     value: _s.overlayFontSize,
                     onChanged: (v) => setState(() => _s.overlayFontSize = v),
                   ),
@@ -54,20 +54,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Card(
             child: Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
-                  child: SegmentedButton<String>(
-                    segments: const [
-                      ButtonSegment(value: 'left', label: Text('Esq')),
-                      ButtonSegment(value: 'bottom', label: Text('Abaixo')),
-                      ButtonSegment(value: 'right', label: Text('Dir')),
-                    ],
-                    selected: {_s.overlayAnchor},
-                    onSelectionChanged: (s) =>
-                        setState(() => _s.overlayAnchor = s.first),
-                  ),
-                ),
                 ListTile(
                   title: Text(
                       'Posição vertical: ${_s.overlayTopDp.round()}dp'),
@@ -76,16 +62,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     max: 300,
                     value: _s.overlayTopDp,
                     onChanged: (v) => setState(() => _s.overlayTopDp = v),
-                  ),
-                ),
-                ListTile(
-                  title: Text(
-                      'Posição horizontal: ${(_s.overlayHPct * 100).round()}%'),
-                  subtitle: Slider(
-                    min: 0,
-                    max: 1,
-                    value: _s.overlayHPct,
-                    onChanged: (v) => setState(() => _s.overlayHPct = v),
                   ),
                 ),
               ],

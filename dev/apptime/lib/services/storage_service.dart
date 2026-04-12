@@ -22,17 +22,11 @@ class StorageService {
 
   // ── Overlay appearance (escrito pelo Flutter, lido pelo OverlayService) ──
 
-  String get overlayAnchor => _prefs.getString('overlay_anchor') ?? 'left';
-  set overlayAnchor(String v) => _prefs.setString('overlay_anchor', v);
-
   double get overlayFontSize => _prefs.getDouble('overlay_font_size') ?? 14.0;
   set overlayFontSize(double v) => _prefs.setDouble('overlay_font_size', v);
 
   double get overlayTopDp => _prefs.getDouble('overlay_top_dp') ?? 40.0;
   set overlayTopDp(double v) => _prefs.setDouble('overlay_top_dp', v);
-
-  double get overlayHPct => _prefs.getDouble('overlay_h_pct') ?? 0.5;
-  set overlayHPct(double v) => _prefs.setDouble('overlay_h_pct', v);
 
   bool get overlayShowBorder => _prefs.getBool('overlay_show_border') ?? false;
   set overlayShowBorder(bool v) => _prefs.setBool('overlay_show_border', v);
