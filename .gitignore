@@ -50,4 +50,8 @@
 !dev/apptime/android/app/src/main/kotlin/
 !dev/apptime/android/app/src/main/kotlin/**
 !dev/apptime/android/app/src/main/AndroidManifest.xml
+!dev/apptime/android/app/src/main/res/mipmap-anydpi-v26/
+!dev/apptime/android/app/src/main/res/mipmap-anydpi-v26/**
+!dev/apptime/android/app/src/main/res/values/ic_launcher_background.xml
+!dev/apptime/android/app/src/main/res/drawable/ic_launcher_foreground.png
 !dev/apptime/pubspec.yaml
