@@ -53,6 +53,63 @@ class StorageService {
   int getDeviceDailyMs({String? date}) =>
       _prefs.getInt('device_daily_ms_${date ?? _todayKey()}') ?? 0;
 
+  // ── Rolling 24h helpers ──
+  // Since data is stored per calendar day we approximate the rolling 24h window
+  // as: yesterday's total * fraction still within the window + all of today's total.
+  // Assumption: usage is roughly uniform throughout the day (best we can do with
+  // daily-granularity storage without a full schema change).
+
+  String _yesterdayKey() {
+    final yesterday = DateTime.now().subtract(const Duration(days: 1));
+    return '${yesterday.year}-${yesterday.month.toString().padLeft(2, '0')}-${yesterday.day.toString().padLeft(2, '0')}';
+  }
+
+  /// Fraction of the previous calendar day still within the last 24h.
+  double _yesterdayFraction() {
+    final now = DateTime.now();
+    final hoursElapsedToday =
+        now.hour + now.minute / 60.0 + now.second / 3600.0;
+    return (24.0 - hoursElapsedToday) / 24.0;
+  }
+
+  int getLast24hMs(String packageName) {
+    final f = _yesterdayFraction();
+    final yesterdayMs = getDailyMs(packageName, date: _yesterdayKey());
+    final todayMs = getDailyMs(packageName);
+    return (yesterdayMs * f).round() + todayMs;
+  }
+
+  int getDeviceLast24hMs() {
+    final f = _yesterdayFraction();
+    final yesterdayMs = getDeviceDailyMs(date: _yesterdayKey());
+    final todayMs = getDeviceDailyMs();
+    return (yesterdayMs * f).round() + todayMs;
+  }
+
+  int getUnlockLast24h() {
+    final f = _yesterdayFraction();
+    final yesterdayUnlocks = getUnlockCount(date: _yesterdayKey());
+    final todayUnlocks = getUnlockCount();
+    return (yesterdayUnlocks * f).round() + todayUnlocks;
+  }
+
+  /// Packages that have any usage data in the last 24h (today or yesterday).
+  List<String> packagesLast24h() {
+    final today = _todayKey();
+    final yesterday = _yesterdayKey();
+    const prefix = 'flutter.daily_ms_';
+    final keys = _prefs.getKeys();
+    final packages = <String>{};
+    for (final k in keys) {
+      if (k.startsWith(prefix)) {
+        if (k.endsWith('_$today') || k.endsWith('_$yesterday')) {
+          packages.add(k.substring(prefix.length, k.lastIndexOf('_')));
+        }
+      }
+    }
+    return packages.toList();
+  }
+
   // ── Per-app control ──
 
   Set<String> get disabledApps =>
