@@ -10,7 +10,7 @@
 
 **Libraries:** shared_preferences ^2.3.3 · permission_handler ^12.0.1 · fl_chart ^0.70.2 · flutter_launcher_icons ^0.14.3 (dev)
 
-**Android permissions:** SYSTEM_ALERT_WINDOW · PACKAGE_USAGE_STATS · FOREGROUND_SERVICE · FOREGROUND_SERVICE_SPECIAL_USE · REQUEST_IGNORE_BATTERY_OPTIMIZATIONS · POST_NOTIFICATIONS
+**Android permissions:** SYSTEM_ALERT_WINDOW · PACKAGE_USAGE_STATS · FOREGROUND_SERVICE · FOREGROUND_SERVICE_SPECIAL_USE · REQUEST_IGNORE_BATTERY_OPTIMIZATIONS · POST_NOTIFICATIONS · RECEIVE_BOOT_COMPLETED
 
 ## Architecture
 
@@ -42,19 +42,39 @@ to the interval since the last write (≤ the watchdog period, currently 30s).
 |-----|------|-------------|
 | `overlay_text` | String | Text shown in overlay |
 | `overlay_visible` | Boolean | Whether overlay should appear |
-| `overlay_anchor`, `overlay_font_size`, `overlay_top_dp`, `overlay_h_pct` | Mixed | Position and style |
-| `daily_ms_{pkg}_{date}` | Long | Accumulated ms for app that day |
-| `open_count_{pkg}_{date}` | Int | App opens that day |
-| `unlock_count_{date}` | Int | Device unlocks that day |
-| `device_daily_ms_{date}` | Long | Total device usage that day |
-| `disabled_apps` | StringSet | Apps with overlay disabled |
+| `overlay_font_size` | Float | Overlay text size (10–30 sp) |
+| `overlay_top_dp` | Float | Vertical offset from top of screen |
+| `overlay_show_border` | Boolean | Whether to draw border around overlay |
+| `overlay_show_background` | Boolean | Whether to draw background behind overlay |
+| `daily_ms_{pkg}_{date}` | Long | Accumulated ms for app that calendar day |
+| `open_count_{pkg}_{date}` | Int | App opens that calendar day |
+| `unlock_count_{date}` | Int | Device unlocks that calendar day |
+| `device_daily_ms_{date}` | Long | Total device usage that calendar day |
+| `device_hourly_ms_{date}_{h}` | Long | Total device ms in hour h (0–23) |
+| `hourly_opens_{pkg}_{date}_{h}` | Int | Per-app opens in hour h |
+| `hourly_unlocks_{date}_{h}` | Int | Device unlocks in hour h |
+| `session_bucket_{i}_{date}` | Int | Session count for bucket i (0=<1m 1=1-5m 2=5-15m 3=>15m) |
+| `disabled_apps` | StringList | Packages with overlay disabled |
+| `daily_goal_minutes` | Int | User's daily screen-time goal |
+| `onboarding_done` | Boolean | Whether onboarding has been completed |
 
 **Overlay display**
 - Phase 0 (first 5s after open): open count → `"13x"`
 - Phase 1 (after): cumulative time → `"0:45"` (`M:SS` if <1h, `H:MM` if ≥1h)
 - On launcher — phase 0: unlocks (`"86x"`), phase 1: total device usage (`"2.3h"`)
+- Overlay resilience: try-catch on addView/updateViewLayout resets `isViewAdded`; 30s watchdog restarts OverlayService
 
-**MethodChannel** `"apptime/service"`: `startMonitoring` · `stopMonitoring` · `isRunning` · `requestOverlayPermission` · `requestUsagePermission`
+**MethodChannel** `"apptime/service"`: `startMonitoring` · `stopMonitoring` · `isRunning` · `requestOverlayPermission` · `hasOverlayPermission` · `requestUsagePermission` · `hasUsagePermission`
+
+## Screens
+
+| Screen | Description |
+|--------|-------------|
+| `OnboardingScreen` | First-launch flow: welcome → overlay permission → usage permission. Auto-detects grants via `WidgetsBindingObserver`. |
+| `HomeScreen` | Rotating "Insight do dia" card + monitoring summary card |
+| `AnalyticsScreen` | 3-tab layout: 24h (sleep hygiene, impulsivity, focus, phubbing, opportunity cost) · 7d (trends, dopamine drain, engagement balance) · 30d (line chart, weekend spike heatmap) |
+| `InsightsScreen` | 2-tab layout: Alertas + Soluções — 40 PT-BR research-backed cards |
+| `SettingsScreen` | Overlay appearance, daily goal, per-app toggle |
 
 ## Features
 
@@ -63,11 +83,19 @@ to the interval since the last write (≤ the watchdog period, currently 30s).
 | Native floating overlay — open count + cumulative time | ✓ |
 | Background app monitoring + session tracking | ✓ |
 | Screen-off detection / launcher special mode | ✓ |
-| HomeScreen — permissions, toggle, daily insight | ✓ |
+| Overlay resilience — watchdog + try-catch recovery | ✓ |
+| Hourly usage breakdown (device + per-app + unlocks) | ✓ |
+| Session duration bucketing (<1m · 1-5m · 5-15m · >15m) | ✓ |
+| Rolling 24h window (analytics) | ✓ |
+| OnboardingScreen — permission flow | ✓ |
+| HomeScreen — rotating daily insight | ✓ |
+| AnalyticsScreen — 9 analysis blocks across 3 tabs | ✓ |
+| InsightsScreen — 40 PT-BR research cards | ✓ |
 | SettingsScreen — appearance, goals, per-app control | ✓ |
-| PerAppScreen — per-app overlay toggle | ✓ |
-| AnalyticsScreen — 1/7/30d charts and session breakdown | ✓ |
-| Polish — adaptive icon, edge cases, MIUI support | Planned |
+| Adaptive launcher icon | ✓ |
+| BootReceiver — service auto-start after reboot | ✓ |
+| Language support (pt-BR / en-US i18n) | Planned (M13) |
+| Dynamic overlay based on goals | Planned (M14) |
 
 ## Conventions
 
