@@ -62,6 +62,25 @@ def extract_latest_change(path: str) -> str | None:
     return last_entry
 
 
+def sync_settings_if_needed(file_path: str) -> bool:
+    """
+    If the real settings.json was edited, copy it to the in-repo backup,
+    then commit the backup. Returns True if handled, False otherwise.
+    """
+    if os.path.normcase(file_path) != os.path.normcase(CLAUDE_SETTINGS):
+        return False
+
+    os.makedirs(os.path.dirname(SETTINGS_BACKUP), exist_ok=True)
+    import shutil
+    shutil.copy2(CLAUDE_SETTINGS, SETTINGS_BACKUP)
+
+    git("add", SETTINGS_BACKUP)
+    result = git("commit", "-m", "auto: update ws-meta/config/settings.json")
+    if result.returncode != 0 and "nothing to commit" not in result.stdout:
+        print(f"[auto_commit] settings sync falhou: {result.stderr}", file=sys.stderr)
+    return True
+
+
 def main():
     try:
         data = json.load(sys.stdin)
@@ -73,7 +92,14 @@ def main():
         sys.exit(0)
 
     file_path = data.get("tool_input", {}).get("file_path", "")
-    if not file_path or not is_tracked(file_path):
+    if not file_path:
+        sys.exit(0)
+
+    # Special case: real settings.json → sync to in-repo backup
+    if sync_settings_if_needed(file_path):
+        sys.exit(0)
+
+    if not is_tracked(file_path):
         sys.exit(0)
 
     rel_path = os.path.relpath(file_path, WORKSPACE)
