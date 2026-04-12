@@ -1,7 +1,5 @@
-﻿# LIH.DD -- placeholder
+# LIH.DD — placeholder
 
-> Contexto nao preenchido. Preencher quando este workspace for usado pela primeira vez.
+> Context not filled in. Fill when this workspace is first used.
 
-Lab de Inteligencia Hibrida para Design Distribuido. Subareas: papers, manifestos, pesquisadores.
-
-# LATEST CHANGES
+Hybrid Intelligence Lab for Distributed Design. Sub-areas: papers, manifestos, researchers.
