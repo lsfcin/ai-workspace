@@ -16,6 +16,18 @@
     ]
   },
   "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "C:/Users/Lucas/AppData/Local/Programs/Python/Python312/python.exe \"C:/Users/Lucas/Desktop/AI-Workspace/ws-meta/hooks/t1_routing_check.py\"",
+            "timeout": 5,
+            "statusMessage": "Checking T1 routing..."
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Agent",
