@@ -11,6 +11,11 @@ Trigger: prompt matches code-gen patterns AND has no codebase-context signals.
 import json
 import re
 import sys
+from datetime import datetime
+from pathlib import Path
+
+HOOKS_DIR = Path(__file__).parent
+LOG_FILE  = HOOKS_DIR / "routing.log"
 
 # Patterns that suggest "write me some code from scratch"
 T1_TRIGGERS = [
