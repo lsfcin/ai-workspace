@@ -37,8 +37,9 @@ class OverlayService : Service() {
         startForeground(NOTIF_ID, buildNotification())
         if (!isViewAdded) {
             addOverlayView()
-            isViewAdded = true
         }
+        // Re-arm the poll loop (idempotent — postDelayed deduplicates via Runnable identity)
+        handler.removeCallbacks(pollRunnable)
         handler.post(pollRunnable)
         return START_STICKY
     }
@@ -71,53 +72,51 @@ class OverlayService : Service() {
                     WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT
         ).apply {
-            gravity = Gravity.TOP or Gravity.START
+            gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
             x = 0
             y = 120
         }
 
-        windowManager.addView(overlayView, params)
+        try {
+            windowManager.addView(overlayView, params)
+            isViewAdded = true
+        } catch (e: Exception) {
+            // View couldn't be added (e.g. permission revoked) — stay invisible
+            isViewAdded = false
+        }
     }
 
     private fun updateOverlay() {
         if (!isViewAdded) return
+        val prefs = getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
+        val text = prefs.getString("flutter.overlay_text", "") ?: ""
+        val visible = prefs.getBoolean("flutter.overlay_visible", false)
+        val showBg = prefs.getBoolean("flutter.overlay_show_background", false)
+        val showBorder = prefs.getBoolean("flutter.overlay_show_border", false)
+        val fontSize = readFloat(prefs, "flutter.overlay_font_size", 14f).coerceIn(10f, 30f)
+        val topDp = readFloat(prefs, "flutter.overlay_top_dp", 40f).coerceIn(0f, 800f)
+
+        overlayView.text = text
+        overlayView.textSize = fontSize
+        overlayView.visibility = if (visible && text.isNotEmpty()) android.view.View.VISIBLE
+                                  else android.view.View.INVISIBLE
+
+        val density = resources.displayMetrics.density
+        val bg = android.graphics.drawable.GradientDrawable()
+        bg.cornerRadius = 8f * density
+        bg.setColor(if (showBg) Color.argb(160, 0, 0, 0) else Color.TRANSPARENT)
+        if (showBorder) bg.setStroke((1.5f * density).toInt(), Color.WHITE)
+        overlayView.background = bg
+
         try {
-            val prefs = getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
-            val text = prefs.getString("flutter.overlay_text", "") ?: ""
-            val visible = prefs.getBoolean("flutter.overlay_visible", false)
-            val showBg = prefs.getBoolean("flutter.overlay_show_background", false)
-            val fontSize = readFloat(prefs, "flutter.overlay_font_size", 14f).coerceIn(10f, 18f)
-            val topDp = readFloat(prefs, "flutter.overlay_top_dp", 40f).coerceIn(0f, 800f)
-            val hPct = readFloat(prefs, "flutter.overlay_h_pct", 0f).coerceIn(0f, 1f)
-            val anchor = prefs.getString("flutter.overlay_anchor", "left") ?: "left"
-
-            overlayView.text = text
-            overlayView.textSize = fontSize
-            overlayView.visibility = if (visible && text.isNotEmpty()) android.view.View.VISIBLE
-                                      else android.view.View.INVISIBLE
-            overlayView.setBackgroundColor(
-                if (showBg) Color.argb(160, 0, 0, 0) else Color.TRANSPARENT
-            )
-
             val layoutParams = overlayView.layoutParams as WindowManager.LayoutParams
-            val metrics = resources.displayMetrics
-            val density = metrics.density
-
-            // Sempre usa START gravity + x absoluto para evitar comportamento indefinido
-            // com gravity END (x seria deslocamento da borda direita, causando overflow).
-            layoutParams.gravity = when (anchor) {
-                "bottom" -> Gravity.BOTTOM or Gravity.START
-                else -> Gravity.TOP or Gravity.START
-            }
-            layoutParams.x = when (anchor) {
-                "right" -> (metrics.widthPixels * (1f - hPct)).toInt()
-                else -> (metrics.widthPixels * hPct).toInt()
-            }
+            layoutParams.gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
+            layoutParams.x = 0
             layoutParams.y = (topDp * density).toInt()
-
             windowManager.updateViewLayout(overlayView, layoutParams)
         } catch (e: Exception) {
-            // Swallow — próximo ciclo de 500ms tentará novamente
+            // View detached from window — will be re-added on next watchdog cycle
+            isViewAdded = false
         }
     }
 

@@ -24,6 +24,7 @@ class MonitoringService : Service() {
 
     private var lastPackage: String? = null
     private var sessionStartMs: Long = 0L
+    private var watchdogTick = 0
 
     private val unlockReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -63,6 +64,12 @@ class MonitoringService : Service() {
     }
 
     private fun tick() {
+        // Watchdog: restart OverlayService every 30s in case it was killed
+        if (++watchdogTick >= 30) {
+            watchdogTick = 0
+            startService(Intent(this, OverlayService::class.java))
+        }
+
         val current = getCurrentApp()
         val isLauncher = current != null && LAUNCHERS.contains(current)
 
