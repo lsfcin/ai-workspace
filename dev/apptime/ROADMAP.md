@@ -15,11 +15,11 @@ x Change monitoring policy from "Today" to "24h" meaning we're reporting on the 
 
 ## M9 — Polish
 
-x HomeScreen "Insight of the day": 50 PT-BR texts with high-citation recognized scientific references, 3min rotation
+- HomeScreen "Insight of the day": 50 PT-BR texts with high-citation recognized scientific references, 3min rotation
 x Adaptive icon (`flutter_launcher_icons`); Check it, I believe it is already done.
 - Edge cases: MIUI home, device reboot (service won't auto-start — document limitation), active session at day rollover
 
-## M10 — Analysis Blocks
+## M10 — Analysis Blocks (done)
 
 List of analysis blocks to place in the analysis tab (under the correct subtab: 24h | 7days | 30days):
 
@@ -108,7 +108,140 @@ Implementation Tip: In the Roadmap, prioritize the Sleep Hygiene and Impulsivity
 
 ## M11 — Insights
 
-## M12 — Insights
+Category A: Harmful Behaviors and Alerts
+🚨 Impulsivity and Checking Habits
+Frequency vs. Sleep: Checking your phone more than 400 times per week increases the risk of poor sleep quality by 61%, a much stronger predictor than total screen time alone.
+Reference: Mental Health Journal, 2025 Study on Objective Smartphone Use.
+
+The Anxiety Loop: Frequent checking for notifications creates an "intermittent reward" cycle similar to slot machines, conditioning your brain to constantly seek the next dopamine hit.
+Reference: Psychology of Phone Addiction Research.
+
+The Cost of Unlocking: Each time you unlock your phone without a specific goal, you reinforce impulsive neural pathways that make it harder to sustain focus on long-term tasks.
+Reference: Longitudinal Investigation of Smartphone Interaction Patterns.
+
+Micro-usage Stress: Usage sessions shorter than 10 seconds are typically "boredom checks" that fragment your attention and increase baseline stress levels.
+Reference: ARDUOUS User Interaction Analysis.
+
+🌑 Sleep Hygiene and Blue Light
+Melatonin Delay: Using screens before bed can delay the release of melatonin by up to 30 minutes, hindering your brain's ability to recover overnight.
+Reference: Frontiers in Psychiatry, 2025 Digital Nudge Study.
+
+REM Sleep Loss: People who use social media in bed lose an average of 16 minutes of sleep per night due to cognitive overstimulation and blue light exposure.
+Reference: University of Wisconsin-Madison Attention Research.
+
+Stressful Awakenings: Checking your phone within the first 5 minutes of waking up places your brain in a high-cortisol "stress-alert" state before you even leave bed.
+Reference: Mindfulness and Digital Distraction Study.
+
+Sleep Duration: Heavy smartphone use (over 63 hours per week) is directly linked to a 6.66-minute reduction in your total nightly rest.
+Reference: Journal of Medical Internet Research, 2025.
+
+🧠 Focus, Productivity, and Multitasking
+The 23-Minute Rule: After a single notification interruption, it takes your brain an average of 23 minutes and 15 seconds to regain deep focus on your original task.
+Reference: Gloria Mark, UCI Research on the Cost of Interrupted Work.
+
+Temporary IQ Loss: Digital multitasking can reduce your functional IQ by 10 points—a greater cognitive impact than losing an entire night of sleep.
+Reference: American Psychological Association Research on Multitasking.
+
+Productivity Drain: Switching between apps and work can consume up to 40% of your productive time due to the cognitive load of mental reorientation.
+Reference: Rubinstein, Meyer, & Evans (2001) Task-Switching Study.
+
+Attention Erosion: Over the last 20 years, the average attention span on a single digital task has plummeted from 150 seconds to just 47 seconds.
+Reference: Dr. Gloria Mark (2023) Attention Span Data.
+
+The Multitasker Myth: Only 2.5% of the population can effectively multitask; for the other 97.5%, error rates increase by 50% when using a phone during work.
+Reference: Watson & Strayer (2010) Supertasker Profiles.
+
+🤳 Passive vs. Active Consumption
+Emotion Sink: Passively scrolling through feeds without interacting is strongly linked to increased symptoms of depression, anxiety, and social envy.
+Reference: Mobile Sensing Technology Mental Health Study.
+
+Maladaptive Escape: Using your smartphone to "kill time" or avoid negative emotions often exacerbates digital fatigue and long-term mental exhaustion.
+Reference: Cognitive Load Theory and Digital Fatigue Research.
+
+Doomscrolling: Consuming endless negative news triggers the amygdala, keeping your body in a constant "fight-or-flight" state.
+Reference: Emerson Health Digital Wellness Guidelines.
+
+🦴 Physical Health and Ergonomics
+Neck Pressure: Tilting your head at 60 degrees to look at your phone exerts 60 pounds (approx. 27kg) of force on your cervical spine.
+Reference: "Text Neck" Biomechanical Model Research.
+
+Chronic Pain Risk: Excessive smartphone users have a sixfold higher risk of developing chronic neck and shoulder pain due to poor postural habits.
+Reference: Longitudinal Population-Based Cohort Study (Gustafsson et al.).
+
+Digital Eye Strain: Prolonged screen use reduces your blink rate by up to 50%, leading to dry eyes, blurred vision, and persistent headaches.
+Reference: Computer Vision Syndrome (CVS) and the 20-20-20 Rule Research.
+
+👥 Social Impact (Phubbing)
+The Silent Presence: Even a phone placed face-down on a table reduces the depth of conversation and emotional connection between people in the room.
+Reference: Sherry Turkle, Reclaiming Conversation Research.
+
+Digital Loneliness: "Phubbing" (ignoring others for your phone) triggers feelings of exclusion and ostracism in partners and friends, damaging long-term trust.
+Reference: Seppala (2017) Phubbing and Relationship Satisfaction Study.
+
+Empathy Decline: College students who grew up with intense technology use show 40% less empathy than generations 20 years ago.
+Reference: Sherry Turkle & University of Michigan Empathy Meta-Analysis.
+
+Category B: Positive Adjustments and Solutions
+🛠️ Habit Change Techniques
+The Power of Grayscale: Switching your screen to black and white reduces daily use by approximately 20-40 minutes by making apps less visually rewarding.
+Reference: Holte & Ferraro (2020) Grayscale Screen Time Research.
+
+The Friction Rule: Introducing just a 10-second delay before opening a target app is enough to dissipate most impulsive urges for mindless consumption.
+Reference: "One Sec" App Psychological Mechanism Study, PNAS 2023.
+
+Out of Sight: Keeping your phone in another room while working significantly improves your working memory and cognitive capacity.
+Reference: Ward et al. (2017) "Brain Drain" Study.
+
+Manual Passwords: Disabling biometric unlocking (FaceID/TouchID) in favor of long passwords adds a layer of "deliberate friction" that reduces impulsive opens.
+Reference: Nudge-Based Intervention Randomized Controlled Trial.
+
+The 20-20-20 Rule: Every 20 minutes of screen use, look at something 20 feet away for 20 seconds to relax your eye muscles and prevent strain.
+Reference: Eye Care Practitioner Clinical Guidelines for Digital Fatigue.
+
+🌿 Wellbeing and Recovery
+Nature Reboot: Spending 3 days in nature without a phone can increase cognitive function and creative problem-solving skills by 50%.
+Reference: The "Three-Day Effect" and Attention Restoration Theory.
+
+Screen Time Detox: Reducing screen time for just 3 weeks can improve mental health indicators with an effect size comparable to antidepressants.
+Reference: Georgetown University Digital Detox Study (Kushlev et al., 2025).
+
+Prefrontal Strength: Daily "digital fasting" periods help strengthen your prefrontal cortex, returning control over your decisions and reducing internet addiction.
+Reference: Mindfulness Practice for Behavioral Addiction Research.
+
+Unitasking Training: Rebuilding your attention span requires training the brain to focus on a single app or task for 25 uninterrupted minutes.
+Reference: Reclaiming Conversation - Unitasking Principles.
+
+📊 Awareness and Environment
+The Underestimation Gap: Users typically underestimate their actual smartphone usage by 20% to 50% until they see objective tracking data.
+Reference: Agreement Between Self-Reported and Objective Usage Study.
+
+Adaptive Goal Setting: Reducing your usage in small, 10% weekly increments is more effective for permanent change than attempting sudden, drastic cuts.
+Reference: Rule-Based Adaptive Goals in Habit Formation.
+
+Opportunity Cost: Visualizing your screen time as "lost hours" helps you prioritize real-world hobbies, exercise, and deep sleep.
+Reference: PNAS Nexus (2025) Blocking Mobile Internet Study.
+
+Trigger Removal: Hiding social media apps in folders off your home screen reduces the visual cues that trigger automatic "checking" behaviors.
+Reference: Fogg Behavior Model and Multifaceted Nudges.
+
+Feed Audit: Unfollowing accounts that trigger negative emotions can transform your passive usage into a more neutral or positive experience.
+Reference: Digital Wellness Guidelines for Doomscrolling.
+
+Active Recovery: Replacing a 5-minute scroll session with a short walk rejuvenates the brain and reduces mental fatigue faster than digital entertainment.
+Reference: CareerBuilder Workplace Productivity Suggestion.
+
+The Bedroom Rule: Charging your phone outside the bedroom improves sleep quality and prevents the cortisol spike associated with morning scrolling.
+Reference: Digital Detox Benefits and Sleep Quality Research.
+
+Selective Notifications: Keeping only human-to-human alerts (messaging) while disabling app-driven "pings" reduces constant environmental stress.
+Reference: Intervention for Reducing Non-Essential Notification Disruptions.
+
+Mindfulness Pause: Before opening an app, asking yourself "Why am I picking this up?" shifts your state from System 1 (automatic) to System 2 (deliberate).
+Reference: Pratt Institute Digital Wellbeing Journey Guidelines.
+
+## M12 — Active Overlay
+
+Dynamic overlay behavior
 
 ## M13 — Permissions Onboarding
 
