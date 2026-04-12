@@ -10,10 +10,20 @@ Lucas Silva Figueiredo — Prof. CS, UFRPE / CIn-UFPE. Research: Hybrid Intellig
    - Gmail, Notion, Figma read/write → MCP tool
    - If yes: use it. Stop here.
 
-2. **T1 — Is this isolated code gen with no codebase context needed?**
-   - Single fn/class, boilerplate, simple transform → `ollama run <model> "<prompt>"`
-   - Models: `qwen2.5-coder:7b` (simple) · `deepseek-coder-v2` (complex logic) · `qwen3:4b` (general text)
-   - If yes: use Ollama. Stop here.
+2. **T1 — Isolated code gen (no codebase context needed)**
+   Triggers when ALL of the following hold:
+   - No file path or extension in the request (no `/path/to/`, no `.py`, `.dart`, etc.)
+   - No fix/debug/refactor/update intent on existing code
+   - Output fits in one function, class, or standalone script
+   - No need to read or cross-reference existing project files
+
+   Commands:
+   - Simple logic, boilerplate, algorithms → `ollama run qwen2.5-coder:7b "<prompt>"`
+   - Complex logic, multi-step algorithm → `ollama run deepseek-coder-v2 "<prompt>"`
+   - General text/code → `ollama run qwen3:4b "<prompt>"`
+
+   **NEVER write T1 code inline.** Pass the full task as a single quoted argument; pipe output back in the response.
+   If yes: use Ollama. Stop here.
 
 3. **T2 — Is this analysis/review/text with no real-time or codebase context?**
    - Analyze or review an existing file → `gemini_run.py --file <path> --prompt "<instr>"` — never Read then summarize inline
