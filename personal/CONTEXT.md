@@ -1,14 +1,12 @@
-# Pessoal
+# Personal
 
-Vida pessoal, hobbies, saúde, produtividade. Cada subárea tem seu próprio ctx.
+Personal life, hobbies, health, productivity. Each sub-area has its own context file.
 
-## Subáreas
+## Sub-areas
 
-| Subárea | Descrição |
-|---------|-----------|
-| `/rpg/` | D&D 5e — personagens, campanhas, conteúdo visual |
-| `/saude/` | Registros de saúde, calistenia, pesquisa baseada em evidência |
-| `/casa/` | Construção da casa em Recife — tijolo ecológico, radier, telha sanduíche |
-| `/produtividade/` | CRM pessoal, triagem email, agenda, prioridades |
-
-# LATEST CHANGES
+| Sub-area | Description |
+|----------|-------------|
+| `/rpg/` | D&D 5e — characters, campaigns, visual content |
+| `/saude/` | Health records, calisthenics, evidence-based research |
+| `/casa/` | House construction in Recife — ecological brick, raft foundation, sandwich roof |
+| `/produtividade/` | Personal CRM, email triage, schedule, priorities |
