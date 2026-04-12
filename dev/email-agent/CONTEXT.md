@@ -1,7 +1,5 @@
-﻿# Email Agent -- placeholder
+# Email Agent — placeholder
 
-> Contexto nao preenchido. Preencher quando este workspace for usado pela primeira vez.
+> Context not filled in. Fill when this workspace is first used.
 
-Agente para leitura, resumo e priorizacao de emails. Fase: planejamento.
-
-# LATEST CHANGES
+Agent for reading, summarizing, and prioritizing emails. Phase: planning.
