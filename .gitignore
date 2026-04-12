@@ -45,6 +45,9 @@
 
 # ── dev/apptime — source code ───────────────────────────────
 !dev/apptime/ROADMAP.md
+!dev/apptime/HISTORY.md
+!dev/apptime/CONTEXT.md
+!dev/apptime/SPECS.md
 !dev/apptime/lib/
 !dev/apptime/lib/**
 !dev/apptime/lib/data/
