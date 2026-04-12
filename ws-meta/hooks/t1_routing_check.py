@@ -66,10 +66,20 @@ def main():
         if re.search(excl, prompt_lower, re.IGNORECASE):
             return
 
-    # If a trigger fires, inject the routing reminder
+    # If a trigger fires, inject the routing reminder and log the alert
     for trigger in T1_TRIGGERS:
         if re.search(trigger, prompt_lower, re.IGNORECASE):
             print(REMINDER)
+            try:
+                snippet = prompt[:80].replace("\n", " ")
+                line = (
+                    f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} "
+                    f"T1-ALERT prompt={snippet!r}\n"
+                )
+                with open(LOG_FILE, "a", encoding="utf-8") as f:
+                    f.write(line)
+            except Exception:
+                pass
             return
 
 
