@@ -101,8 +101,13 @@ to the interval since the last write (≤ the watchdog period, currently 30s).
 | SettingsScreen — appearance, goals, per-app control | ✓ |
 | Adaptive launcher icon | ✓ |
 | BootReceiver — service auto-start after reboot | ✓ |
-| Language support (pt-BR / en-US i18n) | Planned (M13) |
-| Dynamic overlay based on goals | Planned (M14) |
+| Language support (pt-BR / en-US i18n) | ✓ |
+| Goal tiers (GoalThresholds.kt + goal_config.dart, 3 levels × 6 metrics) | ✓ |
+| F.BN Breathing Nudge — random alpha cycle via Handler + ObjectAnimator | ✓ |
+| F.VW Visual Weight — overlay scale 1.0→1.2 as usage climbs 80%→200% of limit | ✓ |
+| F.PM Personalized Message — centred WindowManager overlay, 3s fade-in/10s/3s fade-out, 60s cooldown | ✓ |
+| Per-app goal overrides (app_goal_{pkg}, evaluated in OverlayService) | ✓ |
+| GoalScreen — level selector + per-app goal table | ✓ |
 
 ## Conventions
 
