@@ -15,9 +15,9 @@ x Change monitoring policy from "Today" to "24h" meaning we're reporting on the 
 
 ## M9 — Polish
 
-- HomeScreen "Insight of the day": 50 PT-BR texts with high-citation recognized scientific references, 3min rotation
+x HomeScreen "Insight of the day": 50 PT-BR texts with high-citation recognized scientific references, 3min rotation
 x Adaptive icon (`flutter_launcher_icons`); Check it, I believe it is already done.
-x Edge cases: MIUI home, device reboot (service won't auto-start — document limitation), active session at day rollover
+- Edge cases: MIUI home, device reboot (service won't auto-start — document limitation), active session at day rollover
 
 ## M10 — Analysis Blocks
 
@@ -108,6 +108,12 @@ Implementation Tip: In the Roadmap, prioritize the Sleep Hygiene and Impulsivity
 
 ## M11 — Insights
 
-## M12 — Permissions Onboarding
+## M12 — Insights
 
-. Create
+## M13 — Permissions Onboarding
+
+. Define the best way the first-use should happen, how users should be directed towards allowing the permissions, popups? automatically?
+
+. Implement that
+
+## M14 — L

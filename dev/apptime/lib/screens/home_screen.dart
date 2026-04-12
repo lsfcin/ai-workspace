@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import '../data/insights.dart';
 import '../services/service_channel.dart';
 import '../theme/app_theme.dart';
 
@@ -14,15 +16,31 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   bool _hasOverlayPermission = false;
   bool _hasUsagePermission = false;
 
+  late int _insightIndex;
+  Timer? _insightTimer;
+
+  static int _currentInsightIndex() {
+    // Rotate every 3 minutes based on wall-clock time so all sessions agree
+    final minutes = DateTime.now().millisecondsSinceEpoch ~/ (3 * 60 * 1000);
+    return minutes % kInsights.length;
+  }
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _insightIndex = _currentInsightIndex();
+    // Re-check every 30s so the switch happens within 30s of the 3-min boundary
+    _insightTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      final next = _currentInsightIndex();
+      if (next != _insightIndex) setState(() => _insightIndex = next);
+    });
     _refreshStatus();
   }
 
   @override
   void dispose() {
+    _insightTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -82,6 +100,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             },
           ),
           const SizedBox(height: AppSpacing.md),
+          _InsightCard(insight: kInsights[_insightIndex]),
+          const SizedBox(height: AppSpacing.md),
           Card(
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.md),
@@ -124,6 +144,43 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _InsightCard extends StatelessWidget {
+  const _InsightCard({required this.insight});
+  final String insight;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.lightbulb_outline, size: 16),
+                const SizedBox(width: AppSpacing.xs),
+                Text(
+                  'Insight do dia',
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              insight,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ),
       ),
     );
   }
