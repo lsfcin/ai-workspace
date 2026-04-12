@@ -1,13 +1,5 @@
 # AppTime — Roadmap
 
-## M13 — Language Support
-
-I am brazilian and the app will likely be first used here. So:
-. First I'd like to prepare the app to easily interchange between brazilian portugues and en-us. So prepare the project in a way all content of output/visible text is separated, right? Well, use industry standards for that.
-. Add a config for that so the user can change.
-. Make pt-br the default language.
-. Can you make the language recognition an automatic selection (maybe on the first use).
-
 ## M14 — Goals and Dynamic Overlay
 
 To implement this feature you'll likely have to read the entire milestone (M14 — Goals and Dynamic Overlay), it is not separated in small sequential bullets as other roadmap cases. Create your own todo list and write it in subsection, then follow it changing the - (todo) for x (done) step by step. Also, remember to commit changes.
@@ -24,7 +16,7 @@ Following "Calm Technology" principles, the overlay should move from the periphe
 #### F.BN - Breathing Nudge
 
 - **Intent:** To provide a "Silent Mirror" of behavior without interrupting the task.
-- **Feedback:** **"The Breathing Nudge."** The overlay uses a smooth fade-in (randomly between 2-3 seconds), stays on (randomy between 1-3 second) and fade-out (between 2-3 seconds seconds) cycle. This intermittent (and random pattern) presence prevents "banner blindness" by subtly re-engaging the user’s awareness.
+- **Feedback:** **"The Breathing Nudge."** The overlay uses a smooth fade-in (randomly between 2-3 seconds), stays on (randomy between 1-3 second) and fade-out (between 2-3 seconds seconds) cycle. This intermittent (and random pattern) presence prevents "banner blindness" by subtly re-engaging the user's awareness.
 
 #### F.PM - Personalized Message
 
@@ -67,7 +59,19 @@ Show a selector for the core/global goal level (choose how to display it, it can
 
 ### 4. Bullet ToDo List
 
-
+- StorageService: goal level + per-app goal level keys
+- GoalConfig data class + goal tier constants (thresholds per metric per level)
+- F.PM message tables (PT-BR + EN) for each trigger scenario
+- OverlayService: read goal level + current metrics, compute active feedbacks
+- OverlayService: F.BN — random breathing cycle (fade in/stay/fade out) with Handler
+- OverlayService: F.VW — scale factor on WindowManager params based on % of limit
+- OverlayService: F.PM — fade-in message overlay, 10s on, fade out, 1min cooldown
+- OverlayService: sleeping-hours and wakeup-window detection
+- OverlayService: per-app goal evaluation (app-specific limit overrides global)
+- GoalScreen (Flutter): level selector with research rationale + per-app goal table
+- l10n: add new strings for GoalScreen + F.PM messages to both ARB classes
+- Wire GoalScreen into SettingsScreen or NavigationBar
+- Commit all
 
 ## M15 — Prepare to PlayStore submission
 

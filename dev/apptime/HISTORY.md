@@ -60,3 +60,16 @@ New SharedPreferences keys (written by Kotlin, read by Flutter):
 - Step 1 — Overlay permission (SYSTEM_ALERT_WINDOW): opens system settings, detects grant via `WidgetsBindingObserver.didChangeAppLifecycleState`
 - Step 2 — Usage Stats permission (PACKAGE_USAGE_STATS): same pattern
 - Auto-advances when permission is granted; skips onboarding entirely on subsequent launches if both permissions are present
+
+## M13 — Language Support
+
+Industry-standard i18n via a manual `AppLocalizations` class (same interface as `flutter gen-l10n`, no codegen required).
+
+- `lib/l10n/app_localizations.dart` — abstract base + `LocalizationsDelegate`
+- `lib/l10n/app_localizations_pt.dart` — PT-BR (default)
+- `lib/l10n/app_localizations_en.dart` — EN-US
+- `flutter_localizations` SDK dep added to `pubspec.yaml`
+- `StorageService.languageCode` String? key persists the choice
+- Auto-detects system locale on first launch (PT-BR unless system is `en`)
+- Settings → Language section (`RadioGroup`: System / Português / English); change is immediate (no restart)
+- All 6 screens migrated off hardcoded strings
