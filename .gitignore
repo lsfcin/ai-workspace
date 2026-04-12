@@ -42,3 +42,12 @@
 !meta/scripts/
 !meta/scripts/*.py
 .env
+
+# ── dev/apptime — source code ───────────────────────────────
+!dev/apptime/ROADMAP.md
+!dev/apptime/lib/
+!dev/apptime/lib/**
+!dev/apptime/android/app/src/main/kotlin/
+!dev/apptime/android/app/src/main/kotlin/**
+!dev/apptime/android/app/src/main/AndroidManifest.xml
+!dev/apptime/pubspec.yaml
