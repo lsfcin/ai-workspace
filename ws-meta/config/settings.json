@@ -1,0 +1,64 @@
+{
+  "autoUpdatesChannel": "latest",
+  "voiceEnabled": false,
+  "voice": {
+    "enabled": false,
+    "mode": "hold"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "Edit(*)",
+      "Write(*)",
+      "Read(*)",
+      "Glob(*)",
+      "Grep(*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "C:/Users/Lucas/AppData/Local/Programs/Python/Python312/python.exe \"C:/Users/Lucas/Desktop/AI-Workspace/ws-meta/hooks/agent_routing_check.py\"",
+            "timeout": 10,
+            "statusMessage": "Verificando roteamento antes de spawn..."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash|Glob|Grep|mcp__",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "C:/Users/Lucas/AppData/Local/Programs/Python/Python312/python.exe \"C:/Users/Lucas/Desktop/AI-Workspace/ws-meta/hooks/bash_routing_log.py\"",
+            "timeout": 5,
+            "statusMessage": "Logging route..."
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "C:/Users/Lucas/AppData/Local/Programs/Python/Python312/python.exe \"C:/Users/Lucas/Desktop/AI-Workspace/ws-meta/hooks/auto_commit.py\"",
+            "timeout": 30,
+            "statusMessage": "Versionando arquivo..."
+          },
+          {
+            "type": "command",
+            "command": "C:/Users/Lucas/AppData/Local/Programs/Python/Python312/python.exe \"C:/Users/Lucas/Desktop/AI-Workspace/ws-meta/hooks/auto_version.py\"",
+            "timeout": 15,
+            "statusMessage": "Auto-versioning..."
+          }
+        ]
+      }
+    ]
+  },
+  "effortLevel": "medium"
+}
