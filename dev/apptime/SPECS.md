@@ -22,7 +22,19 @@
 - Overlay uses `WindowManager.addView()` with `START_STICKY` — no `flutter_overlay_window`
 - Sessions tracked manually — never use `totalTimeInForeground` (excludes active session)
 - Launchers treated as special mode, not regular apps
-- Screen off = event type 8 (`SCREEN_NON_INTERACTIVE`) → stop counting
+- Screen off = event type `SCREEN_NON_INTERACTIVE` → immediately flush and close active session
+
+**Usage data strategy — why we do not use Android's native UsageStatsManager totals**
+Android's `UsageStats.totalTimeInForeground` excludes the currently active (open) session,
+which would make the live overlay display always lag by one session. We use `UsageEvents`
+only to detect the *current* foreground app (1-min sliding window query), and accumulate
+session durations ourselves in `daily_ms_{pkg}_{date}`. This gives us:
+- Live accuracy: current session is always included in the displayed total
+- No dependency on battery-intensive background queries
+- Deterministic data: we control exactly what counts (screen-on + foreground only)
+The tradeoff is that a service crash loses the in-progress session. This is acceptable:
+we write to SharedPreferences on every app switch and on screen-off, so loss is bounded
+to the interval since the last write (≤ the watchdog period, currently 30s).
 
 **SharedPreferences keys**
 
