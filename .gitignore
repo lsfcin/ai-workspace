@@ -24,23 +24,27 @@
 !**/SPECS.md
 
 # ── Meta: templates, tools, referências ─────────────────────
-!meta/templates/
-!meta/templates/*.md
-!meta/tools/
-!meta/tools/*.md
-!meta/referencias/
-!meta/referencias/clief-notes/
-!meta/referencias/clief-notes/CONTEXT.md
-!meta/referencias/clief-notes/*.pdf
+!ws-meta/templates/
+!ws-meta/templates/*.md
+!ws-meta/tools/
+!ws-meta/tools/*.md
+!ws-meta/references/
+!ws-meta/references/clief-notes/
+!ws-meta/references/clief-notes/CONTEXT.md
+!ws-meta/references/clief-notes/*.pdf
 
 # ── Hook de versionamento ────────────────────────────────────
-!meta/hooks/
-!meta/hooks/*.py
-!meta/hooks/*.sh
+!ws-meta/hooks/
+!ws-meta/hooks/*.py
+!ws-meta/hooks/*.sh
 
 # ── Scripts utilitários (Tier 0-2) ──────────────────────────
-!meta/scripts/
-!meta/scripts/*.py
+!ws-meta/scripts/
+!ws-meta/scripts/*.py
+
+# ── Config: workspace settings backup ───────────────────────
+!ws-meta/config/
+!ws-meta/config/settings.json
 .env
 
 # ── dev/apptime — source code ───────────────────────────────
