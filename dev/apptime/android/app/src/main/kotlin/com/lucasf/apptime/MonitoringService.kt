@@ -42,8 +42,7 @@ class MonitoringService : Service() {
                 Intent.ACTION_SCREEN_OFF -> {
                     // Immediately flush the active session when screen turns off
                     if (lastPackage != null) {
-                        val duration = System.currentTimeMillis() - sessionStartMs
-                        accumulateDailyMs(lastPackage!!, duration)
+                        accumulateDailyMs(lastPackage!!, sessionStartMs, System.currentTimeMillis())
                         lastPackage = null
                     }
                     prefs.edit()
@@ -129,8 +128,7 @@ class MonitoringService : Service() {
         if (current == null) {
             // Screen off or no foreground app — close any open session immediately
             if (lastPackage != null) {
-                val duration = System.currentTimeMillis() - sessionStartMs
-                accumulateDailyMs(lastPackage!!, duration)
+                accumulateDailyMs(lastPackage!!, sessionStartMs, System.currentTimeMillis())
                 lastPackage = null
             }
             prefs.edit()
@@ -145,8 +143,7 @@ class MonitoringService : Service() {
             // App switch — close previous session, open new one
             val now = System.currentTimeMillis()
             if (lastPackage != null) {
-                val duration = now - sessionStartMs
-                accumulateDailyMs(lastPackage!!, duration)
+                accumulateDailyMs(lastPackage!!, sessionStartMs, now)
                 lastClosedPkg = lastPackage
                 lastClosedMs  = now
             }
@@ -236,30 +233,67 @@ class MonitoringService : Service() {
     private fun currentHour(): Int =
         java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
 
-    private fun accumulateDailyMs(pkg: String, duration: Long) {
-        val date = today()
-        val hour = currentHour()
+    /** Returns the 4am-anchored date key (YYYY-MM-DD) for the given epoch ms. */
+    private fun epochToDateKey(epochMs: Long): String {
+        val c = java.util.Calendar.getInstance().apply { timeInMillis = epochMs }
+        if (c.get(java.util.Calendar.HOUR_OF_DAY) < 4) c.add(java.util.Calendar.DATE, -1)
+        return "%04d-%02d-%02d".format(
+            c.get(java.util.Calendar.YEAR),
+            c.get(java.util.Calendar.MONTH) + 1,
+            c.get(java.util.Calendar.DAY_OF_MONTH)
+        )
+    }
 
-        // Daily totals (per-app + device)
-        val key = "flutter.daily_ms_${pkg}_${date}"
-        prefs.edit().putLong(key, prefs.getLong(key, 0L) + duration).apply()
-        val deviceKey = "flutter.device_daily_ms_${date}"
-        prefs.edit().putLong(deviceKey, prefs.getLong(deviceKey, 0L) + duration).apply()
+    /**
+     * Splits the session [startMs, endMs) across hour (and 4am-day) boundaries so that
+     * each hourly_ms bucket only receives the milliseconds that actually fell within it.
+     * Daily totals are attributed to the end-of-session date (same behaviour as before).
+     */
+    private fun accumulateDailyMs(pkg: String, startMs: Long, endMs: Long) {
+        val duration = endMs - startMs
+        if (duration <= 0L) return
 
-        // Hourly breakdown (per-app + device)
-        val hourKey = "flutter.hourly_ms_${pkg}_${date}_${hour}"
-        prefs.edit().putLong(hourKey, prefs.getLong(hourKey, 0L) + duration).apply()
-        val deviceHourKey = "flutter.device_hourly_ms_${date}_${hour}"
-        prefs.edit().putLong(deviceHourKey, prefs.getLong(deviceHourKey, 0L) + duration).apply()
+        // Daily totals — attributed to the day that contains the session end
+        val endDate = epochToDateKey(endMs)
+        val dailyKey = "flutter.daily_ms_${pkg}_${endDate}"
+        prefs.edit().putLong(dailyKey, prefs.getLong(dailyKey, 0L) + duration).apply()
+        val deviceDailyKey = "flutter.device_daily_ms_${endDate}"
+        prefs.edit().putLong(deviceDailyKey, prefs.getLong(deviceDailyKey, 0L) + duration).apply()
 
-        // Session duration bucket
+        // Hourly breakdown — walk from startMs to endMs in hour-boundary steps
+        var cursor = startMs
+        while (cursor < endMs) {
+            val cal = java.util.Calendar.getInstance().apply { timeInMillis = cursor }
+            val hour = cal.get(java.util.Calendar.HOUR_OF_DAY)
+            val date = epochToDateKey(cursor)
+
+            // Start of next hour
+            val nextHourCal = java.util.Calendar.getInstance().apply {
+                timeInMillis = cursor
+                set(java.util.Calendar.MINUTE, 0)
+                set(java.util.Calendar.SECOND, 0)
+                set(java.util.Calendar.MILLISECOND, 0)
+                add(java.util.Calendar.HOUR_OF_DAY, 1)
+            }
+            val chunkEnd = minOf(nextHourCal.timeInMillis, endMs)
+            val chunkMs  = chunkEnd - cursor
+
+            val hourKey = "flutter.hourly_ms_${pkg}_${date}_${hour}"
+            prefs.edit().putLong(hourKey, prefs.getLong(hourKey, 0L) + chunkMs).apply()
+            val deviceHourKey = "flutter.device_hourly_ms_${date}_${hour}"
+            prefs.edit().putLong(deviceHourKey, prefs.getLong(deviceHourKey, 0L) + chunkMs).apply()
+
+            cursor = chunkEnd
+        }
+
+        // Session duration bucket (based on total duration, attributed to end date)
         val bucketIdx = when {
             duration < 60_000L  -> 0   // < 1 min
             duration < 300_000L -> 1   // 1–5 min
             duration < 900_000L -> 2   // 5–15 min
             else                -> 3   // > 15 min
         }
-        val bucketKey = "flutter.session_bucket_${bucketIdx}_${date}"
+        val bucketKey = "flutter.session_bucket_${bucketIdx}_${endDate}"
         prefs.edit().putLong(bucketKey, prefs.safeGetCount(bucketKey) + 1).apply()
     }
 

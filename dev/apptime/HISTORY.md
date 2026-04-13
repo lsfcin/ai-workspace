@@ -1,5 +1,23 @@
 # AppTime — Completed Milestones
 
+## M17 — Persistent Bugs
+
+x Top-5 apps chart: sorted by usage, top-5 coloured with their own hue + shown in caption; remaining apps collapsed to grey "outros/other" segment.
+
+x Per-app control screen was unreachable (missing entry in navigation). Re-added via Settings → Controle por app / Per-app control.
+
+x Overlay font-size slider was writing to SharedPreferences but OverlayService was reading the key only once at init. Fixed by polling overlay_font_size every tick.
+
+x Vertical position slider removed from Settings (config was unmaintainable and unnecessary).
+
+x Timer disappearing while using AppTime itself: ObjectAnimator for breathing nudge wasn't cancelled when stopBreathing() was called, leaving overlay at DIM_ALPHA=0.35f. Fixed with currentAnimator tracking and explicit cancel() before any direct alpha assignment.
+
+x Replaced technical terms ("overlay", "launcher") with plain language in PT-BR strings: "visor flutuante", "tela inicial", etc.
+
+x Launcher counter showing 21h+ and frozen: root cause was UsageEvents 60s query window missing screen-off events when screen was off >60s, so sessions accumulated while screen was off. Fixed with ACTION_SCREEN_OFF BroadcastReceiver for immediate session flush + PowerManager.isInteractive() guard at tick() entry. Added migrateCorruptedDeviceDaily() to reset any existing corrupted value ≥ 23h on startup. Launcher live counter now adds (now – sessionStartMs) to stored total.
+
+x Data handling / hour×weekday heatmap accuracy: sessions were being attributed entirely to the ending hour (e.g. a 14:30–15:45 session put all 75 min into hour 15). Fixed accumulateDailyMs() to accept (pkg, startMs, endMs) and walk from startMs to endMs in hour-boundary steps, writing each chunk to its correct (date, hour) bucket. Added epochToDateKey() helper with 4am anchor for arbitrary epoch timestamps.
+
 ## M16 — More Fixes
 
 x Overlay always on (except PM / unmonitored apps). New Settings toggle: "Monitorar tela inicial / Monitor home screen" (monitor_launcher bool). MonitoringService now checks disabled_apps and monitor_launcher before setting overlay_visible=true.
