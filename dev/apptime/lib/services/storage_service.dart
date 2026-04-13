@@ -138,6 +138,10 @@ class StorageService {
 
   // ── Per-app control ──
 
+  /// Whether the overlay should be shown while on the launcher / home screen.
+  bool get monitorLauncher => _prefs.getBool('monitor_launcher') ?? true;
+  set monitorLauncher(bool v) => _prefs.setBool('monitor_launcher', v);
+
   Set<String> get disabledApps =>
       _prefs.getStringList('disabled_apps')?.toSet() ?? {};
 

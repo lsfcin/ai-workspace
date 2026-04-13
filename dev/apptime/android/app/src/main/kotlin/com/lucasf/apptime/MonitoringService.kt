@@ -126,6 +126,22 @@ class MonitoringService : Service() {
             if (!isLauncher && !isReturn) incrementOpenCount(current)
         }
 
+        // ── Per-app overlay visibility ──────────────────────────────────────
+        val disabledApps = prefs.getStringList("flutter.disabled_apps") ?: emptyList<String>()
+        val monitorLauncher = prefs.getBoolean("flutter.monitor_launcher", true)
+        val overlayHidden = disabledApps.contains(current) || (isLauncher && !monitorLauncher)
+
+        if (overlayHidden) {
+            // Still track time and session, but don't show overlay
+            prefs.edit()
+                .putString("flutter.overlay_text", "")
+                .putBoolean("flutter.overlay_visible", false)
+                .putString("flutter.current_pkg", current)
+                .putLong("flutter.current_session_start_ms", sessionStartMs)
+                .apply()
+            return
+        }
+
         val overlayText = when {
             isLauncher -> {
                 val unlocks = getUnlockCount()

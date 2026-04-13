@@ -91,6 +91,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                 ),
+                SwitchListTile(
+                  title: Text(l10n.monitorLauncherTitle),
+                  subtitle: Text(l10n.monitorLauncherSub),
+                  value: _s.monitorLauncher,
+                  onChanged: (v) => setState(() => _s.monitorLauncher = v),
+                ),
                 ListTile(
                   title: Text(l10n.perAppControlTitle),
                   subtitle: Text(l10n.perAppControlSub),

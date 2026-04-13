@@ -82,6 +82,8 @@ abstract class AppLocalizations {
   String goalMinutesPerDay(int min);
   String get perAppControlTitle;
   String get perAppControlSub;
+  String get monitorLauncherTitle;
+  String get monitorLauncherSub;
   String get dialogDailyGoalTitle;
   String get dialogNoGoal;
   String dialogGoalMinDay(int min);

@@ -86,13 +86,22 @@ class OverlayService : Service() {
     private val windowManager by lazy { getSystemService(WINDOW_SERVICE) as WindowManager }
 
     private fun addOverlayView() {
+        val density = resources.displayMetrics.density
+        val screenWidthPx = resources.displayMetrics.widthPixels
+        // PM messages can be multi-line; cap width at 88% of screen so text
+        // wraps instead of being clipped horizontally.
+        val maxWidthPx = (screenWidthPx * 0.88f).toInt()
+
         overlayView = TextView(this).apply {
             text = ""
             textSize = 14f
             setTextColor(Color.WHITE)
             typeface = Typeface.DEFAULT_BOLD
             setShadowLayer(3f, 1f, 1f, Color.BLACK)
-            setPadding(12, 6, 12, 6)
+            setPadding(16, 8, 16, 8)
+            maxWidth = maxWidthPx
+            // Allow wrapping when PM switches to multi-line content
+            setSingleLine(false)
         }
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
@@ -318,6 +327,12 @@ class OverlayService : Service() {
         // Temporarily stop breathing so it doesn't interfere with the PM animation
         breathingActive = false
 
+        // PM messages use a slightly smaller font so multi-line text fits nicely
+        val timerFontSize = readFloat(
+            getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE),
+            "flutter.overlay_font_size", 14f
+        ).coerceIn(10f, 30f)
+        overlayView.textSize = (timerFontSize - 2f).coerceAtLeast(11f)
         overlayView.text = message
         overlayView.visibility = View.VISIBLE
         overlayView.alpha = 0f
@@ -327,6 +342,8 @@ class OverlayService : Service() {
             handler.postDelayed({
                 animateAlpha(overlayView, 1f, 0f, 2_000L) {
                     pmActive = false
+                    // Restore timer font size before next updateOverlay() tick
+                    overlayView.textSize = timerFontSize
                     overlayView.alpha = 1f
                 }
             }, 20_000L)

@@ -65,6 +65,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override String goalMinutesPerDay(int min) => '$min minutes / day';
   @override String get perAppControlTitle => 'Per-app control';
   @override String get perAppControlSub => 'Enable / disable overlay per app';
+  @override String get monitorLauncherTitle => 'Monitor home screen';
+  @override String get monitorLauncherSub => 'Show overlay on the launcher / home screen';
   @override String get dialogDailyGoalTitle => 'Daily goal';
   @override String get dialogNoGoal => 'No goal';
   @override String dialogGoalMinDay(int min) => '$min min / day';
