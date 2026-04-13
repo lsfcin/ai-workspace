@@ -21,11 +21,11 @@ class AppLocalizationsPt extends AppLocalizations {
   @override String get permGrant => 'Conceder';
   @override String get insightOfDay => 'Insight do dia';
   @override String get monitoringTitle => 'Contador';
-  @override String get monitoringActive => 'Ativo — overlay mostrando uso em tempo real.';
+  @override String get monitoringActive => 'Ativo — contador mostrando uso em tempo real.';
   @override String get monitoringInactive => 'Inativo. Toque em Iniciar.';
   @override String get monitoringNoPerms => 'Conceda as permissões acima para iniciar.';
   @override String get monitoringDesc =>
-      'O overlay exibe quantas vezes você abriu o app (5s) e o tempo acumulado.';
+      'O visor exibe quantas vezes você abriu o app (5s) e o tempo acumulado.';
   @override String get actionStart => 'Iniciar';
   @override String get actionStop => 'Parar';
 
@@ -55,20 +55,18 @@ class AppLocalizationsPt extends AppLocalizations {
   @override String get continueAction => 'Continuar';
 
   @override String get settingsTitle => 'Configurações';
-  @override String get sectionOverlay => 'Overlay';
+  @override String get sectionOverlay => 'Visor flutuante';
   @override String get showBorder => 'Mostrar borda';
   @override String get showBackground => 'Mostrar fundo';
   @override String fontSize(int size) => 'Tamanho da fonte: ${size}sp';
-  @override String get sectionPositioning => 'Posicionamento';
-  @override String verticalPosition(int dp) => 'Posição vertical: ${dp}dp';
   @override String get sectionBehavior => 'Comportamento';
   @override String get dailyGoalTitle => 'Meta diária de uso';
   @override String get noGoalSet => 'Sem meta definida';
   @override String goalMinutesPerDay(int min) => '$min minutos / dia';
   @override String get perAppControlTitle => 'Controle por app';
-  @override String get perAppControlSub => 'Habilitar / desabilitar overlay por app';
+  @override String get perAppControlSub => 'Configurar monitoramento individualmente por app';
   @override String get monitorLauncherTitle => 'Monitorar tela inicial';
-  @override String get monitorLauncherSub => 'Mostrar overlay na tela inicial / launcher';
+  @override String get monitorLauncherSub => 'Mostrar o visor ao voltar para a tela inicial';
   @override String get dialogDailyGoalTitle => 'Meta diária';
   @override String get dialogNoGoal => 'Sem meta';
   @override String dialogGoalMinDay(int min) => '$min min / dia';
@@ -81,8 +79,8 @@ class AppLocalizationsPt extends AppLocalizations {
   @override String get noAppsMsg =>
       'Nenhum app registrado nos últimos 7 dias.\n'
       'Inicie o monitoramento e use o celular normalmente.';
-  @override String get overlayDisabled => 'Overlay desabilitado';
-  @override String get overlayActive => 'Overlay ativo';
+  @override String get overlayDisabled => 'Visor desabilitado';
+  @override String get overlayActive => 'Visor ativo';
 
   @override String get analysisTitle => 'Análise';
   @override String get tabToday => 'Hoje';

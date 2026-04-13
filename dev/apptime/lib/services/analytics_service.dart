@@ -37,52 +37,47 @@ class AnalyticsService {
   final StorageService _storage;
 
   /// Retorna sumário para os últimos [days] dias (1, 7 ou 30).
-  /// When days == 1 the first entry covers the rolling last-24h window
-  /// (today's data + proportional fraction of yesterday's data).
-  /// For days > 1 the remaining entries are calendar-day totals.
+  /// i=0 → today (since 04:00). i>0 → previous 4am-bounded days.
   List<DaySummary> getSummaries(int days) {
-    final today = DateTime.now();
+    // 4am day boundary — mirrors MonitoringService.kt
+    final today = _anchor(DateTime.now());
     final summaries = <DaySummary>[];
 
     for (int i = 0; i < days; i++) {
-      if (i == 0) {
-        // Rolling 24h window
-        final packages = _storage.packagesLast24h();
-        final apps = packages.map((pkg) {
-          return AppUsage(
-            packageName: pkg,
-            dailyMs: _storage.getLast24hMs(pkg),
-            openCount: _storage.getOpenCount(pkg),
-          );
-        }).toList();
-        summaries.add(DaySummary(
-          date: '24h',
-          totalMs: _storage.getDeviceLast24hMs(),
-          unlockCount: _storage.getUnlockLast24h(),
-          apps: apps,
-        ));
-      } else {
-        final date = today.subtract(Duration(days: i));
-        final dateStr = _fmt(date);
-        final packages = _storage.packagesDailyMs(dateStr);
-        final apps = packages.map((pkg) {
-          return AppUsage(
-            packageName: pkg,
-            dailyMs: _storage.getDailyMs(pkg, date: dateStr),
-            openCount: _storage.getOpenCount(pkg, date: dateStr),
-          );
-        }).toList();
-        summaries.add(DaySummary(
-          date: dateStr,
-          totalMs: _storage.getDeviceDailyMs(date: dateStr),
-          unlockCount: _storage.getUnlockCount(date: dateStr),
-          apps: apps,
-        ));
-      }
+      final date = today.subtract(Duration(days: i));
+      final dateStr = _fmt(date);
+      final packages = i == 0
+          ? _storage.packagesLast24h()      // uses _todayKey() which is already anchored
+          : _storage.packagesDailyMs(dateStr);
+      final apps = packages.map((pkg) {
+        return AppUsage(
+          packageName: pkg,
+          dailyMs: i == 0
+              ? _storage.getLast24hMs(pkg)
+              : _storage.getDailyMs(pkg, date: dateStr),
+          openCount: i == 0
+              ? _storage.getOpenCount(pkg)
+              : _storage.getOpenCount(pkg, date: dateStr),
+        );
+      }).toList();
+      summaries.add(DaySummary(
+        date: i == 0 ? 'today' : dateStr,
+        totalMs: i == 0
+            ? _storage.getDeviceLast24hMs()
+            : _storage.getDeviceDailyMs(date: dateStr),
+        unlockCount: i == 0
+            ? _storage.getUnlockLast24h()
+            : _storage.getUnlockCount(date: dateStr),
+        apps: apps,
+      ));
     }
 
     return summaries;
   }
+
+  /// 4am day anchor — hours 00–03 belong to the previous calendar day.
+  static DateTime _anchor(DateTime dt) =>
+      dt.hour < 4 ? dt.subtract(const Duration(days: 1)) : dt;
 
   static String _fmt(DateTime d) =>
       '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';

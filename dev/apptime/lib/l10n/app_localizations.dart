@@ -74,8 +74,6 @@ abstract class AppLocalizations {
   String get showBorder;
   String get showBackground;
   String fontSize(int size);
-  String get sectionPositioning;
-  String verticalPosition(int dp);
   String get sectionBehavior;
   String get dailyGoalTitle;
   String get noGoalSet;

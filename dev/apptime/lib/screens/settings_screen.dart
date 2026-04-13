@@ -60,23 +60,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          _SectionHeader(l10n.sectionPositioning),
-          Card(
-            child: Column(
-              children: [
-                ListTile(
-                  title: Text(l10n.verticalPosition(_s.overlayTopDp.round())),
-                  subtitle: Slider(
-                    min: 0,
-                    max: 300,
-                    value: _s.overlayTopDp,
-                    onChanged: (v) => setState(() => _s.overlayTopDp = v),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
           _SectionHeader(l10n.sectionBehavior),
           Card(
             child: Column(

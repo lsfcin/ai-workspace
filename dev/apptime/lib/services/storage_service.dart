@@ -200,13 +200,15 @@ class StorageService {
       '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
   /// Returns the last [n] dates (YYYY-MM-DD) that fall on [weekday] (1=Mon … 7=Sun).
+  /// Uses the 4am day anchor so dates match the keys stored by MonitoringService.
   List<String> lastNDatesForWeekday(int weekday, int n) {
     final result = <String>[];
-    var d = DateTime.now().subtract(const Duration(days: 1));
+    var d = _dayAnchor(DateTime.now()).subtract(const Duration(days: 1));
+    final cutoff = _dayAnchor(DateTime.now()).subtract(const Duration(days: 90));
     while (result.length < n) {
       if (d.weekday == weekday) result.add(_fmt(d));
       d = d.subtract(const Duration(days: 1));
-      if (d.isBefore(DateTime.now().subtract(const Duration(days: 90)))) break;
+      if (d.isBefore(cutoff)) break;
     }
     return result;
   }

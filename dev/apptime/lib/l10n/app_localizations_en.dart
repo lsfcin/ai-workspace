@@ -57,8 +57,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override String get showBorder => 'Show border';
   @override String get showBackground => 'Show background';
   @override String fontSize(int size) => 'Font size: ${size}sp';
-  @override String get sectionPositioning => 'Positioning';
-  @override String verticalPosition(int dp) => 'Vertical position: ${dp}dp';
   @override String get sectionBehavior => 'Behavior';
   @override String get dailyGoalTitle => 'Daily usage goal';
   @override String get noGoalSet => 'No goal set';
