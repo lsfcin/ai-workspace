@@ -26,6 +26,7 @@ class MonitoringService : Service() {
     private var sessionStartMs: Long = 0L
     private var watchdogTick = 0
     private var lastDate: String = ""
+    private var lastPruneDate: String = ""
 
     // Reopening tolerance: if the same app returns within this window, don't
     // count it as a new open (covers copy-paste flows, permission dialogs, etc.)
@@ -84,13 +85,18 @@ class MonitoringService : Service() {
             startService(Intent(this, OverlayService::class.java))
         }
 
-        // Day rollover: flush the active session so pre-midnight usage isn't
-        // attributed to the new calendar day. The in-flight duration is discarded
+        // Day rollover: flush the active session so pre-4am usage isn't
+        // attributed to the new day. The in-flight duration is discarded
         // (bounded loss: at most one session's worth of ms, typically seconds).
         val currentDate = today()
         if (currentDate != lastDate) {
             lastPackage = null
             lastDate = currentDate
+            // Prune data older than 31 days once per new day
+            if (currentDate != lastPruneDate) {
+                lastPruneDate = currentDate
+                pruneOldData()
+            }
         }
 
         val current = getCurrentApp()
@@ -285,6 +291,29 @@ class MonitoringService : Service() {
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setPriority(NotificationCompat.PRIORITY_MIN)
             .build()
+    }
+
+    /** Remove all date-keyed SharedPreferences entries older than 31 days.
+     *  Keys that embed a YYYY-MM-DD substring are matched and cleaned up.
+     *  This keeps storage bounded while guaranteeing 30+ days of history.
+     */
+    private fun pruneOldData() {
+        val cutoff = java.util.Calendar.getInstance().apply {
+            add(java.util.Calendar.DATE, -31)
+            if (get(java.util.Calendar.HOUR_OF_DAY) < 4) add(java.util.Calendar.DATE, -1)
+        }
+        val cutoffStr = "%04d-%02d-%02d".format(
+            cutoff.get(java.util.Calendar.YEAR),
+            cutoff.get(java.util.Calendar.MONTH) + 1,
+            cutoff.get(java.util.Calendar.DAY_OF_MONTH)
+        )
+        val dateRegex = Regex("""(\d{4}-\d{2}-\d{2})""")
+        val editor = prefs.edit()
+        for (key in prefs.all.keys) {
+            val match = dateRegex.find(key) ?: continue
+            if (match.value <= cutoffStr) editor.remove(key)
+        }
+        editor.apply()
     }
 
     /** Read a counter written by either putLong (new) or putInt (legacy data). */
