@@ -37,6 +37,7 @@ class OverlayService : Service() {
 
     // ── F.BN — breathing-nudge state ──────────────────────────────────────────
     private var breathingActive = false
+    private var currentAnimator: ObjectAnimator? = null
 
     // ── Unlock tracking for F.PM-on-unlock ───────────────────────────────────
     private var lastSeenUnlockCount = 0
@@ -273,6 +274,9 @@ class OverlayService : Service() {
 
     private fun stopBreathing() {
         breathingActive = false
+        // Cancel any in-flight animation so it cannot override alpha=1f below
+        currentAnimator?.cancel()
+        currentAnimator = null
         if (isViewAdded && !pmActive) overlayView.alpha = 1f
     }
 
@@ -355,11 +359,18 @@ class OverlayService : Service() {
     // ─────────────────────────────────────────────────────────────────────────
 
     private fun animateAlpha(view: View, from: Float, to: Float, durationMs: Long, onEnd: () -> Unit) {
-        ObjectAnimator.ofFloat(view, View.ALPHA, from, to).apply {
+        currentAnimator?.cancel()
+        currentAnimator = ObjectAnimator.ofFloat(view, View.ALPHA, from, to).apply {
             duration = durationMs
             interpolator = AccelerateDecelerateInterpolator()
             addListener(object : AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator) = onEnd()
+                override fun onAnimationEnd(animation: Animator) {
+                    if (animation == currentAnimator) currentAnimator = null
+                    onEnd()
+                }
+                override fun onAnimationCancel(animation: Animator) {
+                    if (animation == currentAnimator) currentAnimator = null
+                }
             })
             start()
         }

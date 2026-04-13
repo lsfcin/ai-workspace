@@ -14,6 +14,7 @@ import android.content.SharedPreferences
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.os.PowerManager
 import androidx.core.app.NotificationCompat
 
 class MonitoringService : Service() {
@@ -35,17 +36,30 @@ class MonitoringService : Service() {
     private var lastClosedMs: Long = 0L
     private val REOPEN_TOLERANCE_MS = 120_000L
 
-    private val unlockReceiver = object : BroadcastReceiver() {
+    private val screenReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            if (intent.action == Intent.ACTION_USER_PRESENT) {
-                val date = today()
-                val hour = currentHour()
-                // Daily total — use putLong so Flutter's getInt() (which reads Long) works
-                val key = "flutter.unlock_count_${date}"
-                prefs.edit().putLong(key, prefs.safeGetCount(key) + 1).apply()
-                // Hourly count
-                val hourKey = "flutter.hourly_unlocks_${date}_${hour}"
-                prefs.edit().putLong(hourKey, prefs.safeGetCount(hourKey) + 1).apply()
+            when (intent.action) {
+                Intent.ACTION_SCREEN_OFF -> {
+                    // Immediately flush the active session when screen turns off
+                    if (lastPackage != null) {
+                        val duration = System.currentTimeMillis() - sessionStartMs
+                        accumulateDailyMs(lastPackage!!, duration)
+                        lastPackage = null
+                    }
+                    prefs.edit()
+                        .putString("flutter.overlay_text", "")
+                        .putBoolean("flutter.overlay_visible", false)
+                        .remove("flutter.current_pkg")
+                        .apply()
+                }
+                Intent.ACTION_USER_PRESENT -> {
+                    val date = today()
+                    val hour = currentHour()
+                    val key = "flutter.unlock_count_${date}"
+                    prefs.edit().putLong(key, prefs.safeGetCount(key) + 1).apply()
+                    val hourKey = "flutter.hourly_unlocks_${date}_${hour}"
+                    prefs.edit().putLong(hourKey, prefs.safeGetCount(hourKey) + 1).apply()
+                }
             }
         }
     }
@@ -64,14 +78,19 @@ class MonitoringService : Service() {
         usageStatsManager = getSystemService(USAGE_STATS_SERVICE) as UsageStatsManager
         prefs = getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
         lastDate = today()
-        registerReceiver(unlockReceiver, IntentFilter(Intent.ACTION_USER_PRESENT))
+        migrateCorruptedDeviceDaily()
+        val screenFilter = IntentFilter().apply {
+            addAction(Intent.ACTION_SCREEN_OFF)
+            addAction(Intent.ACTION_USER_PRESENT)
+        }
+        registerReceiver(screenReceiver, screenFilter)
         handler.post(pollRunnable)
         return START_STICKY
     }
 
     override fun onDestroy() {
         handler.removeCallbacks(pollRunnable)
-        try { unregisterReceiver(unlockReceiver) } catch (_: Exception) {}
+        try { unregisterReceiver(screenReceiver) } catch (_: Exception) {}
         prefs.edit()
             .putBoolean("flutter.overlay_visible", false)
             .apply()
@@ -98,6 +117,11 @@ class MonitoringService : Service() {
                 pruneOldData()
             }
         }
+
+        // Short-circuit when screen is off — screenReceiver handles the flush;
+        // PowerManager check guards against edge cases (e.g. first tick after boot).
+        val pm = getSystemService(POWER_SERVICE) as PowerManager
+        if (!pm.isInteractive) return
 
         val current = getCurrentApp()
         val isLauncher = current != null && LAUNCHERS.contains(current)
@@ -133,7 +157,7 @@ class MonitoringService : Service() {
         }
 
         // ── Per-app overlay visibility ──────────────────────────────────────
-        val disabledApps = prefs.getStringList("flutter.disabled_apps") ?: emptyList<String>()
+        val disabledApps = prefs.getStringSet("flutter.disabled_apps", emptySet()) ?: emptySet<String>()
         val monitorLauncher = prefs.getBoolean("flutter.monitor_launcher", true)
         val overlayHidden = disabledApps.contains(current) || (isLauncher && !monitorLauncher)
 
@@ -151,8 +175,10 @@ class MonitoringService : Service() {
         val overlayText = when {
             isLauncher -> {
                 val unlocks = getUnlockCount()
-                val totalMs = getDeviceDailyMs()
-                if (shouldShowCount()) "$unlocks×" else formatTime(totalMs)
+                // Add live launcher session so the counter updates every tick (not frozen)
+                val storedMs = getDeviceDailyMs()
+                val liveMs = storedMs + (System.currentTimeMillis() - sessionStartMs)
+                if (shouldShowCount()) "$unlocks×" else formatTime(liveMs)
             }
             else -> {
                 val opens = getOpenCount(current)
@@ -291,6 +317,18 @@ class MonitoringService : Service() {
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setPriority(NotificationCompat.PRIORITY_MIN)
             .build()
+    }
+
+    /** One-time migration: reset device_daily_ms_{today} if it exceeds 23 hours.
+     *  The old rolling-24h logic could accumulate two calendar-days of data into a
+     *  single key, producing impossible values. Any value ≥ 23h is corrupted.
+     */
+    private fun migrateCorruptedDeviceDaily() {
+        val key = "flutter.device_daily_ms_${today()}"
+        val value = prefs.getLong(key, 0L)
+        if (value >= 23 * 3_600_000L) {
+            prefs.edit().remove(key).apply()
+        }
     }
 
     /** Remove all date-keyed SharedPreferences entries older than 31 days.
