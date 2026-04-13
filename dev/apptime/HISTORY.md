@@ -1,5 +1,21 @@
 # AppTime — Completed Milestones
 
+## M16 — More Fixes
+
+x Overlay always on (except PM / unmonitored apps). New Settings toggle: "Monitorar tela inicial / Monitor home screen" (monitor_launcher bool). MonitoringService now checks disabled_apps and monitor_launcher before setting overlay_visible=true.
+
+x PM text was too big and cropped horizontally. OverlayService now sets maxWidth=88% screen width + setSingleLine(false). PM temporarily uses timerSize-2sp font and restores it after fade-out.
+
+x Launcher was showing 21:16:08 because rolling-24h window was summing two calendar days. Root cause fixed: day boundary moved to 4am (see below).
+
+x Engagement balance analysis card classification text ("Passive: social…") was hardcoded English. Added l10n.blockEngagementClassification to all three locale files.
+
+x Week pattern chart: renamed from "Weekend pattern" → "Padrão semanal / Week pattern". Fixed bar fill: each cell now proportionally fills to actual usage fraction of the 60-min slot; unused time is transparent. Segments: top-5 apps by colour, then grey "outros/other", then transparent. Caption uses l10n.weekdayOtherLabel.
+
+x 30-day data retention: MonitoringService calls pruneOldData() once per day on rollover, removing SharedPreferences keys with embedded dates older than 31 days. Guarantees full 30-day history with bounded storage.
+
+x 4am day boundary: today() in both Kotlin services and _todayKey() in Dart subtract one calendar day when hour < 4. Analytics "24h" tab renamed to "Hoje/Today". day-boundary note added at bottom of Today tab. getLast24hMs() now returns today-only data (clean window, no fractional approximation).
+
 ## M8 — Fixes
 
 - x Disappearance: overlay is resilient, but at some point it is still disappearing. It is the most important feature and we must guarantee by all means it remains there
@@ -91,3 +107,27 @@ Industry-standard i18n via a manual `AppLocalizations` class (same interface as 
 - `SettingsScreen`: Goals tile navigates to `GoalScreen` (replaces old daily-goal dialog)
 - `StorageService`: `goal_level` Int + `app_goal_{pkg}` Int per-app override keys
 - l10n (PT+EN): 15 new GoalScreen strings in all three l10n files
+
+## M15 — Fixes
+
+x We're still not capturing any unblocks, zero. 
+
+x Personalized messages (PMs) should be displayed in the same position as the overlay, not in the center of the screen. Also, for these messages no need for final dots ('.'). Also, don't capitalize the first letter. The message will look better this way.
+
+x Personalized messages should also display the strongest point of it. For example, don't just say "you've reached your daily limit", add something strong and short that tells the user (and she/he probably already knows) why is it important to comply. Rewrite all PMs, I will give you more space. Do you think that 2-3 lines with ~8 words each is enough? Also, double the display time of the messages so the user has time to read it.
+
+x Personalized messages are being periodically shown, but the timer overlay disappeared although the counter is active within the app config. Not sure if this is the intended behavior but if it is then let's correct that. The timer should be almost always there, unless we are showing another message (e.g., x times opened, PM, ...). Even in case it is being animated disappearing and appearing, it should not stay disappeared, even for a second.
+
+x Insights tabs should show one insight per time, you can place a carousel instead of the current list. Order insight cards from the most relevant to the least one. Also, can we provide valid hyperlinks for the insights.
+
+x All my usage on the last days is being classified as active. Is this classification correct? Also, briefly especify within this analysis card how are you performing this classification. At last, I believe it will look a little better if you reduce this donnut chart size and increase a bit the padding between it and the other contents of the card.
+
+x The analysis card showing the wekend pattern is a bit hard to interpret. Can we swap that with another analysis? I wanted this card to show a grid (you're already doing that), but making each column represent one day of the week (7-columns) and each row representing an hour of the day. Each hour is an horizontally stacked bar chart. The stacked bar width represents the 60 minutes of that hour. For that hour we will monitor the apps usage on average for the last four-mondays, last four-tuesdays... last four-sundays. The bar starts from left to right with the most used app, stacked with the second most used, the third, until the fifth and then we will agregate all other apps on a last part. Each app has its own color (based on the app icon), the color for 'all other apps' is a grey tone of your choice (remember the color theme). Show the color-app caption of the chart. The ununsed minutes of each hour are transparent. Each bar chart can be mostly horizontal, define a proportion of the entire chart that is pleasant to the eyes.
+
+x Avoid counting as opening automatic app reinitializations (e.g., app reinitializes after asking for permissions or after a small update). Can we set a tolerance margin of 1 or 2 seconds? Maybe a full minute is enough, as for example user is zapping between apps to copy and paste content, share, etc. So ideally we would start the tolerance timestamp on the app exit/unfocus, give 2 minutes, and if the app is opened within that 2-minute period we do not count as an extra opening. Is there a real/official/scientific metric for it, if there is you can use it, maybe reconfigure the tolerance margin, you decide.
+
+x I may be wrong but I believe the overlay is blocking some touch events to be delivered to the app underneath it.
+
+x Overlay time should show seconds even if it reached already more than an hour of accounted time.
+
+x Apparently per-app control is not designed correctly. It should show the list of all apps (with two options of sorting, most-used first [default] or alphabetically), and for each eapp we should be able to grade if it is not monitored | uses default monitoring | uses a specific goal between minimal, normal, or extensive.

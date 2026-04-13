@@ -1,11 +1,36 @@
 # AppTime — Roadmap
 
-## M15 — Prepare to PlayStore submission
+Read the next milestone, implement it bullet by bullet. After a bullet is done, change the dash - to an x, and commit.
+
+## M16 — More Fixes
+
+x Time overlay should be almost always on, unless we're talking by a unmonitored app (or if the user chose not to monitor the launcher/home screen [yes, we should give that option]) careful to not hide the timer count. It is always on and visible except if we are showing PMs (other messages) or if it is very briefly anymating in a fade out (which should be followed by a fade in the very next moment).
+
+x PM became too big and text is being cropped horizontally (probably to fit in some text box). find a strategy for that.
+
+x the overlay is showing 21:16:08 on the launcher. this can't be right. how can I have used it for more than 21 hours in the last 24 hours.
+
+x the text (Passive:social, video, news apps. Active: all others) of engagement alance analysis card is always writen in english.
+
+x the chart wekeend pattern should no longer be named like that. it is now week pattern, right? also, it is all blank. oh, just rechecked it, it has some bars on it, but they are 100% filled with all other apps option. so two fixes here, first, it is unlikely that I used several apps a 100% of the time on the last few hours, it should just fill horizontally each "cell" bar up to the %amount of minutes on that hour, e.g., if I used apps for 30 minutes only 50% of the bar should be filled. secondly, there should be 5 highest used apps visibly there, with their colors and also detailed in the caption. only after the 5 highest used the all other apps should appear.
+
+x maybe there is one point we should discuss here. about the nature of the gathered data? are you fully relying on android data? is it enough? I want you to have data about each session of each app on the last 30 days. so just think of a way to guarantee that. 
+
+x Important change! let's not monitor the last 24 hours. It is confusing regarding the time count. Because during the use, if you think in depth, in case I used the same app at the same time in the last day, the count should stay freeze, not adding a second, because I am using it now but we should be discarding the usage time from the last day as the time window goes by. So, let's simplify. Is it possible for us to use a different mark for a new day? Instead of 0:00 I would like to use 4am. This option is aligned with the fact that several addicted users usually sleep late and starting a new day at 0:00am may not represent reality. Can we, with some proper data organization, use 4am as start point of the new day? We can explain that briefly in some relevant place of our app. Then you can change everything that we do that is designed for the last 24h to work on two ways: today and yesterday. For the analysis subtab we use both. For current monitoring and overlay use just 'today'.
+
+
+## M16 — Prepare to PlayStore submission
 
 ### Checklist
 
+#### 0. Check legal concerns
+- Once launched we'll expose the app to everyone, first review what issues may imply in legal concerns
+- Consider a launch route that protects us, if there is not, it is fine
+- Define protection startegy
+- Build all materials/documents, manifests, don't know, what you can so we avoid being sued, I have no money or energy to handle that
+
 #### 1. App identity & metadata
-- Set a real `applicationId` (e.g. `com.lucasf.apptime`) and confirm it is final — it cannot change after publish
+- Set a real `applicationId` (e.g. `com.lsf.apptime`) and confirm it is final — it cannot change after publish
 - Bump `versionName` to `1.0.0` and `versionCode` to `1` in `build.gradle`
 - Replace placeholder app name in `strings.xml` / `AndroidManifest.xml` (`AppTime`)
 - Replace `ic_launcher` placeholder icon with final adaptive icon (foreground + background layers, 108dp safe zone)
@@ -46,9 +71,3 @@
 #### 8. Post-launch minimum
 - Set up crash reporting (Firebase Crashlytics free tier, or just monitor Play's built-in ANR/crash dashboard)
 - Prepare a `1.0.1` patch plan for any day-one issues
-
-## M16 — Small fixes
-
-- Avoid counting as opening automatic app reinitializations (e.g., app reinitializes after asking for permissions or after a small update). Can we set a tolerance margin of 1 or 2 seconds? Maybe a full minute is enough, as for example user is zapping between apps to copy and paste content, share, etc. So ideally we would start the tolerance timestamp on the app exit/unfocus, give 2 minutes, and if the app is opened within that 2-minute period we do not count as an extra opening. Is there a real/official/scientific metric for it, if there is you can use it, maybe reconfigure the tolerance margin, you decide.
-
-- I may be 
