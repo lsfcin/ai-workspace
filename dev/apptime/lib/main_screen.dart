@@ -29,7 +29,7 @@ class _MainScreenState extends State<MainScreen> {
     final screens = [
       const HomeScreen(),
       AnalyticsScreen(storage: widget.storage),
-      const InsightsScreen(),
+      InsightsScreen(storage: widget.storage),
       SettingsScreen(
         storage: widget.storage,
         onLocaleChange: widget.onLocaleChange,
