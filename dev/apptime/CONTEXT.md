@@ -20,5 +20,5 @@ Completed milestones → [HISTORY.md](HISTORY.md)
 | Item | Value |
 |------|-------|
 | Phase | In dev |
-| Last milestone | M17 Persistent Bugs ✓ |
+| Last milestone | M17 Persistent Bugs + hour-split fix ✓ |
 | Next | M18 Prepare to PlayStore submission |
