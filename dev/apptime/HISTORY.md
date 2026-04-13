@@ -131,3 +131,19 @@ x I may be wrong but I believe the overlay is blocking some touch events to be d
 x Overlay time should show seconds even if it reached already more than an hour of accounted time.
 
 x Apparently per-app control is not designed correctly. It should show the list of all apps (with two options of sorting, most-used first [default] or alphabetically), and for each eapp we should be able to grade if it is not monitored | uses default monitoring | uses a specific goal between minimal, normal, or extensive.
+
+## M16 — More Fixes
+
+x Time overlay should be almost always on, unless we're talking by a unmonitored app (or if the user chose not to monitor the launcher/home screen [yes, we should give that option]) careful to not hide the timer count. It is always on and visible except if we are showing PMs (other messages) or if it is very briefly anymating in a fade out (which should be followed by a fade in the very next moment).
+
+x PM became too big and text is being cropped horizontally (probably to fit in some text box). find a strategy for that.
+
+x the overlay is showing 21:16:08 on the launcher. this can't be right. how can I have used it for more than 21 hours in the last 24 hours.
+
+x the text (Passive:social, video, news apps. Active: all others) of engagement alance analysis card is always writen in english.
+
+x the chart wekeend pattern should no longer be named like that. it is now week pattern, right? also, it is all blank. oh, just rechecked it, it has some bars on it, but they are 100% filled with all other apps option. so two fixes here, first, it is unlikely that I used several apps a 100% of the time on the last few hours, it should just fill horizontally each "cell" bar up to the %amount of minutes on that hour, e.g., if I used apps for 30 minutes only 50% of the bar should be filled. secondly, there should be 5 highest used apps visibly there, with their colors and also detailed in the caption. only after the 5 highest used the all other apps should appear.
+
+x maybe there is one point we should discuss here. about the nature of the gathered data? are you fully relying on android data? is it enough? I want you to have data about each session of each app on the last 30 days. so just think of a way to guarantee that. 
+
+x Important change! let's not monitor the last 24 hours. It is confusing regarding the time count. Because during the use, if you think in depth, in case I used the same app at the same time in the last day, the count should stay freeze, not adding a second, because I am using it now but we should be discarding the usage time from the last day as the time window goes by. So, let's simplify. Is it possible for us to use a different mark for a new day? Instead of 0:00 I would like to use 4am. This option is aligned with the fact that several addicted users usually sleep late and starting a new day at 0:00am may not represent reality. Can we, with some proper data organization, use 4am as start point of the new day? We can explain that briefly in some relevant place of our app. Then you can change everything that we do that is designed for the last 24h to work on two ways: today and yesterday. For the analysis subtab we use both. For current monitoring and overlay use just 'today'.
