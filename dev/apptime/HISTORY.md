@@ -12,6 +12,8 @@ x Vertical position slider removed from Settings (config was unmaintainable and 
 
 x Timer disappearing while using AppTime itself: ObjectAnimator for breathing nudge wasn't cancelled when stopBreathing() was called, leaving overlay at DIM_ALPHA=0.35f. Fixed with currentAnimator tracking and explicit cancel() before any direct alpha assignment.
 
+x Overlay disappearing after staying in same app >60s: getCurrentApp() queries UsageEvents in a 60s sliding window — no new MOVE_TO_FOREGROUND event after 60s caused null return, which flushed the session and hid the overlay. Fixed by falling back to lastPackage when query returns null and screen is interactive.
+
 x Replaced technical terms ("overlay", "launcher") with plain language in PT-BR strings: "visor flutuante", "tela inicial", etc.
 
 x Launcher counter showing 21h+ and frozen: root cause was UsageEvents 60s query window missing screen-off events when screen was off >60s, so sessions accumulated while screen was off. Fixed with ACTION_SCREEN_OFF BroadcastReceiver for immediate session flush + PowerManager.isInteractive() guard at tick() entry. Added migrateCorruptedDeviceDaily() to reset any existing corrupted value ≥ 23h on startup. Launcher live counter now adds (now – sessionStartMs) to stored total.
