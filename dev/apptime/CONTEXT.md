@@ -20,5 +20,5 @@ Completed milestones → [HISTORY.md](HISTORY.md)
 | Item | Value |
 |------|-------|
 | Phase | In dev |
-| Last milestone | M12 Permissions Onboarding ✓ |
-| Next | M13 Language Support |
+| Last milestone | M16 More Fixes ✓ |
+| Next | M16 Prepare to PlayStore submission |
