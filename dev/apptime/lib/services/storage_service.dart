@@ -36,9 +36,14 @@ class StorageService {
 
   // ── Session data (escrito pelo MonitoringService Kotlin) ──
 
+  /// The "day" starts at 04:00. Hours 00–03 belong to the previous calendar day,
+  /// matching the 4 AM day-boundary used by the Kotlin monitoring service.
+  DateTime _dayAnchor(DateTime dt) =>
+      dt.hour < 4 ? dt.subtract(const Duration(days: 1)) : dt;
+
   String _todayKey() {
-    final now = DateTime.now();
-    return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final d = _dayAnchor(DateTime.now());
+    return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
   }
 
   int getDailyMs(String packageName, {String? date}) =>
@@ -64,6 +69,9 @@ class StorageService {
   int getHourlyOpens(String packageName, {required String date, required int hour}) =>
       _prefs.getInt('hourly_opens_${packageName}_${date}_$hour') ?? 0;
 
+  int getHourlyMs(String packageName, {required String date, required int hour}) =>
+      _prefs.getInt('hourly_ms_${packageName}_${date}_$hour') ?? 0;
+
   /// 24-element list — index = hour of day (0–23), value = device ms in that hour.
   List<int> getDeviceHourlyBreakdown(String date) =>
       List.generate(24, (h) => getDeviceHourlyMs(date: date, hour: h));
@@ -87,47 +95,38 @@ class StorageService {
   // daily-granularity storage without a full schema change).
 
   String _yesterdayKey() {
-    final yesterday = DateTime.now().subtract(const Duration(days: 1));
-    return '${yesterday.year}-${yesterday.month.toString().padLeft(2, '0')}-${yesterday.day.toString().padLeft(2, '0')}';
+    final d = _dayAnchor(DateTime.now()).subtract(const Duration(days: 1));
+    return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
   }
 
-  /// Fraction of the previous calendar day still within the last 24h.
-  double _yesterdayFraction() {
-    final now = DateTime.now();
-    final hoursElapsedToday =
-        now.hour + now.minute / 60.0 + now.second / 3600.0;
-    return (24.0 - hoursElapsedToday) / 24.0;
-  }
+  /// Today's usage ms for a package (since 04:00 of the current day).
+  int getTodayMs(String packageName) => getDailyMs(packageName);
 
-  int getLast24hMs(String packageName) {
-    final f = _yesterdayFraction();
-    final yesterdayMs = getDailyMs(packageName, date: _yesterdayKey());
-    final todayMs = getDailyMs(packageName);
-    return (yesterdayMs * f).round() + todayMs;
-  }
+  /// Yesterday's usage ms for a package (full 04:00–04:00 window).
+  int getYesterdayMs(String packageName) =>
+      getDailyMs(packageName, date: _yesterdayKey());
 
-  int getDeviceLast24hMs() {
-    final f = _yesterdayFraction();
-    final yesterdayMs = getDeviceDailyMs(date: _yesterdayKey());
-    final todayMs = getDeviceDailyMs();
-    return (yesterdayMs * f).round() + todayMs;
-  }
+  /// Device-level today/yesterday helpers.
+  int getDeviceTodayMs() => getDeviceDailyMs();
+  int getDeviceYesterdayMs() => getDeviceDailyMs(date: _yesterdayKey());
 
-  int getUnlockLast24h() {
-    final f = _yesterdayFraction();
-    final yesterdayUnlocks = getUnlockCount(date: _yesterdayKey());
-    final todayUnlocks = getUnlockCount();
-    return (yesterdayUnlocks * f).round() + todayUnlocks;
-  }
+  int getUnlockToday() => getUnlockCount();
+  int getUnlockYesterday() => getUnlockCount(date: _yesterdayKey());
 
-  /// Packages that have any usage data in the last 24h (today or yesterday).
+  // Legacy rolling-24h helpers kept for compatibility with AnalyticsService.
+  // They now simply return today's totals (since the day starts at 4am, this
+  // is a cleaner window than the old fractional approximation).
+  int getLast24hMs(String packageName) => getTodayMs(packageName);
+  int getDeviceLast24hMs() => getDeviceTodayMs();
+  int getUnlockLast24h() => getUnlockToday();
+
+  /// Packages that have any usage data today (since 04:00) or yesterday.
   List<String> packagesLast24h() {
     final today = _todayKey();
     final yesterday = _yesterdayKey();
     const prefix = 'flutter.daily_ms_';
-    final keys = _prefs.getKeys();
     final packages = <String>{};
-    for (final k in keys) {
+    for (final k in _prefs.getKeys()) {
       if (k.startsWith(prefix)) {
         if (k.endsWith('_$today') || k.endsWith('_$yesterday')) {
           packages.add(k.substring(prefix.length, k.lastIndexOf('_')));
@@ -190,6 +189,52 @@ class StorageService {
 
   void setAppGoalLevel(String packageName, int level) =>
       _prefs.setInt('app_goal_$packageName', level);
+
+  // ── Weekday-pattern helpers ───────────────────────────────────────────────
+
+  String _fmt(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  /// Returns the last [n] dates (YYYY-MM-DD) that fall on [weekday] (1=Mon … 7=Sun).
+  List<String> lastNDatesForWeekday(int weekday, int n) {
+    final result = <String>[];
+    var d = DateTime.now().subtract(const Duration(days: 1));
+    while (result.length < n) {
+      if (d.weekday == weekday) result.add(_fmt(d));
+      d = d.subtract(const Duration(days: 1));
+      if (d.isBefore(DateTime.now().subtract(const Duration(days: 90)))) break;
+    }
+    return result;
+  }
+
+  /// Average device hourly ms (24 values) across [dates].
+  List<int> avgDeviceHourlyMs(List<String> dates) => List.generate(24, (h) {
+        if (dates.isEmpty) return 0;
+        final total =
+            dates.fold<int>(0, (s, d) => s + getDeviceHourlyMs(date: d, hour: h));
+        return total ~/ dates.length;
+      });
+
+  /// For [dates], returns pkg → 24-element list of average hourly ms.
+  /// Only packages that have any non-zero data in those dates are included.
+  Map<String, List<int>> avgAppHourlyMs(List<String> dates) {
+    final result = <String, List<int>>{};
+    if (dates.isEmpty) return result;
+    // Collect all packages that have data on these dates
+    final packages = <String>{};
+    for (final d in dates) {
+      packages.addAll(packagesDailyMs(d));
+    }
+    for (final pkg in packages) {
+      final hourly = List.generate(24, (h) {
+        final total =
+            dates.fold<int>(0, (s, d) => s + getHourlyMs(pkg, date: d, hour: h));
+        return total ~/ dates.length;
+      });
+      if (hourly.any((v) => v > 0)) result[pkg] = hourly;
+    }
+    return result;
+  }
 
   // ── Query helpers ──
 

@@ -9,6 +9,7 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.Typeface
@@ -30,9 +31,7 @@ class OverlayService : Service() {
     private val handler = Handler(Looper.getMainLooper())
     private var isViewAdded = false
 
-    // ── F.PM — personalized-message overlay (full-width, centered) ────────────
-    private var pmView: TextView? = null
-    private var isPmViewAdded = false
+    // ── F.PM — personalized message shown inside the regular overlay ─────────
     private var pmActive = false
     private var pmCooldownUntil = 0L
 
@@ -77,7 +76,6 @@ class OverlayService : Service() {
             try { windowManager.removeView(overlayView) } catch (_: Exception) {}
             isViewAdded = false
         }
-        removePmView()
         super.onDestroy()
     }
 
@@ -102,6 +100,7 @@ class OverlayService : Service() {
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                     WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
                     WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT
         ).apply {
@@ -119,6 +118,7 @@ class OverlayService : Service() {
 
     private fun updateOverlay() {
         if (!isViewAdded) return
+        if (pmActive) return   // PM is using the overlay view — don't touch it
         val prefs = getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
         val text    = prefs.getString("flutter.overlay_text", "") ?: ""
         val visible = prefs.getBoolean("flutter.overlay_visible", false)
@@ -156,7 +156,7 @@ class OverlayService : Service() {
 
     private fun evaluateFeedbacks() {
         val prefs = getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
-        val goalLevel = prefs.getInt("flutter.goal_level", 0)
+        val goalLevel = prefs.getLong("flutter.goal_level", 0L).toInt()
 
         if (goalLevel == 0) {
             stopBreathing()
@@ -178,12 +178,12 @@ class OverlayService : Service() {
         // ── Metrics ──────────────────────────────────────────────────────────
 
         val deviceMs  = prefs.getLong("flutter.device_daily_ms_$date", 0L)
-        val unlocks   = prefs.getInt("flutter.unlock_count_$date", 0)
+        val unlocks   = prefs.safeGetCount("flutter.unlock_count_$date").toInt()
         val appMs     = if (pkg != null && !isLauncher)
             prefs.getLong("flutter.daily_ms_${pkg}_$date", 0L) else 0L
 
         val appGoalLevel = if (pkg != null && !isLauncher)
-            prefs.getInt("flutter.app_goal_$pkg", 0).let { if (it == 0) goalLevel else it }
+            prefs.getLong("flutter.app_goal_$pkg", 0L).toInt().let { if (it == 0) goalLevel else it }
         else goalLevel
         val appThresholds = GoalThresholds.forLevel(appGoalLevel)
 
@@ -237,7 +237,7 @@ class OverlayService : Service() {
         }
 
         // ── Unlock trigger (F.PM 3 s after new unlock when over limit) ───────
-        val currentUnlocks = prefs.getInt("flutter.unlock_count_$date", 0)
+        val currentUnlocks = prefs.safeGetCount("flutter.unlock_count_$date").toInt()
         if (currentUnlocks > lastSeenUnlockCount) {
             lastSeenUnlockCount = currentUnlocks
             if (currentUnlocks > thresholds.unlockLimit) {
@@ -264,27 +264,23 @@ class OverlayService : Service() {
 
     private fun stopBreathing() {
         breathingActive = false
-        if (isViewAdded) overlayView.alpha = 1f
+        if (isViewAdded && !pmActive) overlayView.alpha = 1f
     }
 
     private fun scheduleBreathe() {
-        if (!breathingActive || !isViewAdded) return
-        val fadeInMs  = (2_000L..3_000L).random()
-        val stayMs    = (1_000L..3_000L).random()
+        // Never fully hide the overlay — pulse between DIM_ALPHA and 1.0
+        if (!breathingActive || !isViewAdded || pmActive) return
         val fadeOutMs = (2_000L..3_000L).random()
-        val hiddenMs  = (5_000L..15_000L).random()
+        val dimMs     = (3_000L..6_000L).random()
+        val fadeInMs  = (2_000L..3_000L).random()
 
-        animateAlpha(overlayView, 0f, 1f, fadeInMs) {
+        animateAlpha(overlayView, 1f, DIM_ALPHA, fadeOutMs) {
             handler.postDelayed({
-                if (!breathingActive) return@postDelayed
-                animateAlpha(overlayView, 1f, 0f, fadeOutMs) {
-                    overlayView.alpha = 0f
-                    handler.postDelayed({
-                        if (breathingActive) scheduleBreathe()
-                        else overlayView.alpha = 1f
-                    }, hiddenMs)
+                if (!breathingActive || pmActive) return@postDelayed
+                animateAlpha(overlayView, DIM_ALPHA, 1f, fadeInMs) {
+                    if (breathingActive) scheduleBreathe()
                 }
-            }, stayMs)
+            }, dimMs)
         }
     }
 
@@ -308,73 +304,32 @@ class OverlayService : Service() {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // F.PM — Personalized Message
+    // F.PM — Personalized Message (shown inside the regular overlay view)
     // ─────────────────────────────────────────────────────────────────────────
-
-    private fun addPmView() {
-        if (isPmViewAdded) return
-        pmView = TextView(this).apply {
-            setTextColor(Color.WHITE)
-            textSize = 15f
-            typeface = Typeface.DEFAULT_BOLD
-            gravity = Gravity.CENTER
-            setPadding(32, 20, 32, 20)
-            val bg = GradientDrawable().apply {
-                cornerRadius = 16f * resources.displayMetrics.density
-                setColor(Color.argb(220, 10, 10, 20))
-            }
-            background = bg
-            alpha = 0f
-            visibility = View.INVISIBLE
-        }
-        val params = WindowManager.LayoutParams(
-            WindowManager.LayoutParams.WRAP_CONTENT,
-            WindowManager.LayoutParams.WRAP_CONTENT,
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                    WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-            PixelFormat.TRANSLUCENT
-        ).apply {
-            gravity = Gravity.CENTER
-        }
-        try {
-            windowManager.addView(pmView, params)
-            isPmViewAdded = true
-        } catch (e: Exception) {
-            isPmViewAdded = false
-        }
-    }
-
-    private fun removePmView() {
-        if (isPmViewAdded && pmView != null) {
-            try { windowManager.removeView(pmView) } catch (_: Exception) {}
-        }
-        pmView = null
-        isPmViewAdded = false
-    }
 
     private fun triggerPm(message: String) {
         val now = System.currentTimeMillis()
         if (now < pmCooldownUntil) return
         if (pmActive) return
+        if (!isViewAdded) return
         pmActive = true
         pmCooldownUntil = now + 60_000L
 
-        addPmView()
-        val view = pmView ?: run { pmActive = false; return }
+        // Temporarily stop breathing so it doesn't interfere with the PM animation
+        breathingActive = false
 
-        view.text = message
-        view.alpha = 0f
-        view.visibility = View.VISIBLE
+        overlayView.text = message
+        overlayView.visibility = View.VISIBLE
+        overlayView.alpha = 0f
 
-        // 3 s fade-in → 10 s stay → 3 s fade-out
-        animateAlpha(view, 0f, 1f, 3_000L) {
+        // 2 s fade-in → 20 s stay → 2 s fade-out, then restore normal timer
+        animateAlpha(overlayView, 0f, 1f, 2_000L) {
             handler.postDelayed({
-                animateAlpha(view, 1f, 0f, 3_000L) {
-                    view.visibility = View.INVISIBLE
+                animateAlpha(overlayView, 1f, 0f, 2_000L) {
                     pmActive = false
+                    overlayView.alpha = 1f
                 }
-            }, 10_000L)
+            }, 20_000L)
         }
     }
 
@@ -398,7 +353,9 @@ class OverlayService : Service() {
     // ─────────────────────────────────────────────────────────────────────────
 
     private fun today(): String {
+        // The "day" starts at 04:00 — hours 00–03 belong to the previous calendar day.
         val c = java.util.Calendar.getInstance()
+        if (c.get(java.util.Calendar.HOUR_OF_DAY) < 4) c.add(java.util.Calendar.DATE, -1)
         return "%04d-%02d-%02d".format(
             c.get(java.util.Calendar.YEAR),
             c.get(java.util.Calendar.MONTH) + 1,
@@ -408,6 +365,9 @@ class OverlayService : Service() {
 
     private fun currentHour(): Int =
         java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+
+    private fun SharedPreferences.safeGetCount(key: String): Long =
+        try { getLong(key, 0L) } catch (_: ClassCastException) { getInt(key, 0).toLong() }
 
     private fun readFloat(prefs: android.content.SharedPreferences, key: String, default: Float): Float {
         val raw = prefs.all[key] ?: return default
@@ -441,6 +401,7 @@ class OverlayService : Service() {
 
     companion object {
         const val NOTIF_ID = 1001
+        const val DIM_ALPHA = 0.35f  // min alpha during breathing nudge — overlay stays readable
 
         /** Package-name fragments that identify social/passive apps. */
         val SOCIAL_PATTERNS = listOf(

@@ -27,17 +27,24 @@ class MonitoringService : Service() {
     private var watchdogTick = 0
     private var lastDate: String = ""
 
+    // Reopening tolerance: if the same app returns within this window, don't
+    // count it as a new open (covers copy-paste flows, permission dialogs, etc.)
+    // 120 s aligns with common session-gap thresholds in mobile UX research.
+    private var lastClosedPkg: String? = null
+    private var lastClosedMs: Long = 0L
+    private val REOPEN_TOLERANCE_MS = 120_000L
+
     private val unlockReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action == Intent.ACTION_USER_PRESENT) {
                 val date = today()
                 val hour = currentHour()
-                // Daily total
+                // Daily total — use putLong so Flutter's getInt() (which reads Long) works
                 val key = "flutter.unlock_count_${date}"
-                prefs.edit().putInt(key, prefs.getInt(key, 0) + 1).apply()
+                prefs.edit().putLong(key, prefs.safeGetCount(key) + 1).apply()
                 // Hourly count
                 val hourKey = "flutter.hourly_unlocks_${date}_${hour}"
-                prefs.edit().putInt(hourKey, prefs.getInt(hourKey, 0) + 1).apply()
+                prefs.edit().putLong(hourKey, prefs.safeGetCount(hourKey) + 1).apply()
             }
         }
     }
@@ -106,13 +113,17 @@ class MonitoringService : Service() {
 
         if (current != lastPackage) {
             // App switch — close previous session, open new one
+            val now = System.currentTimeMillis()
             if (lastPackage != null) {
-                val duration = System.currentTimeMillis() - sessionStartMs
+                val duration = now - sessionStartMs
                 accumulateDailyMs(lastPackage!!, duration)
+                lastClosedPkg = lastPackage
+                lastClosedMs  = now
             }
             lastPackage = current
-            sessionStartMs = System.currentTimeMillis()
-            if (!isLauncher) incrementOpenCount(current)
+            sessionStartMs = now
+            val isReturn = current == lastClosedPkg && (now - lastClosedMs) < REOPEN_TOLERANCE_MS
+            if (!isLauncher && !isReturn) incrementOpenCount(current)
         }
 
         val overlayText = when {
@@ -167,7 +178,9 @@ class MonitoringService : Service() {
     // ── Banco de sessões ──────────────────────────────────────────────────────
 
     private fun today(): String {
+        // The "day" starts at 04:00 — hours 00–03 belong to the previous calendar day.
         val c = java.util.Calendar.getInstance()
+        if (c.get(java.util.Calendar.HOUR_OF_DAY) < 4) c.add(java.util.Calendar.DATE, -1)
         return "%04d-%02d-%02d".format(c.get(java.util.Calendar.YEAR),
             c.get(java.util.Calendar.MONTH) + 1, c.get(java.util.Calendar.DAY_OF_MONTH))
     }
@@ -199,26 +212,26 @@ class MonitoringService : Service() {
             else                -> 3   // > 15 min
         }
         val bucketKey = "flutter.session_bucket_${bucketIdx}_${date}"
-        prefs.edit().putInt(bucketKey, prefs.getInt(bucketKey, 0) + 1).apply()
+        prefs.edit().putLong(bucketKey, prefs.safeGetCount(bucketKey) + 1).apply()
     }
 
     private fun incrementOpenCount(pkg: String) {
         val date = today()
         val hour = currentHour()
         val key = "flutter.open_count_${pkg}_${date}"
-        prefs.edit().putInt(key, prefs.getInt(key, 0) + 1).apply()
+        prefs.edit().putLong(key, prefs.safeGetCount(key) + 1).apply()
         val hourKey = "flutter.hourly_opens_${pkg}_${date}_${hour}"
-        prefs.edit().putInt(hourKey, prefs.getInt(hourKey, 0) + 1).apply()
+        prefs.edit().putLong(hourKey, prefs.safeGetCount(hourKey) + 1).apply()
     }
 
     private fun getDailyMs(pkg: String): Long =
         prefs.getLong("flutter.daily_ms_${pkg}_${today()}", 0L)
 
     private fun getOpenCount(pkg: String): Int =
-        prefs.getInt("flutter.open_count_${pkg}_${today()}", 0)
+        prefs.safeGetCount("flutter.open_count_${pkg}_${today()}").toInt()
 
     private fun getUnlockCount(): Int =
-        prefs.getInt("flutter.unlock_count_${today()}", 0)
+        prefs.safeGetCount("flutter.unlock_count_${today()}").toInt()
 
     private fun getDeviceDailyMs(): Long =
         prefs.getLong("flutter.device_daily_ms_${today()}", 0L)
@@ -230,7 +243,7 @@ class MonitoringService : Service() {
         val hours = totalSec / 3600
         val mins = (totalSec % 3600) / 60
         val secs = totalSec % 60
-        return if (hours > 0) "%d:%02d".format(hours, mins)
+        return if (hours > 0) "%d:%02d:%02d".format(hours, mins, secs)
                else "%d:%02d".format(mins, secs)
     }
 
@@ -257,6 +270,10 @@ class MonitoringService : Service() {
             .setPriority(NotificationCompat.PRIORITY_MIN)
             .build()
     }
+
+    /** Read a counter written by either putLong (new) or putInt (legacy data). */
+    private fun SharedPreferences.safeGetCount(key: String): Long =
+        try { getLong(key, 0L) } catch (_: ClassCastException) { getInt(key, 0).toLong() }
 
     companion object {
         const val NOTIF_ID = 1002

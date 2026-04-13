@@ -82,9 +82,13 @@ String _fmtDuration(int ms) {
   return '${h}h${m.toString().padLeft(2, '0')}';
 }
 
+/// Day starts at 04:00 — mirrors the 4 AM boundary in MonitoringService.kt.
+DateTime _dayAnchor(DateTime dt) =>
+    dt.hour < 4 ? dt.subtract(const Duration(days: 1)) : dt;
+
 String _todayStr() {
-  final now = DateTime.now();
-  return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+  final d = _dayAnchor(DateTime.now());
+  return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 }
 
 String _dateStr(DateTime d) =>
@@ -392,25 +396,6 @@ class _Tab30d extends StatelessWidget {
 
     final dailyMs = summaries.reversed.map((s) => s.totalMs).toList();
 
-    final today = DateTime.now();
-    int weekendMs = 0, weekdayMs = 0, weekendDays = 0, weekdayDays = 0;
-    for (int i = 0; i < summaries.length; i++) {
-      final date = today.subtract(Duration(days: i));
-      final ms = summaries[i].totalMs;
-      if (date.weekday == DateTime.saturday || date.weekday == DateTime.sunday) {
-        weekendMs += ms;
-        weekendDays++;
-      } else {
-        weekdayMs += ms;
-        weekdayDays++;
-      }
-    }
-    final avgWeekend = weekendDays > 0 ? weekendMs ~/ weekendDays : 0;
-    final avgWeekday = weekdayDays > 0 ? weekdayMs ~/ weekdayDays : 0;
-    final weekendSpike = avgWeekday > 0
-        ? ((avgWeekend - avgWeekday) / avgWeekday * 100).round()
-        : 0;
-
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.md),
       children: [
@@ -434,15 +419,11 @@ class _Tab30d extends StatelessWidget {
 
         _analysisCard(
           context: context,
-          icon: Icons.beach_access_outlined,
+          icon: Icons.grid_4x4_outlined,
           title: l10n.blockWeekendTitle,
-          chartHeight: 180,
-          chart: summaries.isNotEmpty
-              ? _HeatmapCalendar(summaries: summaries, storage: storage)
-              : _noData(context, l10n.noData),
-          text: weekendSpike > 0
-              ? l10n.blockWeekendSpikeText(weekendSpike.abs())
-              : l10n.blockWeekendNoSpike,
+          chartHeight: _WeekdayHeatmap.kHeight,
+          chart: _WeekdayHeatmap(storage: storage),
+          text: 'Average usage per hour for each day of the week (last 4 weeks).',
         ),
       ],
     );
@@ -635,37 +616,46 @@ class _DonutChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(children: [
-      Expanded(
+      SizedBox(
+        width: 110,
         child: PieChart(PieChartData(
-          centerSpaceRadius: 36,
+          centerSpaceRadius: 28,
           sectionsSpace: 2,
           sections: [
             PieChartSectionData(
               value: passiveMs.toDouble(),
               color: AppColors.error,
-              title: l10n.passive,
-              radius: 48,
-              titleStyle: const TextStyle(fontSize: 9, color: Colors.white),
+              title: '',
+              radius: 38,
             ),
             PieChartSectionData(
               value: activeMs.toDouble(),
               color: AppColors.success,
-              title: l10n.active,
-              radius: 48,
-              titleStyle: const TextStyle(fontSize: 9, color: Colors.white),
+              title: '',
+              radius: 38,
             ),
           ],
         )),
       ),
-      const SizedBox(width: AppSpacing.md),
-      Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _Legend(color: AppColors.error, label: '${l10n.passive} (${_fmtDuration(passiveMs)})'),
-          const SizedBox(height: 8),
-          _Legend(color: AppColors.success, label: '${l10n.active} (${_fmtDuration(activeMs)})'),
-        ],
+      const SizedBox(width: AppSpacing.lg),
+      Expanded(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _Legend(color: AppColors.error, label: '${l10n.passive} (${_fmtDuration(passiveMs)})'),
+            const SizedBox(height: 10),
+            _Legend(color: AppColors.success, label: '${l10n.active} (${_fmtDuration(activeMs)})'),
+            const SizedBox(height: 12),
+            Text(
+              'Passive: social, video, news apps.\nActive: all others.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontStyle: FontStyle.italic,
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
+            ),
+          ],
+        ),
       ),
     ]);
   }
@@ -768,44 +758,152 @@ class _LineChart30d extends StatelessWidget {
   }
 }
 
-class _HeatmapCalendar extends StatelessWidget {
-  const _HeatmapCalendar({required this.summaries, required this.storage});
-  final List<DaySummary> summaries;
+// ─── Weekday × Hour heatmap ───────────────────────────────────────────────────
+// 7 columns (Mon–Sun) × 24 rows (0 h–23 h).
+// Each cell is a horizontal stacked bar: top-5 apps + grey "other".
+// Data = average over the last 4 occurrences of each weekday.
+
+class _WeekdayHeatmap extends StatelessWidget {
+  static const kHeight = 380.0;
+
+  const _WeekdayHeatmap({required this.storage});
   final StorageService storage;
+
+  static Color _pkgColor(String pkg) {
+    final hue = (pkg.hashCode % 360).abs().toDouble();
+    return HSLColor.fromAHSL(1.0, hue, 0.65, 0.48).toColor();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final maxMs =
-        summaries.fold<int>(1, (m, s) => s.totalMs > m ? s.totalMs : m);
-    final goal = storage.dailyGoalMinutes * 60 * 1000;
+    const dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    const maxMs = 3_600_000; // 60 min per hour ceiling
 
-    return GridView.builder(
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 7,
-        mainAxisSpacing: 3,
-        crossAxisSpacing: 3,
-      ),
-      itemCount: summaries.length.clamp(0, 30),
-      itemBuilder: (_, i) {
-        final s = summaries[i];
-        final intensity = s.totalMs / maxMs;
-        final overGoal = goal > 0 && s.totalMs > goal;
-        final color = overGoal
-            ? Color.lerp(
-                AppColors.error.withAlpha(80), AppColors.error, intensity)!
-            : Color.lerp(
-                AppColors.primary.withAlpha(30), AppColors.primary, intensity)!;
-        return Tooltip(
-          message: '${s.date}: ${_fmtDuration(s.totalMs)}',
-          child: Container(
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(3),
+    // Precompute per-weekday data (weekday 1=Mon … 7=Sun)
+    final weekdayDevice = <List<int>>[];   // [7][24]
+    final weekdayApps = <Map<String, List<int>>>[];  // [7] pkg→[24]
+    for (int i = 0; i < 7; i++) {
+      final dates = storage.lastNDatesForWeekday(i + 1, 4);
+      weekdayDevice.add(storage.avgDeviceHourlyMs(dates));
+      weekdayApps.add(storage.avgAppHourlyMs(dates));
+    }
+
+    // Top-5 apps by total ms across all days/hours
+    final totals = <String, int>{};
+    for (final dayMap in weekdayApps) {
+      for (final e in dayMap.entries) {
+        totals[e.key] = (totals[e.key] ?? 0) + e.value.fold(0, (s, v) => s + v);
+      }
+    }
+    final topApps = (totals.entries.toList()
+          ..sort((a, b) => b.value.compareTo(a.value)))
+        .take(5)
+        .map((e) => e.key)
+        .toList();
+
+    final greyOther = Colors.grey.withAlpha(100);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ── Column headers ──────────────────────────────────────────────
+        Row(children: [
+          const SizedBox(width: 22),
+          ...List.generate(7, (i) => Expanded(
+                child: Center(
+                  child: Text(dayLabels[i],
+                      style: const TextStyle(
+                          fontSize: 8, fontWeight: FontWeight.w700)),
+                ),
+              )),
+        ]),
+        const SizedBox(height: 2),
+        // ── Grid ────────────────────────────────────────────────────────
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
+              children: List.generate(24, (h) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 1),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 22,
+                        child: Text('${h}h',
+                            style: const TextStyle(
+                                fontSize: 7,
+                                color: Colors.grey)),
+                      ),
+                      ...List.generate(7, (d) {
+                        final total = weekdayDevice[d][h];
+                        return Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 1),
+                            child: LayoutBuilder(builder: (_, box) {
+                              if (total == 0) {
+                                return Container(
+                                    height: 10,
+                                    color: Colors.transparent);
+                              }
+                              // Build proportional segments (capped at maxMs)
+                              final segments = <(Color, double)>[];
+                              double usedFrac = 0;
+                              for (final pkg in topApps) {
+                                final ms = weekdayApps[d][pkg]?[h] ?? 0;
+                                if (ms <= 0) continue;
+                                final frac =
+                                    (ms / maxMs).clamp(0.0, 1.0 - usedFrac);
+                                segments.add((_pkgColor(pkg), frac));
+                                usedFrac += frac;
+                              }
+                              final rest = (total / maxMs).clamp(0.0, 1.0) -
+                                  usedFrac;
+                              if (rest > 0.005) {
+                                segments.add((greyOther, rest));
+                              }
+                              return SizedBox(
+                                height: 10,
+                                child: Row(
+                                  children: segments.map((seg) {
+                                    return Flexible(
+                                      flex: (seg.$2 * 1000).round(),
+                                      child: Container(color: seg.$1),
+                                    );
+                                  }).toList(),
+                                ),
+                              );
+                            }),
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                );
+              }),
             ),
           ),
-        );
-      },
+        ),
+        // ── Caption ─────────────────────────────────────────────────────
+        const SizedBox(height: 6),
+        Wrap(
+          spacing: 10,
+          runSpacing: 4,
+          children: [
+            ...topApps.map((pkg) => Row(mainAxisSize: MainAxisSize.min, children: [
+                  Container(
+                      width: 8, height: 8, color: _pkgColor(pkg)),
+                  const SizedBox(width: 3),
+                  Text(pkg.split('.').last,
+                      style: const TextStyle(fontSize: 8)),
+                ])),
+            Row(mainAxisSize: MainAxisSize.min, children: [
+              Container(width: 8, height: 8, color: greyOther),
+              const SizedBox(width: 3),
+              const Text('other', style: TextStyle(fontSize: 8)),
+            ]),
+          ],
+        ),
+      ],
     );
   }
 }
