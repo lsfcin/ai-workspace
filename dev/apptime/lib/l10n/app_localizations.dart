@@ -100,9 +100,10 @@ abstract class AppLocalizations {
 
   // ── AnalyticsScreen ──────────────────────────────────────────────────────────
   String get analysisTitle;
-  String get tab24h;
+  String get tabToday;
   String get tab7d;
   String get tab30d;
+  String get dayBoundaryNote;
   String get statTotalUsage;
   String get statUnlocks;
   String get statTotalTime;

@@ -83,9 +83,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override String get overlayActive => 'Overlay active';
 
   @override String get analysisTitle => 'Analysis';
-  @override String get tab24h => '24h';
+  @override String get tabToday => 'Today';
   @override String get tab7d => '7 days';
   @override String get tab30d => '30 days';
+  @override String get dayBoundaryNote =>
+      'The "day" starts at 4 AM — usage between midnight and 4 AM counts toward the previous day.';
   @override String get statTotalUsage => 'Total usage';
   @override String get statUnlocks => 'Unlocks';
   @override String get statTotalTime => 'Total time';

@@ -54,7 +54,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
         bottom: TabBar(
           controller: _tabs,
           tabs: [
-            Tab(text: l10n.tab24h),
+            Tab(text: l10n.tabToday),
             Tab(text: l10n.tab7d),
             Tab(text: l10n.tab30d),
           ],
@@ -219,6 +219,28 @@ class _Tab24h extends StatelessWidget {
                 )
               : _noData(context, l10n.collectingData),
           text: _phubbingText(l10n, hourlyUnlocks),
+        ),
+
+        // Day-boundary note
+        Padding(
+          padding: const EdgeInsets.only(bottom: AppSpacing.md),
+          child: Row(
+            children: [
+              Icon(Icons.info_outline,
+                  size: 12,
+                  color: Theme.of(context).colorScheme.outline),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  l10n.dayBoundaryNote,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.outline,
+                        fontStyle: FontStyle.italic,
+                      ),
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
