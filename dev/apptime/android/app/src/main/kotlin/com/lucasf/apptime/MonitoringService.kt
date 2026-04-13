@@ -122,15 +122,15 @@ class MonitoringService : Service() {
         val pm = getSystemService(POWER_SERVICE) as PowerManager
         if (!pm.isInteractive) return
 
-        val current = getCurrentApp()
-        val isLauncher = current != null && LAUNCHERS.contains(current)
+        // getCurrentApp() queries only the last 60s of UsageEvents. If the user has been
+        // in the same app for >60s with no new fg event, it returns null — but the screen
+        // IS on (guarded above), so fall back to the last known foreground package.
+        // Session close only happens via ACTION_SCREEN_OFF (immediate flush) or an actual
+        // app switch detected below.
+        val current = getCurrentApp() ?: lastPackage
 
         if (current == null) {
-            // Screen off or no foreground app — close any open session immediately
-            if (lastPackage != null) {
-                accumulateDailyMs(lastPackage!!, sessionStartMs, System.currentTimeMillis())
-                lastPackage = null
-            }
+            // Screen on but no app ever recorded yet — nothing to show.
             prefs.edit()
                 .putString("flutter.overlay_text", "")
                 .putBoolean("flutter.overlay_visible", false)
@@ -138,6 +138,8 @@ class MonitoringService : Service() {
                 .apply()
             return
         }
+
+        val isLauncher = LAUNCHERS.contains(current)
 
         if (current != lastPackage) {
             // App switch — close previous session, open new one
