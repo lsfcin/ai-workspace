@@ -420,10 +420,10 @@ class _Tab30d extends StatelessWidget {
         _analysisCard(
           context: context,
           icon: Icons.grid_4x4_outlined,
-          title: l10n.blockWeekendTitle,
+          title: l10n.blockWeekPatternTitle,
           chartHeight: _WeekdayHeatmap.kHeight,
-          chart: _WeekdayHeatmap(storage: storage),
-          text: 'Average usage per hour for each day of the week (last 4 weeks).',
+          chart: _WeekdayHeatmap(storage: storage, l10n: l10n),
+          text: l10n.blockWeekPatternText,
         ),
       ],
     );
@@ -648,7 +648,7 @@ class _DonutChart extends StatelessWidget {
             _Legend(color: AppColors.success, label: '${l10n.active} (${_fmtDuration(activeMs)})'),
             const SizedBox(height: 12),
             Text(
-              'Passive: social, video, news apps.\nActive: all others.',
+              l10n.blockEngagementClassification,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     fontStyle: FontStyle.italic,
                     color: Theme.of(context).colorScheme.outline,
@@ -766,8 +766,9 @@ class _LineChart30d extends StatelessWidget {
 class _WeekdayHeatmap extends StatelessWidget {
   static const kHeight = 380.0;
 
-  const _WeekdayHeatmap({required this.storage});
+  const _WeekdayHeatmap({required this.storage, required this.l10n});
   final StorageService storage;
+  final AppLocalizations l10n;
 
   static Color _pkgColor(String pkg) {
     final hue = (pkg.hashCode % 360).abs().toDouble();
@@ -840,36 +841,47 @@ class _WeekdayHeatmap extends StatelessWidget {
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 1),
                             child: LayoutBuilder(builder: (_, box) {
-                              if (total == 0) {
+                              // usedFraction = total device ms capped at 60 min
+                              final usedFraction =
+                                  (total / maxMs).clamp(0.0, 1.0);
+                              if (usedFraction == 0) {
                                 return Container(
                                     height: 10,
                                     color: Colors.transparent);
                               }
-                              // Build proportional segments (capped at maxMs)
+                              // Build app segments within usedFraction
                               final segments = <(Color, double)>[];
-                              double usedFrac = 0;
+                              double appFrac = 0;
                               for (final pkg in topApps) {
                                 final ms = weekdayApps[d][pkg]?[h] ?? 0;
                                 if (ms <= 0) continue;
                                 final frac =
-                                    (ms / maxMs).clamp(0.0, 1.0 - usedFrac);
+                                    (ms / maxMs).clamp(0.0, usedFraction - appFrac);
                                 segments.add((_pkgColor(pkg), frac));
-                                usedFrac += frac;
+                                appFrac += frac;
                               }
-                              final rest = (total / maxMs).clamp(0.0, 1.0) -
-                                  usedFrac;
-                              if (rest > 0.005) {
-                                segments.add((greyOther, rest));
+                              // "Other" fills remaining used time not attributed to top apps
+                              final otherFrac = usedFraction - appFrac;
+                              if (otherFrac > 0.005) {
+                                segments.add((greyOther, otherFrac));
                               }
+                              // Transparent remainder = unused minutes in that hour
+                              final unusedFrac = 1.0 - usedFraction;
                               return SizedBox(
                                 height: 10,
                                 child: Row(
-                                  children: segments.map((seg) {
-                                    return Flexible(
-                                      flex: (seg.$2 * 1000).round(),
-                                      child: Container(color: seg.$1),
-                                    );
-                                  }).toList(),
+                                  children: [
+                                    ...segments.map((seg) => Flexible(
+                                          flex: (seg.$2 * 1000).round(),
+                                          child: Container(color: seg.$1),
+                                        )),
+                                    if (unusedFrac > 0.005)
+                                      Flexible(
+                                        flex: (unusedFrac * 1000).round(),
+                                        child: Container(
+                                            color: Colors.transparent),
+                                      ),
+                                  ],
                                 ),
                               );
                             }),
@@ -899,7 +911,7 @@ class _WeekdayHeatmap extends StatelessWidget {
             Row(mainAxisSize: MainAxisSize.min, children: [
               Container(width: 8, height: 8, color: greyOther),
               const SizedBox(width: 3),
-              const Text('other', style: TextStyle(fontSize: 8)),
+              Text(l10n.weekdayOtherLabel, style: const TextStyle(fontSize: 8)),
             ]),
           ],
         ),

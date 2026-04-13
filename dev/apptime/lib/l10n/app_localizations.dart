@@ -131,14 +131,15 @@ abstract class AppLocalizations {
   String get blockEngagementTitle;
   String blockEngagementText(int pct);
   String get blockEngagementNoData;
+  String get blockEngagementClassification;
   String get blockTrendTitle;
   String blockTrendReduced(int pct);
   String blockTrendIncreased(int pct);
   String get blockTrend30Title;
   String get blockTrend30Text;
-  String get blockWeekendTitle;
-  String blockWeekendSpikeText(int pct);
-  String get blockWeekendNoSpike;
+  String get blockWeekPatternTitle;
+  String get blockWeekPatternText;
+  String get weekdayOtherLabel;
 
   // ── InsightsScreen ───────────────────────────────────────────────────────────
   String get insightsTitle;

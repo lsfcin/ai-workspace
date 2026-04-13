@@ -139,6 +139,8 @@ class AppLocalizationsPt extends AppLocalizations {
       'e sintomas de depressão, enquanto o uso ativo (mensagens reais) '
       'pode ter efeito protetor na saúde mental.';
   @override String get blockEngagementNoData => 'Sem dados ainda.';
+  @override String get blockEngagementClassification =>
+      'Passivo: redes sociais, vídeo, notícias.\nAtivo: todos os demais.';
   @override String get blockTrendTitle => 'Tendência semanal';
   @override String blockTrendReduced(int pct) =>
       'Você reduziu seu uso em $pct% vs. a semana anterior. '
@@ -152,15 +154,12 @@ class AppLocalizationsPt extends AppLocalizations {
       'Manter uma tendência de queda por 21 dias consecutivos é '
       'o marco científico para a reformulação de circuitos de hábito '
       'e fortalecimento do córtex pré-frontal.';
-  @override String get blockWeekendTitle => 'Padrão de fim de semana';
-  @override String blockWeekendSpikeText(int pct) =>
-      'Seu uso aumenta $pct% nos finais de semana. '
-      'Embora pareça lazer, o uso excessivo nos dias de descanso '
-      'impede a recuperação cognitiva do estresse semanal.';
-  @override String get blockWeekendNoSpike =>
-      'Seu uso no fim de semana é similar ao dos dias úteis. '
-      'Isso pode indicar um padrão de uso crônico ou '
-      'uma rotina saudável e consistente.';
+  @override String get blockWeekPatternTitle => 'Padrão semanal';
+  @override String get blockWeekPatternText =>
+      'Uso médio por hora para cada dia da semana (últimas 4 semanas). '
+      'Cada barra horizontal representa 60 minutos; a parte preenchida '
+      'indica o tempo usado, empilhado por app.';
+  @override String get weekdayOtherLabel => 'outros';
 
   @override String get insightsTitle => 'Insights';
   @override String get tabAlerts => 'Alertas';
