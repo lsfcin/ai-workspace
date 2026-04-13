@@ -20,5 +20,5 @@ Completed milestones → [HISTORY.md](HISTORY.md)
 | Item | Value |
 |------|-------|
 | Phase | In dev |
-| Last milestone | M16 More Fixes ✓ |
-| Next | M16 Prepare to PlayStore submission |
+| Last milestone | M17 Persistent Bugs ✓ |
+| Next | M18 Prepare to PlayStore submission |
