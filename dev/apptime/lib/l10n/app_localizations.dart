@@ -98,7 +98,7 @@ abstract class AppLocalizations {
 
   // ── AnalyticsScreen ──────────────────────────────────────────────────────────
   String get analysisTitle;
-  String get tabToday;
+  String get tab1d;
   String get tab7d;
   String get tab30d;
   String get dayBoundaryNote;
@@ -139,6 +139,9 @@ abstract class AppLocalizations {
   String get blockWeekPatternTitle;
   String get blockWeekPatternText;
   String get weekdayOtherLabel;
+  String get blockYesterdayPatternTitle;
+  String get blockYesterdayPatternText;
+  String get yesterdayPatternOther;
 
   // ── InsightsScreen ───────────────────────────────────────────────────────────
   String get insightsTitle;

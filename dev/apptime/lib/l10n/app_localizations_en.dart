@@ -81,7 +81,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override String get overlayActive => 'Overlay active';
 
   @override String get analysisTitle => 'Analysis';
-  @override String get tabToday => 'Today';
+  @override String get tab1d => '1 day';
   @override String get tab7d => '7 days';
   @override String get tab30d => '30 days';
   @override String get dayBoundaryNote =>
@@ -157,6 +157,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Each horizontal bar represents 60 minutes; the filled portion '
       'shows time used, stacked by app.';
   @override String get weekdayOtherLabel => 'other';
+  @override String get blockYesterdayPatternTitle => 'Yesterday pattern';
+  @override String get blockYesterdayPatternText =>
+      'Horizontal stacked bars by app — each row is one hour of yesterday.';
+  @override String get yesterdayPatternOther => 'other';
 
   @override String get insightsTitle => 'Insights';
   @override String get tabAlerts => 'Alerts';

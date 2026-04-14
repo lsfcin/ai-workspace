@@ -80,6 +80,17 @@ class StorageService {
   List<int> getHourlyUnlockBreakdown(String date) =>
       List.generate(24, (h) => getHourlyUnlocks(date: date, hour: h));
 
+  /// pkg → 24-element list of hourly ms for the given date.
+  /// Only packages that have any non-zero hourly data are included.
+  Map<String, List<int>> getAppHourlyBreakdown(String date) {
+    final result = <String, List<int>>{};
+    for (final pkg in packagesDailyMs(date)) {
+      final hourly = List.generate(24, (h) => getHourlyMs(pkg, date: date, hour: h));
+      if (hourly.any((v) => v > 0)) result[pkg] = hourly;
+    }
+    return result;
+  }
+
   // ── Session duration buckets ──
   // Bucket 0: < 1 min · 1: 1–5 min · 2: 5–15 min · 3: > 15 min
 
@@ -124,7 +135,8 @@ class StorageService {
   List<String> packagesLast24h() {
     final today = _todayKey();
     final yesterday = _yesterdayKey();
-    const prefix = 'flutter.daily_ms_';
+    // Flutter's getKeys() strips the 'flutter.' storage prefix — match without it.
+    const prefix = 'daily_ms_';
     final packages = <String>{};
     for (final k in _prefs.getKeys()) {
       if (k.startsWith(prefix)) {
@@ -246,7 +258,8 @@ class StorageService {
 
   /// Retorna packages que têm dados de uso para a data dada (formato YYYY-MM-DD).
   List<String> packagesDailyMs(String date) {
-    const prefix = 'flutter.daily_ms_';
+    // Flutter's getKeys() strips the 'flutter.' storage prefix — match without it.
+    const prefix = 'daily_ms_';
     final suffix = '_$date';
     return _prefs
         .getKeys()

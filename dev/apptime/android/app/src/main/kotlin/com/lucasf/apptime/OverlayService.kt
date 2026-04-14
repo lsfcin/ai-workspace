@@ -166,7 +166,7 @@ class OverlayService : Service() {
 
     private fun evaluateFeedbacks() {
         val prefs = getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
-        val goalLevel = prefs.getLong("flutter.goal_level", 0L).toInt()
+        val goalLevel = prefs.safeGetCount("flutter.goal_level").toInt()
 
         if (goalLevel == 0) {
             stopBreathing()
@@ -193,7 +193,7 @@ class OverlayService : Service() {
             prefs.getLong("flutter.daily_ms_${pkg}_$date", 0L) else 0L
 
         val appGoalLevel = if (pkg != null && !isLauncher)
-            prefs.getLong("flutter.app_goal_$pkg", 0L).toInt().let { if (it == 0) goalLevel else it }
+            prefs.safeGetCount("flutter.app_goal_$pkg").toInt().let { if (it == 0) goalLevel else it }
         else goalLevel
         val appThresholds = GoalThresholds.forLevel(appGoalLevel)
 

@@ -54,7 +54,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
         bottom: TabBar(
           controller: _tabs,
           tabs: [
-            Tab(text: l10n.tabToday),
+            Tab(text: l10n.tab1d),
             Tab(text: l10n.tab7d),
             Tab(text: l10n.tab30d),
           ],
@@ -63,7 +63,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
       body: TabBarView(
         controller: _tabs,
         children: [
-          _Tab24h(storage: widget.storage, analytics: _analytics),
+          _Tab1d(storage: widget.storage, analytics: _analytics),
           _Tab7d(storage: widget.storage, analytics: _analytics),
           _Tab30d(storage: widget.storage, analytics: _analytics),
         ],
@@ -91,6 +91,11 @@ String _todayStr() {
   return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 }
 
+String _yesterdayStr() {
+  final d = _dayAnchor(DateTime.now()).subtract(const Duration(days: 1));
+  return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+}
+
 String _dateStr(DateTime d) =>
     '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
@@ -100,7 +105,7 @@ Widget _analysisCard({
   required String title,
   required Widget chart,
   required String text,
-  double chartHeight = 140,
+  double? chartHeight = 140, // null = let chart size itself
 }) {
   return Card(
     margin: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -119,7 +124,9 @@ Widget _analysisCard({
                     )),
           ]),
           const SizedBox(height: AppSpacing.sm),
-          SizedBox(height: chartHeight, child: chart),
+          chartHeight != null
+              ? SizedBox(height: chartHeight, child: chart)
+              : chart,
           const SizedBox(height: AppSpacing.sm),
           Text(text, style: Theme.of(context).textTheme.bodySmall),
         ],
@@ -136,10 +143,10 @@ Widget _noData(BuildContext context, String msg) => Center(
               ?.copyWith(color: Theme.of(context).colorScheme.outline)),
     );
 
-// ─── TAB 24h ─────────────────────────────────────────────────────────────────
+// ─── TAB 1 dia ───────────────────────────────────────────────────────────────
 
-class _Tab24h extends StatelessWidget {
-  const _Tab24h({required this.storage, required this.analytics});
+class _Tab1d extends StatelessWidget {
+  const _Tab1d({required this.storage, required this.analytics});
   final StorageService storage;
   final AnalyticsService analytics;
 
@@ -219,6 +226,18 @@ class _Tab24h extends StatelessWidget {
                 )
               : _noData(context, l10n.collectingData),
           text: _phubbingText(l10n, hourlyUnlocks),
+        ),
+
+        _analysisCard(
+          context: context,
+          icon: Icons.view_timeline_outlined,
+          title: l10n.blockYesterdayPatternTitle,
+          chartHeight: null,
+          chart: _YesterdayPatternChart(
+            appHourly: storage.getAppHourlyBreakdown(_yesterdayStr()),
+            l10n: l10n,
+          ),
+          text: l10n.blockYesterdayPatternText,
         ),
 
         // Day-boundary note
@@ -466,12 +485,15 @@ class _HourlyBarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Day starts at 04:00 — position i maps to actual hour (i + 4) % 24.
+    // Labels at positions 0, 6, 12, 18 → "4h", "10h", "16h", "22h".
     final maxVal = values.fold(0, (a, b) => a > b ? a : b).toDouble();
     return BarChart(BarChartData(
       maxY: maxVal > 0 ? maxVal * 1.2 : 1,
-      barGroups: List.generate(24, (h) {
+      barGroups: List.generate(24, (i) {
+        final h = (i + 4) % 24;
         final isHighlight = highlightHours.contains(h);
-        return BarChartGroupData(x: h, barRods: [
+        return BarChartGroupData(x: i, barRods: [
           BarChartRodData(
             toY: values[h].toDouble(),
             color: color ??
@@ -492,9 +514,10 @@ class _HourlyBarChart extends StatelessWidget {
             showTitles: true,
             reservedSize: 18,
             getTitlesWidget: (v, _) {
-              final h = v.toInt();
-              if (h % 6 != 0) return const SizedBox.shrink();
-              return Text('${h}h', style: const TextStyle(fontSize: 9));
+              final pos = v.toInt();
+              if (pos % 6 != 0) return const SizedBox.shrink();
+              final actualHour = (pos + 4) % 24;
+              return Text('${actualHour}h', style: const TextStyle(fontSize: 9));
             },
           ),
         ),
@@ -504,6 +527,224 @@ class _HourlyBarChart extends StatelessWidget {
     ));
   }
 }
+
+// ─── Yesterday pattern chart ──────────────────────────────────────────────────
+
+// Static brand colors keyed by package name.
+// Source: official brand guidelines / seekcolors.com / brandcolorcode.com
+// Add new entries here when new apps appear in the data.
+const _kAppColors = <String, Color>{
+  'com.whatsapp':                            Color(0xFF25D366), // WhatsApp green
+  'com.instagram.android':                   Color(0xFFE1306C), // Instagram pink
+  'com.instagram.barcelona':                 Color(0xFFE1306C), // Threads (same brand)
+  'com.tinder':                              Color(0xFFFD267A), // Tinder pink
+  'org.telegram.messenger':                  Color(0xFF2AABEE), // Telegram blue
+  'com.spotify.music':                       Color(0xFF1DB954), // Spotify green
+  'com.google.android.apps.maps':            Color(0xFF34A853), // Maps green
+  'com.android.chrome':                      Color(0xFF4285F4), // Chrome blue
+  'com.google.android.youtube':              Color(0xFFFF0000), // YouTube red
+  'com.supercell.clashroyale':               Color(0xFF2B59C3), // Clash Royale blue
+  'com.supercell.clashofclans':              Color(0xFFFBBC04), // Clash of Clans gold
+  'com.bumble.app':                          Color(0xFFFFC629), // Bumble yellow
+  'com.openai.chatgpt':                      Color(0xFF10A37F), // ChatGPT teal
+  'com.nu.production':                       Color(0xFF8A05BE), // Nubank purple
+  'com.studiosol.cifraclub':                 Color(0xFFFF6600), // CifraClub orange
+  'com.google.android.keep':                 Color(0xFFFBBC04), // Keep yellow
+  'com.lucasf.apptime':                      Color(0xFF6366F1), // AppTime indigo
+  'com.google.android.gm':                   Color(0xFFD44638), // Gmail red
+  'com.facebook.katana':                     Color(0xFF1877F2), // Facebook blue
+  'com.miui.home':                           Color(0xFF78909C), // Launcher grey-blue
+  'com.google.android.apps.messaging':       Color(0xFF1A73E8), // Messages blue
+  'br.com.brainweb.ifood':                   Color(0xFFEA1D2C), // iFood red
+  'com.android.deskclock':                   Color(0xFF607D8B), // Clock blue-grey
+  'com.google.android.googlequicksearchbox': Color(0xFF4285F4), // Google blue
+  'com.google.android.apps.bard':            Color(0xFF8E77FA), // Gemini violet
+  'com.google.android.apps.docs':            Color(0xFF1A73E8), // Docs blue
+  'com.ovelin.guitartuna':                   Color(0xFFE91E63), // GuitarTuna pink
+  'com.stremio.one':                         Color(0xFF7B4FFF), // Stremio purple
+  'br.com.bradseg.segurobradescosaude':      Color(0xFFCC092F), // Bradesco red
+};
+
+// Human-readable labels for known packages.
+const _kAppLabels = <String, String>{
+  'com.whatsapp':                            'WhatsApp',
+  'com.instagram.android':                   'Instagram',
+  'com.instagram.barcelona':                 'Threads',
+  'com.tinder':                              'Tinder',
+  'org.telegram.messenger':                  'Telegram',
+  'com.spotify.music':                       'Spotify',
+  'com.google.android.apps.maps':            'Maps',
+  'com.android.chrome':                      'Chrome',
+  'com.google.android.youtube':              'YouTube',
+  'com.supercell.clashroyale':               'Clash Royale',
+  'com.supercell.clashofclans':              'Clash of Clans',
+  'com.bumble.app':                          'Bumble',
+  'com.openai.chatgpt':                      'ChatGPT',
+  'com.nu.production':                       'Nubank',
+  'com.studiosol.cifraclub':                 'CifraClub',
+  'com.google.android.keep':                 'Keep',
+  'com.lucasf.apptime':                      'AppTime',
+  'com.google.android.gm':                   'Gmail',
+  'com.facebook.katana':                     'Facebook',
+  'com.miui.home':                           'Início',
+  'com.google.android.apps.messaging':       'Messages',
+  'br.com.brainweb.ifood':                   'iFood',
+  'com.android.deskclock':                   'Relógio',
+  'com.google.android.googlequicksearchbox': 'Google',
+  'com.google.android.apps.bard':            'Gemini',
+  'com.google.android.apps.docs':            'Docs',
+  'com.ovelin.guitartuna':                   'GuitarTuna',
+  'com.stremio.one':                         'Stremio',
+  'br.com.bradseg.segurobradescosaude':      'Bradesco',
+};
+
+Color _colorForApp(String pkg) =>
+    _kAppColors[pkg] ?? const Color(0xFFB0BEC5);
+
+String _labelForApp(String pkg) =>
+    _kAppLabels[pkg] ?? pkg.split('.').where((s) => s != 'android' && s != 'app' && s != 'mobile').last;
+
+class _YesterdayPatternChart extends StatelessWidget {
+  const _YesterdayPatternChart({
+    required this.appHourly,
+    required this.l10n,
+  });
+
+  final Map<String, List<int>> appHourly;
+  final AppLocalizations l10n;
+
+  static const double _rowHeight = 22.0;
+  static const double _labelWidth = 30.0;
+  static const double _barHeight = 12.0;
+  static const int _hourMs = 60 * 60 * 1000;
+  static const int _topN = 5;
+
+  @override
+  Widget build(BuildContext context) {
+    if (appHourly.isEmpty) {
+      return Center(
+        child: Text(l10n.collectingData,
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: Theme.of(context).colorScheme.outline)),
+      );
+    }
+
+    // Rank apps by total daily usage → pick top N
+    final ranked = appHourly.entries
+        .map((e) => (e.key, e.value.fold(0, (a, b) => a + b)))
+        .toList()
+      ..sort((a, b) => b.$2.compareTo(a.$2));
+    final topN = ranked.take(_topN).map((e) => e.$1).toList();
+
+    int toFlex(int ms) => (ms ~/ 1000).clamp(1, 3600);
+
+    // Build one row per hour, all 24, in 4am-first order
+    final rows = <Widget>[];
+    for (int i = 0; i < 24; i++) {
+      final h = (i + 4) % 24;
+      final hourData = <String, int>{};
+      for (final e in appHourly.entries) {
+        if (e.value[h] > 0) hourData[e.key] = e.value[h];
+      }
+
+      final total = hourData.values.fold(0, (a, b) => a + b);
+      final outrosMs = total - topN.fold<int>(0, (s, p) => s + (hourData[p] ?? 0));
+
+      rows.add(SizedBox(
+        height: _rowHeight,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: _labelWidth,
+              child: Text('${h}h',
+                  style: TextStyle(
+                      fontSize: 9,
+                      color: total > 0
+                          ? const Color(0xFF757575)
+                          : const Color(0xFFBDBDBD))),
+            ),
+            Expanded(
+              child: total == 0
+                  ? const SizedBox.shrink()
+                  : ClipRRect(
+                      borderRadius: BorderRadius.circular(2),
+                      child: SizedBox(
+                        height: _barHeight,
+                        child: Row(children: [
+                          for (final pkg in topN)
+                            if ((hourData[pkg] ?? 0) > 0)
+                              Flexible(
+                                flex: toFlex(hourData[pkg]!),
+                                child: Container(color: _colorForApp(pkg)),
+                              ),
+                          if (outrosMs > 0)
+                            Flexible(
+                              flex: toFlex(outrosMs),
+                              child: Container(color: const Color(0xFFB0BEC5)),
+                            ),
+                          // Unused fraction of the hour
+                          if (total < _hourMs)
+                            Flexible(
+                              flex: toFlex(_hourMs - total),
+                              child: const SizedBox.shrink(),
+                            ),
+                        ]),
+                      ),
+                    ),
+            ),
+          ],
+        ),
+      ));
+    }
+
+    // Legend
+    final legendItems = [
+      for (final pkg in topN)
+        _LegendDot(color: _colorForApp(pkg), label: _labelForApp(pkg)),
+      if (appHourly.length > _topN)
+        _LegendDot(color: const Color(0xFFB0BEC5), label: l10n.yesterdayPatternOther),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Wrap(spacing: 10, runSpacing: 4, children: legendItems),
+        const SizedBox(height: 8),
+        ...rows,
+      ],
+    );
+  }
+}
+
+class _LegendDot extends StatelessWidget {
+  const _LegendDot({required this.color, required this.label});
+  final Color color;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                  color: color, borderRadius: BorderRadius.circular(2))),
+          const SizedBox(width: 4),
+          Text(label,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(fontSize: 10)),
+        ],
+      );
+}
+
+// ─── Session histogram ────────────────────────────────────────────────────────
 
 class _SessionHistogram extends StatelessWidget {
   const _SessionHistogram({required this.buckets});
