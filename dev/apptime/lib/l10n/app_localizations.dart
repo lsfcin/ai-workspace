@@ -104,6 +104,7 @@ abstract class AppLocalizations {
   String get dayBoundaryNote;
   String get statTotalUsage;
   String get statUnlocks;
+  String get statYesterday;
   String get statTotalTime;
   String get noSessions;
   String get dailyUsageLabel;
@@ -142,6 +143,9 @@ abstract class AppLocalizations {
   String get blockYesterdayPatternTitle;
   String get blockYesterdayPatternText;
   String get yesterdayPatternOther;
+  String get blockLastDaysPatternTitle;
+  String get blockLastDaysPatternText;
+  String get statLast7Days;
 
   // ── InsightsScreen ───────────────────────────────────────────────────────────
   String get insightsTitle;

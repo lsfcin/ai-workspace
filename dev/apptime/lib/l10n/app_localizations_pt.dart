@@ -90,6 +90,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'O "dia" começa às 4h da manhã — uso entre 0h e 4h é contado no dia anterior.';
   @override String get statTotalUsage => 'Uso total';
   @override String get statUnlocks => 'Desbloqueios';
+  @override String get statYesterday => 'ontem';
   @override String get statTotalTime => 'Tempo total';
   @override String get noSessions => 'Nenhuma sessão registrada ainda.';
   @override String get dailyUsageLabel => 'Uso diário';
@@ -164,6 +165,11 @@ class AppLocalizationsPt extends AppLocalizations {
   @override String get blockYesterdayPatternText =>
       'Barras horizontais empilhadas por app — cada linha é uma hora do dia de ontem.';
   @override String get yesterdayPatternOther => 'outros';
+  @override String get blockLastDaysPatternTitle => 'Padrão dos últimos 7 dias';
+  @override String get blockLastDaysPatternText =>
+      'Barras verticais empilhadas — cada coluna é uma hora, agrupada por dia. '
+      'Toque no ícone de zoom para alternar entre visão de 2,5 dias e semana completa.';
+  @override String get statLast7Days => 'Relativo aos últimos 7 dias';
 
   @override String get insightsTitle => 'Insights';
   @override String get tabAlerts => 'Alertas';
