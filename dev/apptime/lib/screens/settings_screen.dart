@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
-import 'goal_screen.dart';
-import 'per_app_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({
@@ -37,23 +35,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               children: [
                 SwitchListTile(
+                  title: Text(l10n.showOverlay),
+                  subtitle: Text(l10n.showOverlaySub),
+                  value: _s.overlayEnabled,
+                  onChanged: (v) => setState(() => _s.overlayEnabled = v),
+                ),
+                const Divider(height: 1, indent: 16),
+                SwitchListTile(
                   title: Text(l10n.showBorder),
                   value: _s.overlayShowBorder,
-                  onChanged: (v) => setState(() => _s.overlayShowBorder = v),
+                  onChanged: _s.overlayEnabled ? (v) => setState(() => _s.overlayShowBorder = v) : null,
                 ),
                 SwitchListTile(
                   title: Text(l10n.showBackground),
                   value: _s.overlayShowBackground,
-                  onChanged: (v) => setState(() => _s.overlayShowBackground = v),
+                  onChanged: _s.overlayEnabled ? (v) => setState(() => _s.overlayShowBackground = v) : null,
                 ),
                 ListTile(
+                  enabled: _s.overlayEnabled,
                   title: Text(l10n.fontSize(_s.overlayFontSize.round())),
                   subtitle: Slider(
                     min: 10,
                     max: 30,
                     divisions: 20,
                     value: _s.overlayFontSize,
-                    onChanged: (v) => setState(() => _s.overlayFontSize = v),
+                    onChanged: _s.overlayEnabled ? (v) => setState(() => _s.overlayFontSize = v) : null,
                   ),
                 ),
               ],
@@ -62,35 +68,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: AppSpacing.md),
           _SectionHeader(l10n.sectionBehavior),
           Card(
-            child: Column(
-              children: [
-                ListTile(
-                  title: Text(l10n.goalSettingsTile),
-                  subtitle: Text(l10n.goalSettingsSub),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => GoalScreen(storage: _s),
-                    ),
-                  ),
-                ),
-                SwitchListTile(
-                  title: Text(l10n.monitorLauncherTitle),
-                  subtitle: Text(l10n.monitorLauncherSub),
-                  value: _s.monitorLauncher,
-                  onChanged: (v) => setState(() => _s.monitorLauncher = v),
-                ),
-                ListTile(
-                  title: Text(l10n.perAppControlTitle),
-                  subtitle: Text(l10n.perAppControlSub),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => PerAppScreen(storage: _s),
-                    ),
-                  ),
-                ),
-              ],
+            child: SwitchListTile(
+              title: Text(l10n.monitorLauncherTitle),
+              subtitle: Text(l10n.monitorLauncherSub),
+              value: _s.monitorLauncher,
+              onChanged: (v) => setState(() => _s.monitorLauncher = v),
             ),
           ),
           const SizedBox(height: AppSpacing.md),

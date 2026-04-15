@@ -13,7 +13,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
-  bool _isRunning = false;
   bool _hasOverlayPermission = false;
   bool _hasUsagePermission = false;
 
@@ -51,29 +50,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Future<void> _refreshStatus() async {
     final results = await Future.wait([
-      ServiceChannel.isRunning(),
       ServiceChannel.hasOverlayPermission(),
       ServiceChannel.hasUsagePermission(),
     ]);
     if (mounted) {
       setState(() {
-        _isRunning = results[0];
-        _hasOverlayPermission = results[1];
-        _hasUsagePermission = results[2];
+        _hasOverlayPermission = results[0];
+        _hasUsagePermission = results[1];
       });
     }
-  }
-
-  bool get _allPermissionsGranted => _hasOverlayPermission && _hasUsagePermission;
-
-  Future<void> _toggleMonitoring() async {
-    if (!_allPermissionsGranted) return;
-    if (_isRunning) {
-      await ServiceChannel.stopMonitoring();
-    } else {
-      await ServiceChannel.startMonitoring();
-    }
-    await _refreshStatus();
   }
 
   @override
@@ -105,47 +90,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           _InsightCard(
             headerLabel: l10n.insightOfDay,
             insight: kInsights[_insightIndex],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(l10n.monitoringTitle,
-                      style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    _isRunning
-                        ? l10n.monitoringActive
-                        : _allPermissionsGranted
-                            ? l10n.monitoringInactive
-                            : l10n.monitoringNoPerms,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    l10n.monitoringDesc,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.outline,
-                        ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  FilledButton.icon(
-                    onPressed: _allPermissionsGranted ? _toggleMonitoring : null,
-                    icon: Icon(_isRunning ? Icons.stop : Icons.play_arrow),
-                    label: Text(_isRunning ? l10n.actionStop : l10n.actionStart),
-                    style: _isRunning
-                        ? FilledButton.styleFrom(
-                            backgroundColor:
-                                Theme.of(context).colorScheme.error,
-                          )
-                        : null,
-                  ),
-                ],
-              ),
-            ),
           ),
         ],
       ),

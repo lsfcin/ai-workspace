@@ -6,6 +6,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override String get navHome => 'Home';
   @override String get navAnalysis => 'Analysis';
   @override String get navInsights => 'Insights';
+  @override String get navMonitoring => 'Monitor';
   @override String get navSettings => 'Settings';
 
   @override String get cancel => 'Cancel';
@@ -54,6 +55,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override String get settingsTitle => 'Settings';
   @override String get sectionOverlay => 'Overlay';
+  @override String get showOverlay => 'Show usage overlay';
+  @override String get showOverlaySub => 'Display the floating counter while using apps. Monitoring (data collection) continues regardless.';
   @override String get showBorder => 'Show border';
   @override String get showBackground => 'Show background';
   @override String fontSize(int size) => 'Font size: ${size}sp';

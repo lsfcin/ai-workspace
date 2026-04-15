@@ -32,6 +32,7 @@ abstract class AppLocalizations {
   String get navHome;
   String get navAnalysis;
   String get navInsights;
+  String get navMonitoring;
   String get navSettings;
 
   // ── Common ───────────────────────────────────────────────────────────────────
@@ -71,6 +72,8 @@ abstract class AppLocalizations {
   // ── SettingsScreen ───────────────────────────────────────────────────────────
   String get settingsTitle;
   String get sectionOverlay;
+  String get showOverlay;
+  String get showOverlaySub;
   String get showBorder;
   String get showBackground;
   String fontSize(int size);
@@ -151,6 +154,11 @@ abstract class AppLocalizations {
   String get insightsTitle;
   String get tabAlerts;
   String get tabSolutions;
+
+  // ── Tab30d ───────────────────────────────────────────────────────────────────
+  String get block30dSummaryTitle;
+  String get block30dChartTitle;
+  String get block30dChartText;
 
   // ── GoalScreen ───────────────────────────────────────────────────────────────
   String get goalScreenTitle;

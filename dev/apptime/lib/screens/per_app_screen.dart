@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/app_info.dart';
 
 // ─── App goal level ───────────────────────────────────────────────────────────
 // -1 = not monitored   0 = default   1 = minimal   2 = normal   3 = extensive
@@ -43,7 +44,9 @@ class _PerAppScreenState extends State<PerAppScreen> {
       packages.addAll(_s.packagesDailyMs(dateStr));
     }
 
-    final entries = packages.map((pkg) {
+    final entries = packages
+        .where(isUserFacingApp)
+        .map((pkg) {
       int ms = 0;
       for (int i = 0; i < 7; i++) {
         final dateStr = _fmt(today.subtract(Duration(days: i)));
@@ -109,12 +112,24 @@ class _PerAppScreenState extends State<PerAppScreen> {
               itemBuilder: (_, i) {
                 final (pkg, ms) = packages[i];
                 final level = _effectiveLevel(pkg);
-                final label = pkg.split('.').last;
+                final label = labelForApp(pkg);
                 final usageStr = _fmtMs(ms);
+                final appColor = colorForApp(pkg);
 
                 return ListTile(
                   contentPadding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.md, vertical: 4),
+                  leading: CircleAvatar(
+                    radius: 18,
+                    backgroundColor: appColor.withAlpha(200),
+                    child: Text(
+                      label.isNotEmpty ? label[0].toUpperCase() : '?',
+                      style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white),
+                    ),
+                  ),
                   title: Text(
                     label,
                     style: const TextStyle(fontSize: 13),

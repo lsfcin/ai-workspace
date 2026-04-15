@@ -34,6 +34,11 @@ class StorageService {
   bool get overlayShowBackground => _prefs.getBool('overlay_show_background') ?? false;
   set overlayShowBackground(bool v) => _prefs.setBool('overlay_show_background', v);
 
+  /// Controls whether the floating overlay is shown at all.
+  /// Monitoring (data collection) continues regardless of this flag.
+  bool get overlayEnabled => _prefs.getBool('overlay_enabled') ?? true;
+  set overlayEnabled(bool v) => _prefs.setBool('overlay_enabled', v);
+
   // ── Session data (escrito pelo MonitoringService Kotlin) ──
 
   /// The "day" starts at 04:00. Hours 00–03 belong to the previous calendar day,

@@ -29,6 +29,18 @@ class MonitoringService : Service() {
     private var lastDate: String = ""
     private var lastPruneDate: String = ""
 
+    // Timestamp of the most recent ACTION_USER_PRESENT (unlock). Used to
+    // determine whether a launcher session started via direct unlock or via
+    // home/back button press.
+    private var lastUnlockMs: Long = 0L
+
+    // Key used to persist the last-alive timestamp so gap detection survives
+    // process death (service killed, device reboot, crash, etc.)
+    private val HEARTBEAT_KEY = "flutter.monitoring_heartbeat_ms"
+    // Maximum gap before we consider the period unmonitored and attempt backfill.
+    // 10s covers normal poll jitter; anything larger is a real gap.
+    private val GAP_THRESHOLD_MS = 10_000L
+
     // Reopening tolerance: if the same app returns within this window, don't
     // count it as a new open (covers copy-paste flows, permission dialogs, etc.)
     // 120 s aligns with common session-gap thresholds in mobile UX research.
@@ -52,6 +64,7 @@ class MonitoringService : Service() {
                         .apply()
                 }
                 Intent.ACTION_USER_PRESENT -> {
+                    lastUnlockMs = System.currentTimeMillis()
                     val date = today()
                     val hour = currentHour()
                     val key = "flutter.unlock_count_${date}"
@@ -83,6 +96,7 @@ class MonitoringService : Service() {
             addAction(Intent.ACTION_USER_PRESENT)
         }
         registerReceiver(screenReceiver, screenFilter)
+        backfillGap()
         handler.post(pollRunnable)
         return START_STICKY
     }
@@ -97,6 +111,10 @@ class MonitoringService : Service() {
     }
 
     private fun tick() {
+        // Heartbeat: record the current time so gap detection can measure how
+        // long the service was inactive if it gets killed and restarted later.
+        prefs.edit().putLong(HEARTBEAT_KEY, System.currentTimeMillis()).apply()
+
         // Watchdog: restart OverlayService every 30s in case it was killed
         if (++watchdogTick >= 30) {
             watchdogTick = 0
@@ -177,7 +195,17 @@ class MonitoringService : Service() {
                 // Add live launcher session so the counter updates every tick (not frozen)
                 val storedMs = getDeviceDailyMs()
                 val liveMs = storedMs + (System.currentTimeMillis() - sessionStartMs)
-                if (shouldShowCount()) "$unlocks×" else formatTime(liveMs)
+                val elapsed = System.currentTimeMillis() - sessionStartMs
+                // Only show unlock count if user landed on launcher directly from an unlock
+                // (ACTION_USER_PRESENT fired within 5s before this session started).
+                // Home/back-button transitions skip the count and wait 5s before showing time.
+                val directUnlockToLauncher = lastUnlockMs > 0L &&
+                    (sessionStartMs - lastUnlockMs) < 5_000L
+                when {
+                    directUnlockToLauncher && elapsed < 5_000L -> "$unlocks×"
+                    elapsed < 5_000L -> ""   // suppress during 5s delay for home/back transitions
+                    else -> formatTime(liveMs)
+                }
             }
             else -> {
                 val opens = getOpenCount(current)
@@ -193,6 +221,60 @@ class MonitoringService : Service() {
             .putString("flutter.current_pkg", current)
             .putLong("flutter.current_session_start_ms", sessionStartMs)
             .apply()
+    }
+
+    /**
+     * Fills in any usage data for the period when the service was not running.
+     *
+     * On service start we compare [now] against the last heartbeat written by
+     * [tick]. If the gap exceeds [GAP_THRESHOLD_MS] we replay the UsageEvents
+     * for that window and accumulate daily/hourly ms for every foreground app
+     * that appeared during the gap (launchers excluded from daily totals, same
+     * as normal monitoring).
+     */
+    private fun backfillGap() {
+        val lastHeartbeat = prefs.getLong(HEARTBEAT_KEY, 0L)
+        val now = System.currentTimeMillis()
+        if (lastHeartbeat == 0L || (now - lastHeartbeat) < GAP_THRESHOLD_MS) return
+
+        val gapStart = lastHeartbeat
+        val gapEnd   = now
+
+        val events = usageStatsManager.queryEvents(gapStart, gapEnd)
+        val event  = UsageEvents.Event()
+
+        data class Seg(val pkg: String, val startMs: Long, val endMs: Long)
+        val segments = mutableListOf<Seg>()
+        var lastFgPkg: String? = null
+        var lastFgTs:  Long   = gapStart
+
+        while (events.getNextEvent(event)) {
+            when (event.eventType) {
+                UsageEvents.Event.MOVE_TO_FOREGROUND -> {
+                    // Close previous segment if any
+                    if (lastFgPkg != null && event.timeStamp > lastFgTs) {
+                        segments += Seg(lastFgPkg!!, lastFgTs, event.timeStamp)
+                    }
+                    lastFgPkg = event.packageName
+                    lastFgTs  = event.timeStamp
+                }
+                UsageEvents.Event.MOVE_TO_BACKGROUND,
+                UsageEvents.Event.SCREEN_NON_INTERACTIVE -> {
+                    if (lastFgPkg != null && event.timeStamp > lastFgTs) {
+                        segments += Seg(lastFgPkg!!, lastFgTs, event.timeStamp)
+                        lastFgPkg = null
+                    }
+                }
+            }
+        }
+        // Close any still-open segment at gap end
+        if (lastFgPkg != null && gapEnd > lastFgTs) {
+            segments += Seg(lastFgPkg!!, lastFgTs, gapEnd)
+        }
+
+        for (seg in segments) {
+            accumulateDailyMs(seg.pkg, seg.startMs, seg.endMs)
+        }
     }
 
     private fun getCurrentApp(): String? {

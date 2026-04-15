@@ -7,6 +7,7 @@ class AppLocalizationsPt extends AppLocalizations {
   @override String get navHome => 'Início';
   @override String get navAnalysis => 'Análise';
   @override String get navInsights => 'Insights';
+  @override String get navMonitoring => 'Monit.';
   @override String get navSettings => 'Config.';
 
   @override String get cancel => 'Cancelar';
@@ -56,6 +57,8 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override String get settingsTitle => 'Configurações';
   @override String get sectionOverlay => 'Visor flutuante';
+  @override String get showOverlay => 'Exibir visor de uso';
+  @override String get showOverlaySub => 'Mostra o contador flutuante ao usar apps. O monitoramento (coleta de dados) continua independentemente.';
   @override String get showBorder => 'Mostrar borda';
   @override String get showBackground => 'Mostrar fundo';
   @override String fontSize(int size) => 'Tamanho da fonte: ${size}sp';

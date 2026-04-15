@@ -3,6 +3,7 @@ import 'l10n/app_localizations.dart';
 import 'screens/home_screen.dart';
 import 'screens/analytics_screen.dart';
 import 'screens/insights_screen.dart';
+import 'screens/monitoring_screen.dart';
 import 'screens/settings_screen.dart';
 import 'services/storage_service.dart';
 
@@ -30,6 +31,7 @@ class _MainScreenState extends State<MainScreen> {
       const HomeScreen(),
       AnalyticsScreen(storage: widget.storage),
       InsightsScreen(storage: widget.storage),
+      MonitoringScreen(storage: widget.storage),
       SettingsScreen(
         storage: widget.storage,
         onLocaleChange: widget.onLocaleChange,
@@ -56,6 +58,11 @@ class _MainScreenState extends State<MainScreen> {
             icon: const Icon(Icons.lightbulb_outlined),
             selectedIcon: const Icon(Icons.lightbulb),
             label: l10n.navInsights,
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.monitor_heart_outlined),
+            selectedIcon: const Icon(Icons.monitor_heart),
+            label: l10n.navMonitoring,
           ),
           NavigationDestination(
             icon: const Icon(Icons.settings_outlined),

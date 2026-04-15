@@ -157,10 +157,12 @@ class OverlayService : Service() {
         }
 
         if (pmActive) return   // PM is using the overlay for its own text/visibility
-        val text    = prefs.getString("flutter.overlay_text", "") ?: ""
-        val visible = prefs.getBoolean("flutter.overlay_visible", false)
+        val text           = prefs.getString("flutter.overlay_text", "") ?: ""
+        val visible        = prefs.getBoolean("flutter.overlay_visible", false)
+        val overlayEnabled = prefs.getBoolean("flutter.overlay_enabled", true)
         overlayView.text = text
-        overlayView.visibility = if (visible && text.isNotEmpty()) View.VISIBLE else View.INVISIBLE
+        overlayView.visibility =
+            if (overlayEnabled && visible && text.isNotEmpty()) View.VISIBLE else View.INVISIBLE
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -208,8 +210,12 @@ class OverlayService : Service() {
         val sessionPct = if (thresholds.maxSessionMs > 0 && pkg != null && !isLauncher)
             (sessionMs * 100 / thresholds.maxSessionMs).toInt()  else 0
 
-        val inSleepWindow  = (thresholds.sleepCutoffHour > 0) &&
-                (hour >= thresholds.sleepCutoffHour || hour < 6)
+        // sleepCutoffHour >= 18 → evening start (e.g. 21h→6h, 23h→6h)
+        // sleepCutoffHour  < 18 → late-night only (e.g. 1h→6h; avoids triggering all day)
+        val inSleepWindow  = (thresholds.sleepCutoffHour > 0) && when {
+            thresholds.sleepCutoffHour >= 18 -> hour >= thresholds.sleepCutoffHour || hour < 6
+            else -> hour >= thresholds.sleepCutoffHour && hour < 6
+        }
         val inWakeupWindow = (thresholds.wakeupHour > 0) && (hour < thresholds.wakeupHour)
         val isSocialApp    = pkg != null && SOCIAL_PATTERNS.any { pkg.contains(it) }
 
@@ -328,6 +334,8 @@ class OverlayService : Service() {
         if (now < pmCooldownUntil) return
         if (pmActive) return
         if (!isViewAdded) return
+        val prefs = getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
+        if (!prefs.getBoolean("flutter.overlay_enabled", true)) return
         pmActive = true
         pmCooldownUntil = now + 60_000L
 

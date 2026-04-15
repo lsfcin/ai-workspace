@@ -167,3 +167,23 @@ x the chart wekeend pattern should no longer be named like that. it is now week 
 x maybe there is one point we should discuss here. about the nature of the gathered data? are you fully relying on android data? is it enough? I want you to have data about each session of each app on the last 30 days. so just think of a way to guarantee that. 
 
 x Important change! let's not monitor the last 24 hours. It is confusing regarding the time count. Because during the use, if you think in depth, in case I used the same app at the same time in the last day, the count should stay freeze, not adding a second, because I am using it now but we should be discarding the usage time from the last day as the time window goes by. So, let's simplify. Is it possible for us to use a different mark for a new day? Instead of 0:00 I would like to use 4am. This option is aligned with the fact that several addicted users usually sleep late and starting a new day at 0:00am may not represent reality. Can we, with some proper data organization, use 4am as start point of the new day? We can explain that briefly in some relevant place of our app. Then you can change everything that we do that is designed for the last 24h to work on two ways: today and yesterday. For the analysis subtab we use both. For current monitoring and overlay use just 'today'.
+
+## M17 - Persistent Bugs
+
+Some bugs are still there. Find definitive solutions for them or else explain to me if they are already solved but my tests do not reveal yet (due to my small time window of test, testing for only 2 days and some features show comparisons of full weeks or months) or else if they do not have a proper way to fix it.
+
+x There should be 5 highest used apps visibly there, with their colors and also detailed in the caption. only after the 5 highest used the all other apps should appear.
+
+x The option per-app control simply is not there.
+
+x Config slider for overlay font-size ain't working.
+
+x Config slider for vertical position ain't working either, but in this case you can just remove this config. It is fine.
+
+x Timer is disappearing (or becoming invisible) without any other message being displayed. This happened while using the AppTime itself. It reappears if I open another app or go to the launcher.
+
+x Avoid using technical words in the user interface such as overlay and launcher, specially if you're set to pt-br.
+
+x Launcher is showing that I used my phone for more than 21hours. How is that possible? Also, it is frozen at 21:59:36...
+
+x Not a correction, after finshing this milestone please explain to me how we are handling the data, are we collecting/storing something that is not what the android natively stores? I believe there is some serious core problem regarding our collection and storage and how we use it on our count and analysis. End your tasks and then return to this point to answer it seriously.
