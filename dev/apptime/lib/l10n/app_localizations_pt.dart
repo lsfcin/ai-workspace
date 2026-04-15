@@ -167,13 +167,22 @@ class AppLocalizationsPt extends AppLocalizations {
   @override String get yesterdayPatternOther => 'outros';
   @override String get blockLastDaysPatternTitle => 'Padrão dos últimos 7 dias';
   @override String get blockLastDaysPatternText =>
-      'Barras verticais empilhadas — cada coluna é uma hora, agrupada por dia. '
+      'Barras horizontais empilhadas — cada linha é uma hora, agrupada por dia. '
       'Toque no ícone de zoom para alternar entre visão de 2,5 dias e semana completa.';
   @override String get statLast7Days => 'Relativo aos últimos 7 dias';
 
   @override String get insightsTitle => 'Insights';
   @override String get tabAlerts => 'Alertas';
   @override String get tabSolutions => 'Soluções';
+
+  @override String get block30dSummaryTitle => 'Visão geral — 30 dias';
+  @override String get block30dChartTitle => 'Tendência de uso — 30 dias';
+  @override String get block30dChartText =>
+      'Tempo de tela total por dia (linha branca grossa) com tendência linear (cinza tracejado). '
+      'Os 3 apps mais usados aparecem como linhas coloridas finas. '
+      'Limiares: 2h recomendado (APA/Common Sense Media) e '
+      '4h crítico — Twenge et al. (2018), "Increases in Depressive Symptoms", '
+      'Clinical Psychological Science.';
 
   @override String get goalScreenTitle => 'Metas de uso';
   @override String get goalLevelSectionTitle => 'Nível de meta';

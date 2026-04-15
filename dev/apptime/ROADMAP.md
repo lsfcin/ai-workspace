@@ -2,28 +2,38 @@
 
 Read the next milestone, implement it bullet by bullet. After a bullet is done, change the dash - to an x, and commit.
 
-## M17 - Persistent Bugs
+## M18 — Overall Adjustments
+x In the dopamine drain chart improve the references, just author and year is not enough to find it. display title and venue of publication (journal/conference proceedings)
 
-Some bugs are still there. Find definitive solutions for them or else explain to me if they are already solved but my tests do not reveal yet (due to my small time window of test, testing for only 2 days and some features show comparisons of full weeks or months) or else if they do not have a proper way to fix it.
+x In the 30 days analysis subtab, the first card says "2h44 total usage". Is it an average usage per day? complete it plz. same for unblocks count. state that it is /day (/dia)
 
-x There should be 5 highest used apps visibly there, with their colors and also detailed in the caption. only after the 5 highest used the all other apps should appear.
+x In the usage trend chart - 30 days . show captions for the apps lines. also, fix the reference, author and year is not enough.
 
-x The option per-app control simply is not there.
+x Delete the last card/block of 30-days trend, it does not have any rich analysis
 
-x Config slider for overlay font-size ain't working.
+x Standardize the first analysis card (about usage time and unlocks) of all three subtabs (1 day, 7 days, 30 days) using the 30 days as standard
 
-x Config slider for vertical position ain't working either, but in this case you can just remove this config. It is fine.
+- Monitoring gaps: we should handle the monitoring gaps when our app is not active. Do you have any ideas? If you have any better you can bring it on. Mine is to use android data to fill unmonitored gaps. Somehow we must know when we lost the track and when we recovered it and then search through the android data to grab info about exactly that period.
 
-x Timer is disappearing (or becoming invisible) without any other message being displayed. This happened while using the AppTime itself. It reappears if I open another app or go to the launcher.
+- Let's separate the overlay visualization from our status if monitoring is on or off. Please create a toggle that is on by default for analyzing usage and choose the best place to display it on the config tab.
 
-x Avoid using technical words in the user interface such as overlay and launcher, specially if you're set to pt-br.
+x Insight links are not clickable
 
-x Launcher is showing that I used my phone for more than 21hours. How is that possible? Also, it is frozen at 21:59:36...
+x The reference on the insight of the day brings just author and year, it is not enough. Use the sama structure for all our references.
 
-x Not a correction, after finshing this milestone please explain to me how we are handling the data, are we collecting/storing something that is not what the android natively stores? I believe there is some serious core problem regarding our collection and storage and how we use it on our count and analysis. End your tasks and then return to this point to answer it seriously.
+x The slider of overlay font size does not affect the actual overlay
 
+- The goals should be moved to its own tab, but let's call it monitoring (monitoramento), you can abbreviate it to fit a a tab. Now in this tab we will group of features, the goals and the monitoring + per-app control. Aggregate the per-app control in the same drop-down of the goals, adding an option to not monitor. Actually it is already aggregated... right? Ok! So all you need is to ditch the per-app goals list.
 
-## M18 — Prepare to PlayStore submission
+- The list of per-app goals, which is now the same as the per-app control, is too technical. Exclude background and coresystem apps (e.g., android, settings, permissioncontroller); Fix names to use the popular (maybe the play store) names; Place the icon of each app before its name
+
+- Stop showing the unlock count of the home-screen (android/launcher/etc) if the user presses the home (circle) button or the atlernate (square) button. These are moments of quick transition so showing immediatly the count can be confusing, so just don't show it, wait 5 secs and then if the user remains on the home screen/launcher then you can show the total time of phone usage on the overlay as it already happens. Show the count only after unlocks that go directly to the launcher. If an unlock shows at first an app, than you should proceed with the behavior of the overlay for that app. Do not change the count behavior itself, just when it is showed.
+
+- Configured to have the strict goal, because of that just saw a personalized message on the overlay about melatonin but it is 4:30pm. Check the triggers/routes/decision of these messages so they are picked for the right context.
+
+x Review the insights and see if there is a need to add more to cover two topics, brain-rot and comparisons between phone addiction and drugs addiction. I want you to give more attention on these two topics, perhaps prepare 4 insights for each (2 about the issue and 2 with strategies). I believe those are strong convincing points
+
+## M19 — Prepare to PlayStore submission
 
 ### Checklist
 

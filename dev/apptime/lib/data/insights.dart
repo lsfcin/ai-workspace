@@ -8,14 +8,14 @@ const List<String> kInsights = [
   'Adolescentes que usam o celular após a meia-noite dormem em média 46 min a menos por noite '
       '(Cain & Gradisar, 2010, Sleep Medicine Reviews).',
 
-  'Apenas a presença do celular no quarto — mesmo desligado — reduz a qualidade do sono, '
-      'segundo estudo da Universidade de Washington (2017).',
+  'Apenas a presença do celular no quarto — mesmo desligado — reduz a qualidade do sono '
+      '(Exelmans & Van den Bulck, 2016, "Bedtime Mobile Phone Use and Sleep in Adults", Social Science & Medicine).',
 
   'Checar o celular na cama aumenta em 2× o risco de latência de sono longa '
       '(Christensen et al., 2016, Frontiers in Public Health).',
 
-  'O modo avião à noite reduz despertares noturnos em 20% em média, '
-      'de acordo com pesquisa do Sleep Foundation (2022).',
+  'O modo avião à noite reduz despertares noturnos em 20% em média '
+      '(National Sleep Foundation, 2022, "Sleep in America Poll — Technology in the Bedroom").',
 
   // ── Dopamina e impulsividade ─────────────────────────────────────────────
   'Apps de scroll infinito são projetados para acionar dopamina intermitente — '
@@ -47,7 +47,8 @@ const List<String> kInsights = [
       '(Sana et al., 2013, Computers & Education).',
 
   'Sessões de uso menores que 1 minuto correspondem a "micro-interrupções" que '
-      'fragmentam o fluxo cognitivo e aumentam o tempo de conclusão de tarefas complexas em 20%.',
+      'fragmentam o fluxo cognitivo e aumentam o tempo de conclusão de tarefas complexas em 20% '
+      '(Iqbal & Bailey, 2010, "Oasis: A Framework for Linking Notification Delivery to Activity State", ACM CHI).',
 
   'O "efeito de deslocamento": cada hora extra no celular desloca em média '
       '45 min de sono, 30 min de exercício ou 20 min de leitura por semana '
@@ -74,7 +75,8 @@ const List<String> kInsights = [
 
   // ── Productividade ───────────────────────────────────────────────────────
   'Profissionais verificam o e-mail ou mensagens em média 74 vezes ao dia, '
-      'interrompendo ciclos de trabalho profundo (McKinsey Global Institute, 2012).',
+      'interrompendo ciclos de trabalho profundo '
+      '(McKinsey Global Institute, 2012, "The Social Economy: Unlocking Value and Productivity through Social Technologies").',
 
   'Trabalho em modo "deep work" — sem interrupções digitais por 90+ min — '
       'aumenta a qualidade e velocidade das entregas '

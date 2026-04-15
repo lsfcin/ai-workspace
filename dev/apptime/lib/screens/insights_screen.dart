@@ -367,6 +367,65 @@ final _alertas = <_Insight>[
         ? '${(d.weeklyMin / 60).toStringAsFixed(0)}h de tela na semana passada reduz o tempo de conexão face a face'
         : 'registre uso para ver quanto tempo o celular substitui interação humana',
   ),
+
+  // ── Brain-rot (problema) ──────────────────────────────────────────────────
+  _Insight(
+    icon: Icons.psychology_alt_outlined,
+    title: 'Brain-rot: atrofia cognitiva digital',
+    body: 'O consumo crônico de conteúdo curto e hipnótico (Reels, Shorts, TikTok) '
+        'reduz a capacidade de tolerar tédio, ler textos longos e manter foco — '
+        'um fenômeno chamado de "brain-rot" ou erosão cognitiva digital. '
+        'Estudos mostram que após semanas de scroll intenso, o tempo médio de '
+        'atenção voluntária cai para menos de 8 segundos.',
+    reference: 'Loh & Kanai (2016), "How Has the Internet Reshaped Human Cognition?", The Neuroscientist',
+    url: 'https://doi.org/10.1177/1073858415595005',
+    analysisFn: (d) => d.hasData
+        ? '${d.microSessions} sessões abaixo de 1 min na semana — cada uma é um treino do cérebro para rejeitar conteúdo mais longo'
+        : 'registre uso por alguns dias para ver sua proporção de sessões ultra-curtas',
+  ),
+  _Insight(
+    icon: Icons.auto_graph_outlined,
+    title: 'Conteúdo curto destrói a memória',
+    body: 'O consumo de vídeos de 15–60 segundos prejudica a consolidação da '
+        'memória de trabalho: o cérebro não tem tempo suficiente para processar '
+        'e arquivar o que vê, resultando em uma corrente de informações que não '
+        'deixa rastro cognitivo — informação sem aprendizado.',
+    reference: 'Uncapher & Wagner (2018), "Minds and Brains of Media Multitaskers", PNAS',
+    url: 'https://doi.org/10.1073/pnas.1611612115',
+    analysisFn: (d) => d.hasData
+        ? '${d.passiveMin} min em apps de vídeo/social na semana passada — quanto desse conteúdo você ainda lembra?'
+        : 'registre uso para ver quanto tempo vai para consumo de conteúdo descartável',
+  ),
+
+  // ── Comparação com drogas (problema) ─────────────────────────────────────
+  _Insight(
+    icon: Icons.science_outlined,
+    title: 'Celular = droga de design',
+    body: 'Neuroimagens mostram que o uso compulsivo de smartphone ativa o '
+        'núcleo accumbens da mesma forma que cocaína ou álcool. '
+        'A diferença: o smartphone é legal, socialmente aceito e está no bolso '
+        '24h por dia. Essa combinação o torna, segundo pesquisadores, '
+        'potencialmente mais difícil de controlar do que substâncias ilegais.',
+    reference: 'He et al. (2017), "Altered Small-World Brain Networks in Internet Addiction", Scientific Reports',
+    url: 'https://doi.org/10.1038/srep41587',
+    analysisFn: (d) => d.hasData
+        ? '${d.weeklyUnlocks} desbloqueios na semana passada — cada um é uma busca pelo próximo pico de dopamina'
+        : 'registre uma semana de uso para ver com que frequência você busca essa recompensa',
+  ),
+  _Insight(
+    icon: Icons.warning_amber_outlined,
+    title: 'Tolerância e abstinência digital',
+    body: 'Usuários compulsivos de smartphone desenvolvem tolerância — precisam '
+        'de doses crescentes (mais tempo de tela) para obter o mesmo prazer — '
+        'e abstinência — ansiedade, irritabilidade e foco prejudicado quando o '
+        'celular não está disponível. Esses são os critérios clínicos de dependência '
+        'reconhecidos pela OMS para substâncias.',
+    reference: 'Billieux et al. (2015), "Problematic Smartphone Use: Who and Why?", Current Addiction Reports',
+    url: 'https://doi.org/10.1007/s40429-015-0054-y',
+    analysisFn: (d) => d.hasData
+        ? 'você usou ${d.avgDailyMin} min/dia esta semana — note se o padrão aumentou nos últimos meses'
+        : 'registre uso por algumas semanas para identificar tendência de aumento de tolerância',
+  ),
 ];
 
 final _solucoes = <_Insight>[
@@ -567,6 +626,62 @@ final _solucoes = <_Insight>[
     analysisFn: (d) => d.hasData
         ? '${d.passiveMin} min em apps passivos esta semana — vale auditar o que esse feed está te entregando'
         : 'registre uso para ver quanto tempo vai para consumo passivo de conteúdo',
+  ),
+
+  // ── Brain-rot (estratégia) ────────────────────────────────────────────────
+  _Insight(
+    icon: Icons.menu_book_outlined,
+    title: 'Leitura longa como antídoto',
+    body: 'Ler 20 minutos de texto contínuo por dia — livro, artigo, ensaio — '
+        'reconstrói o músculo da atenção sustentada e reverte parcialmente '
+        'os efeitos do consumo fragmentado. É o oposto estrutural do scroll: '
+        'exige atenção linear, memória de trabalho e síntese ativa.',
+    reference: 'Wolf (2018), "Reader, Come Home: The Reading Brain in a Digital World", HarperCollins',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/?term=deep+reading+brain+attention+Wolf',
+    analysisFn: (d) => d.hasData
+        ? '${d.microSessions} checagens impulsivas na semana passada — cada sessão longa de leitura desfaz vários desses danos'
+        : 'registre uso para medir a proporção de sessões fragmentadas vs. profundas',
+  ),
+  _Insight(
+    icon: Icons.self_improvement_outlined,
+    title: 'Tédio como exercício cognitivo',
+    body: 'Tolerar o tédio sem recorrer ao celular é, literalmente, um treino '
+        'cerebral: ativa a rede de modo padrão (default mode network), '
+        'responsável pela criatividade, autopercepção e consolidação de memórias. '
+        'O scroll infinito suprime essa rede, empobrecendo o pensamento espontâneo.',
+    reference: 'Smallwood & Schooler (2015), "The Science of Mind Wandering", Annual Review of Psychology',
+    url: 'https://doi.org/10.1146/annurev-psych-010814-015331',
+    analysisFn: (d) => d.hasData
+        ? '${d.microSessions} vezes que você buscou o celular ao sentir tédio esta semana — experimente esperar 2 minutos antes de pegar'
+        : 'registre uso para identificar quantas aberturas são respostas automáticas ao tédio',
+  ),
+
+  // ── Comparação com drogas (estratégia) ───────────────────────────────────
+  _Insight(
+    icon: Icons.spa_outlined,
+    title: 'Protocolos de dependência aplicados ao celular',
+    body: 'Técnicas validadas para dependência química funcionam para smartphones: '
+        'identificar gatilhos situacionais, criar fricção para o comportamento-alvo '
+        'e substituir por comportamento incompatível (caminhar, respirar, ler). '
+        'A estrutura é a mesma — só o objeto da dependência muda.',
+    reference: 'Throuvala et al. (2019), "Motivational and Self-Control Mechanisms", Journal of Behavioral Addictions',
+    url: 'https://doi.org/10.1556/2006.8.2019.43',
+    analysisFn: (d) => d.hasData
+        ? 'você tem ${d.weeklyUnlocks} desbloqueios semanais — identifique os 3 principais gatilhos e crie atrito para cada um'
+        : 'registre uso por uma semana para mapear seus principais gatilhos de abertura',
+  ),
+  _Insight(
+    icon: Icons.group_work_outlined,
+    title: 'Responsabilidade social como âncora',
+    body: 'Em programas de recuperação de dependência, o suporte social é '
+        'o preditor mais forte de sucesso a longo prazo. Aplicado ao uso digital: '
+        'compartilhar metas de uso com um parceiro, amigo ou grupo aumenta '
+        'significativamente a adesão e reduz recaídas.',
+    reference: 'Kelly et al. (2020), "Mechanisms of Behavior Change in AA", Addiction',
+    url: 'https://doi.org/10.1111/add.14906',
+    analysisFn: (d) => d.hasData
+        ? 'sua meta atual: se um amigo soubesse seus ${d.avgDailyMin} min/dia, isso mudaria seu comportamento?'
+        : 'registre uso por uma semana e compartilhe os dados com alguém de confiança',
   ),
 ];
 

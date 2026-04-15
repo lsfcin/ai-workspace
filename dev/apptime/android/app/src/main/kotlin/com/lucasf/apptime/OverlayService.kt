@@ -128,18 +128,15 @@ class OverlayService : Service() {
 
     private fun updateOverlay() {
         if (!isViewAdded) return
-        if (pmActive) return   // PM is using the overlay view — don't touch it
         val prefs = getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
-        val text    = prefs.getString("flutter.overlay_text", "") ?: ""
-        val visible = prefs.getBoolean("flutter.overlay_visible", false)
-        val showBg  = prefs.getBoolean("flutter.overlay_show_background", false)
+        val showBg     = prefs.getBoolean("flutter.overlay_show_background", false)
         val showBorder = prefs.getBoolean("flutter.overlay_show_border", false)
         val fontSize   = readFloat(prefs, "flutter.overlay_font_size", 14f).coerceIn(10f, 30f)
         val topDp      = readFloat(prefs, "flutter.overlay_top_dp", 40f).coerceIn(0f, 800f)
 
-        overlayView.text = text
+        // Apply appearance settings even during PM — font size / border / position
+        // can change from Settings while a PM animation is playing.
         overlayView.textSize = fontSize
-        overlayView.visibility = if (visible && text.isNotEmpty()) View.VISIBLE else View.INVISIBLE
 
         val density = resources.displayMetrics.density
         val bg = GradientDrawable().apply {
@@ -158,6 +155,12 @@ class OverlayService : Service() {
         } catch (e: Exception) {
             isViewAdded = false
         }
+
+        if (pmActive) return   // PM is using the overlay for its own text/visibility
+        val text    = prefs.getString("flutter.overlay_text", "") ?: ""
+        val visible = prefs.getBoolean("flutter.overlay_visible", false)
+        overlayView.text = text
+        overlayView.visibility = if (visible && text.isNotEmpty()) View.VISIBLE else View.INVISIBLE
     }
 
     // ─────────────────────────────────────────────────────────────────────────

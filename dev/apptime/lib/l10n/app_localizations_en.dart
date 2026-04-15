@@ -164,13 +164,22 @@ class AppLocalizationsEn extends AppLocalizations {
   @override String get yesterdayPatternOther => 'other';
   @override String get blockLastDaysPatternTitle => 'Last 7 days pattern';
   @override String get blockLastDaysPatternText =>
-      'Vertical stacked bars — each column is one hour, grouped by day. '
+      'Horizontal stacked bars — each row is one hour, grouped by day. '
       'Tap the zoom icon to toggle between 2.5-day and full-week view.';
   @override String get statLast7Days => 'Relative to the last 7 days';
 
   @override String get insightsTitle => 'Insights';
   @override String get tabAlerts => 'Alerts';
   @override String get tabSolutions => 'Solutions';
+
+  @override String get block30dSummaryTitle => '30-Day Overview';
+  @override String get block30dChartTitle => 'Daily Usage Trend — 30 Days';
+  @override String get block30dChartText =>
+      'Total screen time per day (thick white line) with linear trend (dashed grey). '
+      'Top 3 apps shown as thin colored lines. '
+      'Dashed thresholds: 2 h recommended limit (APA/Common Sense Media) and '
+      '4 h critical threshold — Twenge et al. (2018), "Increases in Depressive Symptoms", '
+      'Clinical Psychological Science.';
 
   @override String get goalScreenTitle => 'Usage goals';
   @override String get goalLevelSectionTitle => 'Goal level';
