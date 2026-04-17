@@ -56,6 +56,8 @@ class AppLocalizationsPt extends AppLocalizations {
   @override String get continueAction => 'Continuar';
 
   @override String get settingsTitle => 'Configurações';
+  @override String get sectionPermissions => 'Permissões';
+  @override String get sectionMonitoring => 'Monitoramento';
   @override String get sectionOverlay => 'Visor flutuante';
   @override String get showOverlay => 'Exibir visor de uso';
   @override String get showOverlaySub => 'Mostra o contador flutuante ao usar apps. O monitoramento (coleta de dados) continua independentemente.';

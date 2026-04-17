@@ -54,6 +54,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override String get continueAction => 'Continue';
 
   @override String get settingsTitle => 'Settings';
+  @override String get sectionPermissions => 'Permissions';
+  @override String get sectionMonitoring => 'Monitoring';
   @override String get sectionOverlay => 'Overlay';
   @override String get showOverlay => 'Show usage overlay';
   @override String get showOverlaySub => 'Display the floating counter while using apps. Monitoring (data collection) continues regardless.';

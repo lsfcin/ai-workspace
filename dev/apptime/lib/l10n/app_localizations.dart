@@ -71,6 +71,8 @@ abstract class AppLocalizations {
 
   // ── SettingsScreen ───────────────────────────────────────────────────────────
   String get settingsTitle;
+  String get sectionPermissions;
+  String get sectionMonitoring;
   String get sectionOverlay;
   String get showOverlay;
   String get showOverlaySub;

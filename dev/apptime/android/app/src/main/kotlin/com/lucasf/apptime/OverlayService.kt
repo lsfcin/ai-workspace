@@ -33,17 +33,27 @@ class OverlayService : Service() {
 
     // ── F.PM — personalized message shown inside the regular overlay ─────────
     private var pmActive = false
+    private var pmJustEnded = false       // triggers fade-in after PM fade-out
     private var pmCooldownUntil = 0L
 
     // ── F.BN — breathing-nudge state ──────────────────────────────────────────
     private var breathingActive = false
-    private var currentAnimator: ObjectAnimator? = null
+    private var breathingAnimator: ObjectAnimator? = null  // only for breathing
+    private var pmAnimator: ObjectAnimator? = null          // only for PM
+
+    // ── F.VW — visual weight: stored as multiplier, applied via font size ─────
+    // Using font-size scaling instead of scaleX/scaleY keeps the window and
+    // GradientDrawable corners correctly sized at all times.
+    private var visualWeightMult: Float = 1f
 
     // ── Unlock tracking for F.PM-on-unlock ───────────────────────────────────
     private var lastSeenUnlockCount = 0
 
     // ── Feedback evaluation every 5 poll ticks (~2.5 s) ──────────────────────
     private var evalTick = 0
+
+    // ── Max overlay width in px (set once in addOverlayView) ─────────────────
+    private var maxWidthPx = 0
 
     // ── Poll loop ─────────────────────────────────────────────────────────────
     private val pollRunnable = object : Runnable {
@@ -87,11 +97,8 @@ class OverlayService : Service() {
     private val windowManager by lazy { getSystemService(WINDOW_SERVICE) as WindowManager }
 
     private fun addOverlayView() {
-        val density = resources.displayMetrics.density
         val screenWidthPx = resources.displayMetrics.widthPixels
-        // PM messages can be multi-line; cap width at 88% of screen so text
-        // wraps instead of being clipped horizontally.
-        val maxWidthPx = (screenWidthPx * 0.88f).toInt()
+        maxWidthPx = (screenWidthPx * 0.88f).toInt()
 
         overlayView = TextView(this).apply {
             text = ""
@@ -101,8 +108,10 @@ class OverlayService : Service() {
             setShadowLayer(3f, 1f, 1f, Color.BLACK)
             setPadding(16, 8, 16, 8)
             maxWidth = maxWidthPx
-            // Allow wrapping when PM switches to multi-line content
             setSingleLine(false)
+            // Always 1:1 — visual weight is expressed via font size, not scale
+            scaleX = 1f
+            scaleY = 1f
         }
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
@@ -129,16 +138,29 @@ class OverlayService : Service() {
     private fun updateOverlay() {
         if (!isViewAdded) return
         val prefs = getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
+
         val showBg     = prefs.getBoolean("flutter.overlay_show_background", false)
         val showBorder = prefs.getBoolean("flutter.overlay_show_border", false)
-        val fontSize   = readFloat(prefs, "flutter.overlay_font_size", 14f).coerceIn(10f, 30f)
         val topDp      = readFloat(prefs, "flutter.overlay_top_dp", 40f).coerceIn(0f, 800f)
+        val density    = resources.displayMetrics.density
 
-        // Apply appearance settings even during PM — font size / border / position
-        // can change from Settings while a PM animation is playing.
+        // Font size stored as Int for cross-process reliability;
+        // fall back to readFloat for any existing Float/Double legacy data.
+        val fontSizeBase = run {
+            val asInt = try { prefs.getInt("flutter.overlay_font_size", 0) }
+                        catch (_: ClassCastException) { 0 }
+            if (asInt > 0) asInt.toFloat()
+            else readFloat(prefs, "flutter.overlay_font_size", 14f)
+        }.coerceIn(10f, 30f)
+
+        // Visual-weight multiplier grows the font instead of scaling the view,
+        // so corners and borders stay proportional.
+        val fontSize = fontSizeBase * visualWeightMult
+
         overlayView.textSize = fontSize
+        overlayView.scaleX = 1f   // never use view scale — font size does the work
+        overlayView.scaleY = 1f
 
-        val density = resources.displayMetrics.density
         val bg = GradientDrawable().apply {
             cornerRadius = 8f * density
             setColor(if (showBg) Color.argb(160, 0, 0, 0) else Color.TRANSPARENT)
@@ -146,23 +168,34 @@ class OverlayService : Service() {
         }
         overlayView.background = bg
 
-        try {
-            val lp = overlayView.layoutParams as WindowManager.LayoutParams
-            lp.gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
-            lp.x = 0
-            lp.y = (topDp * density).toInt()
-            windowManager.updateViewLayout(overlayView, lp)
-        } catch (e: Exception) {
-            isViewAdded = false
+        // Only reposition the window while PM is NOT playing — repositioning
+        // during PM causes an unwanted lateral slide.
+        if (!pmActive) {
+            try {
+                val lp = overlayView.layoutParams as WindowManager.LayoutParams
+                lp.y = (topDp * density).toInt()
+                windowManager.updateViewLayout(overlayView, lp)
+            } catch (_: Exception) {
+                isViewAdded = false
+                return
+            }
         }
 
-        if (pmActive) return   // PM is using the overlay for its own text/visibility
+        if (pmActive) return   // PM owns text and visibility
+
         val text           = prefs.getString("flutter.overlay_text", "") ?: ""
         val visible        = prefs.getBoolean("flutter.overlay_visible", false)
         val overlayEnabled = prefs.getBoolean("flutter.overlay_enabled", true)
+
         overlayView.text = text
-        overlayView.visibility =
-            if (overlayEnabled && visible && text.isNotEmpty()) View.VISIBLE else View.INVISIBLE
+        val shouldShow = overlayEnabled && visible && text.isNotEmpty()
+        overlayView.visibility = if (shouldShow) View.VISIBLE else View.INVISIBLE
+
+        // After PM ends (alpha=0, pmJustEnded=true), fade the timer back in.
+        if (pmJustEnded && shouldShow) {
+            pmJustEnded = false
+            animatePm(overlayView, 0f, 1f, 500L) {}
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -175,7 +208,7 @@ class OverlayService : Service() {
 
         if (goalLevel == 0) {
             stopBreathing()
-            resetScale()
+            resetVisualWeight()
             return
         }
 
@@ -190,19 +223,17 @@ class OverlayService : Service() {
         val sessionStartMs = prefs.getLong("flutter.current_session_start_ms", now)
         val sessionMs = if (pkg != null) (now - sessionStartMs).coerceAtLeast(0L) else 0L
 
-        // ── Metrics ──────────────────────────────────────────────────────────
-
         val deviceMs  = prefs.getLong("flutter.device_daily_ms_$date", 0L)
         val unlocks   = prefs.safeGetCount("flutter.unlock_count_$date").toInt()
         val appMs     = if (pkg != null && !isLauncher)
             prefs.getLong("flutter.daily_ms_${pkg}_$date", 0L) else 0L
 
         val appGoalLevel = if (pkg != null && !isLauncher)
-            prefs.safeGetCount("flutter.app_goal_$pkg").toInt().let { if (it == 0) goalLevel else it }
+            prefs.safeGetCount("flutter.app_goal_$pkg").toInt()
+                .let { if (it == 0) goalLevel else it }
         else goalLevel
         val appThresholds = GoalThresholds.forLevel(appGoalLevel)
 
-        // Percentages (100 = at limit, 200 = doubled)
         val phonePct   = if (thresholds.phoneLimitMs > 0)
             (deviceMs  * 100 / thresholds.phoneLimitMs).toInt()  else 0
         val appPct     = if (appThresholds.appLimitMs > 0 && pkg != null && !isLauncher)
@@ -210,8 +241,6 @@ class OverlayService : Service() {
         val sessionPct = if (thresholds.maxSessionMs > 0 && pkg != null && !isLauncher)
             (sessionMs * 100 / thresholds.maxSessionMs).toInt()  else 0
 
-        // sleepCutoffHour >= 18 → evening start (e.g. 21h→6h, 23h→6h)
-        // sleepCutoffHour  < 18 → late-night only (e.g. 1h→6h; avoids triggering all day)
         val inSleepWindow  = (thresholds.sleepCutoffHour > 0) && when {
             thresholds.sleepCutoffHour >= 18 -> hour >= thresholds.sleepCutoffHour || hour < 6
             else -> hour >= thresholds.sleepCutoffHour && hour < 6
@@ -219,19 +248,15 @@ class OverlayService : Service() {
         val inWakeupWindow = (thresholds.wakeupHour > 0) && (hour < thresholds.wakeupHour)
         val isSocialApp    = pkg != null && SOCIAL_PATTERNS.any { pkg.contains(it) }
 
-        // ── Determine feedbacks ───────────────────────────────────────────────
-
         var wantBn = false
         var wantVw = false
         var maxPct = 0
         var pmMessage: String? = null
 
-        // 24h phone time
         if (phonePct >= 100) {
             wantBn = true; maxPct = maxOf(maxPct, phonePct)
             if (phonePct >= 200) { wantVw = true; pmMessage = pmMessage ?: PmMessages.phoneTimeExceeded(lang) }
         }
-        // App-specific 24h limit
         if (appPct >= 100 && pkg != null && !isLauncher) {
             wantBn = true; maxPct = maxOf(maxPct, appPct)
             if (appPct >= 200) {
@@ -239,23 +264,19 @@ class OverlayService : Service() {
                 pmMessage = pmMessage ?: PmMessages.appLimitExceeded(lang, pkg.split(".").last())
             }
         }
-        // Max session
         if (sessionPct >= 100 && pkg != null && !isLauncher) {
             wantBn = true; maxPct = maxOf(maxPct, sessionPct)
             if (sessionPct >= 200) { wantVw = true; pmMessage = pmMessage ?: PmMessages.sessionExceeded(lang) }
         }
-        // Sleeping hours
         if (inSleepWindow && pkg != null && !isLauncher) {
             wantVw = true
             pmMessage = pmMessage ?: PmMessages.sleepingHours(lang)
         }
-        // Wakeup + social
         if (inWakeupWindow && isSocialApp) {
             wantVw = true
             pmMessage = pmMessage ?: PmMessages.wakeupSocial(lang)
         }
 
-        // ── Unlock trigger (F.PM 3 s after new unlock when over limit) ───────
         val currentUnlocks = prefs.safeGetCount("flutter.unlock_count_$date").toInt()
         if (currentUnlocks > lastSeenUnlockCount) {
             lastSeenUnlockCount = currentUnlocks
@@ -265,9 +286,8 @@ class OverlayService : Service() {
             }
         }
 
-        // ── Apply ─────────────────────────────────────────────────────────────
         if (wantBn) startBreathing() else stopBreathing()
-        if (wantVw) applyVisualWeight(maxPct) else resetScale()
+        if (wantVw) applyVisualWeight(maxPct) else resetVisualWeight()
         if (pmMessage != null) triggerPm(pmMessage)
     }
 
@@ -276,30 +296,30 @@ class OverlayService : Service() {
     // ─────────────────────────────────────────────────────────────────────────
 
     private fun startBreathing() {
-        if (breathingActive) return
+        if (breathingActive || pmActive) return
         breathingActive = true
         scheduleBreathe()
     }
 
     private fun stopBreathing() {
         breathingActive = false
-        // Cancel any in-flight animation so it cannot override alpha=1f below
-        currentAnimator?.cancel()
-        currentAnimator = null
-        if (isViewAdded && !pmActive) overlayView.alpha = 1f
+        if (!pmActive) {
+            breathingAnimator?.cancel()
+            breathingAnimator = null
+            if (isViewAdded && !pmJustEnded) overlayView.alpha = 1f
+        }
     }
 
     private fun scheduleBreathe() {
-        // Never fully hide the overlay — pulse between DIM_ALPHA and 1.0
         if (!breathingActive || !isViewAdded || pmActive) return
         val fadeOutMs = (2_000L..3_000L).random()
         val dimMs     = (3_000L..6_000L).random()
         val fadeInMs  = (2_000L..3_000L).random()
 
-        animateAlpha(overlayView, 1f, DIM_ALPHA, fadeOutMs) {
+        animateBreathe(overlayView, 1f, DIM_ALPHA, fadeOutMs) {
             handler.postDelayed({
                 if (!breathingActive || pmActive) return@postDelayed
-                animateAlpha(overlayView, DIM_ALPHA, 1f, fadeInMs) {
+                animateBreathe(overlayView, DIM_ALPHA, 1f, fadeInMs) {
                     if (breathingActive) scheduleBreathe()
                 }
             }, dimMs)
@@ -307,26 +327,22 @@ class OverlayService : Service() {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // F.VW — Visual Weight
+    // F.VW — Visual Weight (via font size, not view scale)
     // ─────────────────────────────────────────────────────────────────────────
 
     private fun applyVisualWeight(pct: Int) {
-        if (!isViewAdded) return
-        // 80 % → 1.0×  …  100 % → 1.2×  (capped)
-        val scale = (1f + ((pct - 80).coerceAtLeast(0) * 0.01f)).coerceAtMost(1.2f)
-        overlayView.scaleX = scale
-        overlayView.scaleY = scale
+        // 80% → 1.0×  …  100% → 1.2×  …  200% → 1.5× (capped)
+        val newMult = (1f + ((pct - 80).coerceAtLeast(0) * 0.007f)).coerceAtMost(1.5f)
+        visualWeightMult = newMult
+        // updateOverlay() next tick will apply the new font size
     }
 
-    private fun resetScale() {
-        if (isViewAdded) {
-            overlayView.scaleX = 1f
-            overlayView.scaleY = 1f
-        }
+    private fun resetVisualWeight() {
+        visualWeightMult = 1f
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // F.PM — Personalized Message (shown inside the regular overlay view)
+    // F.PM — Personalized Message
     // ─────────────────────────────────────────────────────────────────────────
 
     private fun triggerPm(message: String) {
@@ -336,51 +352,94 @@ class OverlayService : Service() {
         if (!isViewAdded) return
         val prefs = getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
         if (!prefs.getBoolean("flutter.overlay_enabled", true)) return
+
         pmActive = true
         pmCooldownUntil = now + 60_000L
-
-        // Temporarily stop breathing so it doesn't interfere with the PM animation
         breathingActive = false
+        breathingAnimator?.cancel()
+        breathingAnimator = null
 
-        // PM messages use a slightly smaller font so multi-line text fits nicely
-        val timerFontSize = readFloat(
-            getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE),
-            "flutter.overlay_font_size", 14f
-        ).coerceIn(10f, 30f)
-        overlayView.textSize = (timerFontSize - 2f).coerceAtLeast(11f)
-        overlayView.text = message
-        overlayView.visibility = View.VISIBLE
-        overlayView.alpha = 0f
+        val fontSizeBase = run {
+            val asInt = try { prefs.getInt("flutter.overlay_font_size", 0) }
+                        catch (_: ClassCastException) { 0 }
+            if (asInt > 0) asInt.toFloat()
+            else readFloat(prefs, "flutter.overlay_font_size", 14f)
+        }.coerceIn(10f, 30f)
 
-        // 2 s fade-in → 20 s stay → 2 s fade-out, then restore normal timer
-        animateAlpha(overlayView, 0f, 1f, 2_000L) {
-            handler.postDelayed({
-                animateAlpha(overlayView, 1f, 0f, 2_000L) {
-                    pmActive = false
-                    // Restore timer font size before next updateOverlay() tick
-                    overlayView.textSize = timerFontSize
-                    overlayView.alpha = 1f
-                }
-            }, 20_000L)
+        val pmFontSize = (fontSizeBase - 2f).coerceAtLeast(11f)
+
+        // Widen the window so multi-line PM text isn't cropped
+        setWindowWidth(maxWidthPx)
+
+        // Phase 1: fade out the current timer (from whatever alpha it currently has)
+        val startAlpha = if (overlayView.visibility == View.VISIBLE) overlayView.alpha else 0f
+        animatePm(overlayView, startAlpha, 0f, 400L) {
+            // Phase 2: swap content
+            overlayView.textSize = pmFontSize
+            overlayView.text = message
+            overlayView.visibility = View.VISIBLE
+            // Phase 3: fade in PM
+            animatePm(overlayView, 0f, 1f, 800L) {
+                // Phase 4: hold for 20 s
+                handler.postDelayed({
+                    if (!pmActive) return@postDelayed
+                    // Phase 5: fade out PM
+                    animatePm(overlayView, 1f, 0f, 800L) {
+                        // Phase 6: restore timer mode
+                        overlayView.textSize = fontSizeBase
+                        setWindowWidth(WindowManager.LayoutParams.WRAP_CONTENT)
+                        pmActive = false
+                        pmJustEnded = true
+                        // alpha stays 0; updateOverlay() will fade timer back in
+                    }
+                }, 20_000L)
+            }
         }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Animation helper
+    // Animation helpers — SEPARATE animators for breathing vs PM so they
+    // never cancel each other.
     // ─────────────────────────────────────────────────────────────────────────
 
-    private fun animateAlpha(view: View, from: Float, to: Float, durationMs: Long, onEnd: () -> Unit) {
-        currentAnimator?.cancel()
-        currentAnimator = ObjectAnimator.ofFloat(view, View.ALPHA, from, to).apply {
+    /** Breathing-nudge animator — cancelled if breathing stops. */
+    private fun animateBreathe(view: View, from: Float, to: Float,
+                               durationMs: Long, onEnd: () -> Unit) {
+        breathingAnimator?.cancel()
+        var cancelled = false
+        breathingAnimator = ObjectAnimator.ofFloat(view, View.ALPHA, from, to).apply {
             duration = durationMs
             interpolator = AccelerateDecelerateInterpolator()
             addListener(object : AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator) {
-                    if (animation == currentAnimator) currentAnimator = null
-                    onEnd()
+                override fun onAnimationEnd(a: Animator) {
+                    if (a == breathingAnimator) breathingAnimator = null
+                    if (!cancelled) onEnd()
                 }
-                override fun onAnimationCancel(animation: Animator) {
-                    if (animation == currentAnimator) currentAnimator = null
+                override fun onAnimationCancel(a: Animator) {
+                    if (a == breathingAnimator) breathingAnimator = null
+                    cancelled = true
+                }
+            })
+            start()
+        }
+    }
+
+    /** PM animator — never cancelled by breathing logic. */
+    private fun animatePm(view: View, from: Float, to: Float,
+                          durationMs: Long, onEnd: () -> Unit) {
+        pmAnimator?.cancel()
+        var cancelled = false
+        pmAnimator = ObjectAnimator.ofFloat(view, View.ALPHA, from, to).apply {
+            duration = durationMs
+            interpolator = AccelerateDecelerateInterpolator()
+            addListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(a: Animator) {
+                    if (a == pmAnimator) pmAnimator = null
+                    if (!cancelled) onEnd()
+                }
+                override fun onAnimationCancel(a: Animator) {
+                    if (a == pmAnimator) pmAnimator = null
+                    cancelled = true
                 }
             })
             start()
@@ -388,11 +447,23 @@ class OverlayService : Service() {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // Window width helper
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private fun setWindowWidth(widthPx: Int) {
+        if (!isViewAdded) return
+        try {
+            val lp = overlayView.layoutParams as WindowManager.LayoutParams
+            lp.width = widthPx
+            windowManager.updateViewLayout(overlayView, lp)
+        } catch (_: Exception) {}
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // Helpers
     // ─────────────────────────────────────────────────────────────────────────
 
     private fun today(): String {
-        // The "day" starts at 04:00 — hours 00–03 belong to the previous calendar day.
         val c = java.util.Calendar.getInstance()
         if (c.get(java.util.Calendar.HOUR_OF_DAY) < 4) c.add(java.util.Calendar.DATE, -1)
         return "%04d-%02d-%02d".format(
@@ -408,12 +479,13 @@ class OverlayService : Service() {
     private fun SharedPreferences.safeGetCount(key: String): Long =
         try { getLong(key, 0L) } catch (_: ClassCastException) { getInt(key, 0).toLong() }
 
-    private fun readFloat(prefs: android.content.SharedPreferences, key: String, default: Float): Float {
+    private fun readFloat(prefs: SharedPreferences, key: String, default: Float): Float {
         val raw = prefs.all[key] ?: return default
         return when (raw) {
             is Float  -> raw
             is Double -> raw.toFloat()
             is Long   -> java.lang.Double.longBitsToDouble(raw).toFloat()
+            is Int    -> raw.toFloat()
             is String -> raw.toFloatOrNull() ?: default
             else      -> default
         }
@@ -428,7 +500,8 @@ class OverlayService : Service() {
         val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         if (manager.getNotificationChannel(channelId) == null) {
             manager.createNotificationChannel(
-                NotificationChannel(channelId, "AppTime Overlay", NotificationManager.IMPORTANCE_MIN)
+                NotificationChannel(channelId, "AppTime Overlay",
+                    NotificationManager.IMPORTANCE_MIN)
             )
         }
         return NotificationCompat.Builder(this, channelId)
@@ -440,9 +513,8 @@ class OverlayService : Service() {
 
     companion object {
         const val NOTIF_ID = 1001
-        const val DIM_ALPHA = 0.35f  // min alpha during breathing nudge — overlay stays readable
+        const val DIM_ALPHA = 0.35f
 
-        /** Package-name fragments that identify social/passive apps. */
         val SOCIAL_PATTERNS = listOf(
             "instagram", "tiktok", "twitter", "facebook", "snapchat",
             "reddit", "pinterest", "linkedin", "threads", "bluesky",

@@ -22,8 +22,9 @@ class StorageService {
 
   // ── Overlay appearance (escrito pelo Flutter, lido pelo OverlayService) ──
 
-  double get overlayFontSize => _prefs.getDouble('overlay_font_size') ?? 14.0;
-  set overlayFontSize(double v) => _prefs.setDouble('overlay_font_size', v);
+  // Stored as Int so the Kotlin OverlayService can read it with getInt() reliably.
+  double get overlayFontSize => (_prefs.getInt('overlay_font_size') ?? 14).toDouble();
+  set overlayFontSize(double v) => _prefs.setInt('overlay_font_size', v.round());
 
   double get overlayTopDp => _prefs.getDouble('overlay_top_dp') ?? 40.0;
   set overlayTopDp(double v) => _prefs.setDouble('overlay_top_dp', v);
@@ -175,10 +176,15 @@ class StorageService {
     disabledApps = apps;
   }
 
-  // ── Onboarding ──
+  // ── Onboarding / first-run ──
 
   bool get onboardingDone => _prefs.getBool('onboarding_done') ?? false;
   set onboardingDone(bool v) => _prefs.setBool('onboarding_done', v);
+
+  /// True once we have auto-started monitoring for the first time.
+  /// Prevents repeated auto-start if the user manually stops monitoring.
+  bool get monitoringEverStarted => _prefs.getBool('monitoring_ever_started') ?? false;
+  set monitoringEverStarted(bool v) => _prefs.setBool('monitoring_ever_started', v);
 
   // ── Daily goal ──
 

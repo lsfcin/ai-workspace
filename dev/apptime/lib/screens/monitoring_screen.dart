@@ -1,11 +1,18 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../data/insights.dart';
 import '../l10n/app_localizations.dart';
 import '../models/goal_config.dart';
 import '../services/service_channel.dart';
 import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
-import 'per_app_screen.dart';
+import '../utils/app_info.dart';
+
+// ── Sort mode ─────────────────────────────────────────────────────────────────
+enum _Sort { usage, alpha }
+
+const _kNotMonitored = -1;
+const _kDefault = 0;
 
 class MonitoringScreen extends StatefulWidget {
   const MonitoringScreen({super.key, required this.storage});
@@ -15,110 +22,137 @@ class MonitoringScreen extends StatefulWidget {
   State<MonitoringScreen> createState() => _MonitoringScreenState();
 }
 
-class _MonitoringScreenState extends State<MonitoringScreen>
-    with WidgetsBindingObserver {
+class _MonitoringScreenState extends State<MonitoringScreen> {
   StorageService get _s => widget.storage;
 
-  bool _isRunning = false;
-  bool _hasOverlayPermission = false;
-  bool _hasUsagePermission = false;
+  // ── Insight of the day ────────────────────────────────────────────────────
+  late int _insightIndex;
+  Timer? _insightTimer;
+
+  static int _currentInsightIndex() {
+    final minutes = DateTime.now().millisecondsSinceEpoch ~/ (3 * 60 * 1000);
+    return minutes % kInsights.length;
+  }
+
+  // ── Per-app list ──────────────────────────────────────────────────────────
+  _Sort _sort = _Sort.usage;
+  Map<String, String> _appLabels = {};
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    _refreshStatus();
+    _insightIndex = _currentInsightIndex();
+    _insightTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      final next = _currentInsightIndex();
+      if (next != _insightIndex) setState(() => _insightIndex = next);
+    });
+    _loadAppLabels();
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
+    _insightTimer?.cancel();
     super.dispose();
   }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) _refreshStatus();
+  Future<void> _loadAppLabels() async {
+    final labels = await ServiceChannel.getInstalledAppLabels();
+    if (mounted) setState(() => _appLabels = labels);
   }
 
-  Future<void> _refreshStatus() async {
-    final results = await Future.wait([
-      ServiceChannel.isRunning(),
-      ServiceChannel.hasOverlayPermission(),
-      ServiceChannel.hasUsagePermission(),
-    ]);
-    if (mounted) {
-      setState(() {
-        _isRunning = results[0];
-        _hasOverlayPermission = results[1];
-        _hasUsagePermission = results[2];
-      });
+  // 4am boundary
+  DateTime _anchor(DateTime dt) =>
+      dt.hour < 4 ? dt.subtract(const Duration(days: 1)) : dt;
+
+  String _fmt(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  List<(String, int)> _sortedPackages() {
+    final today = _anchor(DateTime.now());
+    final packages = <String>{};
+    for (int i = 0; i < 7; i++) {
+      final dateStr = _fmt(today.subtract(Duration(days: i)));
+      packages.addAll(_s.packagesDailyMs(dateStr));
     }
-  }
 
-  bool get _allPermissionsGranted =>
-      _hasOverlayPermission && _hasUsagePermission;
+    final visible = packages.where(_showInList).map((pkg) {
+      int ms = 0;
+      for (int i = 0; i < 7; i++) {
+        final dateStr = _fmt(today.subtract(Duration(days: i)));
+        ms += _s.getDailyMs(pkg, date: dateStr);
+      }
+      return (pkg, ms);
+    }).toList();
 
-  Future<void> _toggleMonitoring() async {
-    if (!_allPermissionsGranted) return;
-    if (_isRunning) {
-      await ServiceChannel.stopMonitoring();
+    if (_sort == _Sort.usage) {
+      visible.sort((a, b) => b.$2.compareTo(a.$2));
     } else {
-      await ServiceChannel.startMonitoring();
+      visible.sort((a, b) => a.$1.compareTo(b.$1));
     }
-    await _refreshStatus();
+    return visible;
+  }
+
+  bool _showInList(String pkg) {
+    if (!isUserFacingApp(pkg)) return false;
+    if (_appLabels.isEmpty) return true; // still loading → show kAppLabels apps
+    return _appLabels.containsKey(pkg) || kAppLabels.containsKey(pkg);
+  }
+
+  String _labelFor(String pkg) => _appLabels[pkg] ?? labelForApp(pkg);
+
+  int _effectiveLevel(String pkg) {
+    if (_s.disabledApps.contains(pkg)) return _kNotMonitored;
+    return _s.getAppGoalLevel(pkg);
+  }
+
+  void _setLevel(String pkg, int level) {
+    setState(() {
+      if (level == _kNotMonitored) {
+        final apps = _s.disabledApps..add(pkg);
+        _s.disabledApps = apps;
+        _s.setAppGoalLevel(pkg, 0);
+      } else {
+        final apps = _s.disabledApps..remove(pkg);
+        _s.disabledApps = apps;
+        _s.setAppGoalLevel(pkg, level);
+      }
+    });
+  }
+
+  String _fmtMs(int ms) {
+    final min = ms ~/ 60000;
+    if (min < 60) return '${min}m';
+    return '${min ~/ 60}h${(min % 60).toString().padLeft(2, '0')}';
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final globalLevel = _s.goalLevel;
+    final packages = _sortedPackages();
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.navMonitoring)),
+      appBar: AppBar(
+        title: Text(l10n.navMonitoring),
+        actions: [
+          IconButton(
+            tooltip: _sort == _Sort.usage ? 'Sort A–Z' : 'Sort by usage',
+            icon: Icon(
+              _sort == _Sort.usage ? Icons.sort_by_alpha : Icons.bar_chart,
+            ),
+            onPressed: () => setState(() {
+              _sort = _sort == _Sort.usage ? _Sort.alpha : _Sort.usage;
+            }),
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.md),
         children: [
-          // ── Monitoring start/stop ──────────────────────────────────────
-          _SectionHeader(l10n.monitoringTitle),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _isRunning
-                        ? l10n.monitoringActive
-                        : _allPermissionsGranted
-                            ? l10n.monitoringInactive
-                            : l10n.monitoringNoPerms,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    l10n.monitoringDesc,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.outline,
-                        ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  FilledButton.icon(
-                    onPressed:
-                        _allPermissionsGranted ? _toggleMonitoring : null,
-                    icon: Icon(_isRunning ? Icons.stop : Icons.play_arrow),
-                    label:
-                        Text(_isRunning ? l10n.actionStop : l10n.actionStart),
-                    style: _isRunning
-                        ? FilledButton.styleFrom(
-                            backgroundColor:
-                                Theme.of(context).colorScheme.error,
-                          )
-                        : null,
-                  ),
-                ],
-              ),
-            ),
+          // ── Insight of the day ──────────────────────────────────────────
+          _InsightCard(
+            headerLabel: l10n.insightOfDay,
+            insight: kInsights[_insightIndex],
           ),
           const SizedBox(height: AppSpacing.lg),
 
@@ -162,22 +196,105 @@ class _MonitoringScreenState extends State<MonitoringScreen>
           ),
           const SizedBox(height: AppSpacing.lg),
 
-          // ── Per-app control ────────────────────────────────────────────
+          // ── Per-app control (inline) ────────────────────────────────────
           _SectionHeader(l10n.perAppControlTitle),
-          Card(
-            child: ListTile(
-              title: Text(l10n.perAppControlTitle),
-              subtitle: Text(l10n.perAppControlSub),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => PerAppScreen(storage: _s),
-                ),
+          const SizedBox(height: AppSpacing.xs),
+          if (packages.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+              child: Text(
+                l10n.noAppsMsg,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+              ),
+            )
+          else
+            Card(
+              child: Column(
+                children: [
+                  for (int i = 0; i < packages.length; i++) ...[
+                    if (i > 0) const Divider(height: 1, indent: 16),
+                    _buildAppRow(context, l10n, packages[i]),
+                  ],
+                ],
               ),
             ),
-          ),
           const SizedBox(height: AppSpacing.xl),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAppRow(
+      BuildContext context, AppLocalizations l10n, (String, int) entry) {
+    final (pkg, ms) = entry;
+    final level = _effectiveLevel(pkg);
+    final label = _labelFor(pkg);
+    final appColor = colorForApp(pkg);
+
+    return ListTile(
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 4),
+      leading: CircleAvatar(
+        radius: 18,
+        backgroundColor: appColor.withAlpha(200),
+        child: Text(
+          label.isNotEmpty ? label[0].toUpperCase() : '?',
+          style: const TextStyle(
+              fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+      ),
+      title: Text(label,
+          style: const TextStyle(fontSize: 13),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis),
+      subtitle: Text(
+        _fmtMs(ms),
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.outline,
+            ),
+      ),
+      trailing: _LevelChip(
+        level: level,
+        onSelected: (v) => _setLevel(pkg, v),
+      ),
+    );
+  }
+}
+
+// ── Insight card ───────────────────────────────────────────────────────────────
+
+class _InsightCard extends StatelessWidget {
+  const _InsightCard({required this.headerLabel, required this.insight});
+  final String headerLabel;
+  final String insight;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.lightbulb_outline, size: 16),
+                const SizedBox(width: AppSpacing.xs),
+                Text(
+                  headerLabel,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(insight, style: Theme.of(context).textTheme.bodySmall),
+          ],
+        ),
       ),
     );
   }
@@ -210,10 +327,7 @@ class _GoalLevelCard extends StatelessWidget {
         : BorderSide(color: scheme.outline.withValues(alpha: 0.3));
 
     return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: AppRadius.md,
-        side: border,
-      ),
+      shape: RoundedRectangleBorder(borderRadius: AppRadius.md, side: border),
       child: InkWell(
         borderRadius: AppRadius.md,
         onTap: onTap,
@@ -222,32 +336,25 @@ class _GoalLevelCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  if (selected)
-                    const Icon(Icons.radio_button_checked,
-                        color: AppColors.primary, size: 20)
-                  else
-                    Icon(Icons.radio_button_unchecked,
-                        color: scheme.onSurface.withValues(alpha: 0.4),
-                        size: 20),
-                  const SizedBox(width: AppSpacing.sm),
-                  Text(
-                    name,
+              Row(children: [
+                if (selected)
+                  const Icon(Icons.radio_button_checked,
+                      color: AppColors.primary, size: 20)
+                else
+                  Icon(Icons.radio_button_unchecked,
+                      color: scheme.onSurface.withValues(alpha: 0.4), size: 20),
+                const SizedBox(width: AppSpacing.sm),
+                Text(name,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                           color: selected ? AppColors.primary : null,
-                        ),
-                  ),
-                ],
-              ),
+                        )),
+              ]),
               const SizedBox(height: AppSpacing.sm),
-              Text(
-                rationale,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurface.withValues(alpha: 0.7),
-                    ),
-              ),
+              Text(rationale,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurface.withValues(alpha: 0.7),
+                      )),
               if (thresholds != null) ...[
                 const SizedBox(height: AppSpacing.sm),
                 Wrap(
@@ -282,13 +389,80 @@ class _Chip extends StatelessWidget {
         color: AppColors.primary.withValues(alpha: 0.1),
         borderRadius: AppRadius.sm,
       ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: AppColors.primary,
-              fontWeight: FontWeight.w500,
-            ),
+      child: Text(label,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: AppColors.primary, fontWeight: FontWeight.w500)),
+    );
+  }
+}
+
+// ── Level chip / popup ────────────────────────────────────────────────────────
+
+class _LevelChip extends StatelessWidget {
+  const _LevelChip({required this.level, required this.onSelected});
+  final int level;
+  final ValueChanged<int> onSelected;
+
+  static const _labels = {
+    _kNotMonitored: ('off', Icons.visibility_off_outlined),
+    _kDefault: ('default', Icons.tune_outlined),
+    1: ('min', Icons.signal_cellular_alt_1_bar),
+    2: ('normal', Icons.signal_cellular_alt_2_bar),
+    3: ('max', Icons.signal_cellular_alt),
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final (label, icon) = _labels[level] ?? ('default', Icons.tune_outlined);
+    final isOff = level == _kNotMonitored;
+
+    return PopupMenuButton<int>(
+      onSelected: onSelected,
+      itemBuilder: (_) => [
+        _item(context, _kNotMonitored, 'not monitored',
+            Icons.visibility_off_outlined),
+        _item(context, _kDefault, 'default (global goal)', Icons.tune_outlined),
+        const PopupMenuDivider(),
+        _item(context, 1, 'minimal', Icons.signal_cellular_alt_1_bar),
+        _item(context, 2, 'normal', Icons.signal_cellular_alt_2_bar),
+        _item(context, 3, 'extensive', Icons.signal_cellular_alt),
+      ],
+      child: Chip(
+        avatar: Icon(icon,
+            size: 14,
+            color: isOff
+                ? Theme.of(context).colorScheme.outline
+                : AppColors.primary),
+        label: Text(label,
+            style: TextStyle(
+                fontSize: 11,
+                color: isOff
+                    ? Theme.of(context).colorScheme.outline
+                    : AppColors.primary)),
+        side: BorderSide(
+            color: isOff
+                ? Theme.of(context).colorScheme.outlineVariant
+                : AppColors.primary.withAlpha(120)),
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        visualDensity: VisualDensity.compact,
       ),
+    );
+  }
+
+  PopupMenuItem<int> _item(
+      BuildContext context, int value, String text, IconData icon) {
+    final selected = value == level;
+    return PopupMenuItem(
+      value: value,
+      child: Row(children: [
+        Icon(icon, size: 16, color: selected ? AppColors.primary : null),
+        const SizedBox(width: 8),
+        Text(text,
+            style: TextStyle(
+                fontWeight:
+                    selected ? FontWeight.w600 : FontWeight.normal)),
+      ]),
     );
   }
 }
@@ -302,13 +476,12 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(left: AppSpacing.sm, bottom: AppSpacing.sm),
+      padding:
+          const EdgeInsets.only(left: AppSpacing.sm, bottom: AppSpacing.sm),
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: AppColors.primary,
-              fontWeight: FontWeight.w600,
-            ),
+              color: AppColors.primary, fontWeight: FontWeight.w600),
       ),
     );
   }

@@ -3,6 +3,7 @@ package com.lucasf.apptime
 import android.app.ActivityManager
 import android.app.AppOpsManager
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
@@ -52,6 +53,18 @@ class MainActivity : FlutterActivity() {
                         result.success(null)
                     }
                     "hasUsagePermission" -> result.success(hasUsagePermission())
+                    "getInstalledApps" -> {
+                        val pm = packageManager
+                        val apps = mutableMapOf<String, String>()
+                        for (appInfo in pm.getInstalledApplications(0)) {
+                            val isSystem = (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
+                            if (!isSystem) {
+                                apps[appInfo.packageName] =
+                                    pm.getApplicationLabel(appInfo).toString()
+                            }
+                        }
+                        result.success(apps)
+                    }
                     else -> result.notImplemented()
                 }
             }

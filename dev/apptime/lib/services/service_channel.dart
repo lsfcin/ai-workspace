@@ -18,4 +18,11 @@ class ServiceChannel {
       _channel.invokeMethod('requestUsagePermission');
   static Future<bool> hasUsagePermission() async =>
       await _channel.invokeMethod<bool>('hasUsagePermission') ?? false;
+
+  /// Returns a map of packageName → display label for all user-installed apps.
+  static Future<Map<String, String>> getInstalledAppLabels() async {
+    final raw = await _channel.invokeMethod<Map<Object?, Object?>>('getInstalledApps');
+    if (raw == null) return {};
+    return raw.map((k, v) => MapEntry(k.toString(), v.toString()));
+  }
 }

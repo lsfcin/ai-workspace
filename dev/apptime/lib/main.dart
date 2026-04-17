@@ -28,6 +28,12 @@ void main() async {
   ]);
   final allGranted = results[0] && results[1];
 
+  // Auto-start monitoring on first use once permissions are granted.
+  if (allGranted && !storage.monitoringEverStarted) {
+    await ServiceChannel.startMonitoring();
+    storage.monitoringEverStarted = true;
+  }
+
   runApp(AppTimeApp(
     storage: storage,
     skipOnboarding: allGranted,

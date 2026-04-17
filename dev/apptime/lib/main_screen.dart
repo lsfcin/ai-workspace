@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'l10n/app_localizations.dart';
-import 'screens/home_screen.dart';
 import 'screens/analytics_screen.dart';
 import 'screens/insights_screen.dart';
 import 'screens/monitoring_screen.dart';
@@ -28,10 +27,9 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final screens = [
-      const HomeScreen(),
+      MonitoringScreen(storage: widget.storage),
       AnalyticsScreen(storage: widget.storage),
       InsightsScreen(storage: widget.storage),
-      MonitoringScreen(storage: widget.storage),
       SettingsScreen(
         storage: widget.storage,
         onLocaleChange: widget.onLocaleChange,
@@ -42,12 +40,12 @@ class _MainScreenState extends State<MainScreen> {
       body: screens[_selectedIndex],
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
-        onDestinationSelected: (index) => setState(() => _selectedIndex = index),
+        onDestinationSelected: (i) => setState(() => _selectedIndex = i),
         destinations: [
           NavigationDestination(
-            icon: const Icon(Icons.home_outlined),
-            selectedIcon: const Icon(Icons.home),
-            label: l10n.navHome,
+            icon: const Icon(Icons.monitor_heart_outlined),
+            selectedIcon: const Icon(Icons.monitor_heart),
+            label: l10n.navMonitoring,
           ),
           NavigationDestination(
             icon: const Icon(Icons.bar_chart_outlined),
@@ -58,11 +56,6 @@ class _MainScreenState extends State<MainScreen> {
             icon: const Icon(Icons.lightbulb_outlined),
             selectedIcon: const Icon(Icons.lightbulb),
             label: l10n.navInsights,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.monitor_heart_outlined),
-            selectedIcon: const Icon(Icons.monitor_heart),
-            label: l10n.navMonitoring,
           ),
           NavigationDestination(
             icon: const Icon(Icons.settings_outlined),

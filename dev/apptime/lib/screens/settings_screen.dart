@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
+import '../services/service_channel.dart';
 import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
 
@@ -17,8 +18,58 @@ class SettingsScreen extends StatefulWidget {
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends State<SettingsScreen>
+    with WidgetsBindingObserver {
   StorageService get _s => widget.storage;
+
+  bool _isRunning = false;
+  bool _hasOverlayPermission = false;
+  bool _hasUsagePermission = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _refreshStatus();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _refreshStatus();
+  }
+
+  Future<void> _refreshStatus() async {
+    final results = await Future.wait([
+      ServiceChannel.isRunning(),
+      ServiceChannel.hasOverlayPermission(),
+      ServiceChannel.hasUsagePermission(),
+    ]);
+    if (mounted) {
+      setState(() {
+        _isRunning = results[0];
+        _hasOverlayPermission = results[1];
+        _hasUsagePermission = results[2];
+      });
+    }
+  }
+
+  bool get _allGranted => _hasOverlayPermission && _hasUsagePermission;
+
+  Future<void> _toggleMonitoring() async {
+    if (!_allGranted) return;
+    if (_isRunning) {
+      await ServiceChannel.stopMonitoring();
+    } else {
+      await ServiceChannel.startMonitoring();
+    }
+    await _refreshStatus();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +81,82 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.md),
         children: [
+          // ── Permissions ────────────────────────────────────────────────
+          _SectionHeader(l10n.sectionPermissions),
+          Card(
+            child: Column(
+              children: [
+                _PermissionTile(
+                  label: l10n.permFloatingWindow,
+                  granted: _hasOverlayPermission,
+                  grantLabel: l10n.permGrant,
+                  grantedLabel: l10n.permGranted,
+                  requiredLabel: l10n.permRequired,
+                  onRequest: () async {
+                    await ServiceChannel.requestOverlayPermission();
+                    await _refreshStatus();
+                  },
+                ),
+                const Divider(height: 1, indent: 16),
+                _PermissionTile(
+                  label: l10n.permUsageStats,
+                  granted: _hasUsagePermission,
+                  grantLabel: l10n.permGrant,
+                  grantedLabel: l10n.permGranted,
+                  requiredLabel: l10n.permRequired,
+                  onRequest: () async {
+                    await ServiceChannel.requestUsagePermission();
+                    await _refreshStatus();
+                  },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+
+          // ── Monitoring start/stop ──────────────────────────────────────
+          _SectionHeader(l10n.sectionMonitoring),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _isRunning
+                        ? l10n.monitoringActive
+                        : _allGranted
+                            ? l10n.monitoringInactive
+                            : l10n.monitoringNoPerms,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    l10n.monitoringDesc,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  FilledButton.icon(
+                    onPressed: _allGranted ? _toggleMonitoring : null,
+                    icon: Icon(_isRunning ? Icons.stop : Icons.play_arrow),
+                    label:
+                        Text(_isRunning ? l10n.actionStop : l10n.actionStart),
+                    style: _isRunning
+                        ? FilledButton.styleFrom(
+                            backgroundColor:
+                                Theme.of(context).colorScheme.error,
+                          )
+                        : null,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+
+          // ── Overlay ────────────────────────────────────────────────────
           _SectionHeader(l10n.sectionOverlay),
           Card(
             child: Column(
@@ -44,12 +171,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 SwitchListTile(
                   title: Text(l10n.showBorder),
                   value: _s.overlayShowBorder,
-                  onChanged: _s.overlayEnabled ? (v) => setState(() => _s.overlayShowBorder = v) : null,
+                  onChanged: _s.overlayEnabled
+                      ? (v) => setState(() => _s.overlayShowBorder = v)
+                      : null,
                 ),
                 SwitchListTile(
                   title: Text(l10n.showBackground),
                   value: _s.overlayShowBackground,
-                  onChanged: _s.overlayEnabled ? (v) => setState(() => _s.overlayShowBackground = v) : null,
+                  onChanged: _s.overlayEnabled
+                      ? (v) => setState(() => _s.overlayShowBackground = v)
+                      : null,
                 ),
                 ListTile(
                   enabled: _s.overlayEnabled,
@@ -59,13 +190,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     max: 30,
                     divisions: 20,
                     value: _s.overlayFontSize,
-                    onChanged: _s.overlayEnabled ? (v) => setState(() => _s.overlayFontSize = v) : null,
+                    onChanged: _s.overlayEnabled
+                        ? (v) => setState(() => _s.overlayFontSize = v)
+                        : null,
                   ),
                 ),
               ],
             ),
           ),
           const SizedBox(height: AppSpacing.md),
+
+          // ── Behavior ──────────────────────────────────────────────────
           _SectionHeader(l10n.sectionBehavior),
           Card(
             child: SwitchListTile(
@@ -76,6 +211,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
+
+          // ── Language ──────────────────────────────────────────────────
           _SectionHeader(l10n.sectionLanguage),
           Card(
             child: RadioGroup<String?>(
@@ -108,9 +245,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() => _s.languageCode = code);
     widget.onLocaleChange(code);
   }
-
-
 }
+
+// ── Permission tile ────────────────────────────────────────────────────────────
+
+class _PermissionTile extends StatelessWidget {
+  const _PermissionTile({
+    required this.label,
+    required this.granted,
+    required this.grantLabel,
+    required this.grantedLabel,
+    required this.requiredLabel,
+    required this.onRequest,
+  });
+
+  final String label;
+  final bool granted;
+  final String grantLabel;
+  final String grantedLabel;
+  final String requiredLabel;
+  final VoidCallback onRequest;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Icon(
+        granted ? Icons.check_circle : Icons.warning_amber_rounded,
+        color: granted
+            ? AppColors.success
+            : Theme.of(context).colorScheme.error,
+      ),
+      title: Text(label),
+      subtitle: Text(granted ? grantedLabel : requiredLabel),
+      trailing: granted
+          ? null
+          : TextButton(onPressed: onRequest, child: Text(grantLabel)),
+    );
+  }
+}
+
+// ── Section header ─────────────────────────────────────────────────────────────
 
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader(this.title);
