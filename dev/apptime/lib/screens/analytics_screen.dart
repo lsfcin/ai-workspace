@@ -959,6 +959,22 @@ class _YesterdayPatternChart extends StatelessWidget {
         Wrap(spacing: 10, runSpacing: 4, children: legendItems),
         const SizedBox(height: 8),
         ...rows,
+        const SizedBox(height: 2),
+        Row(
+          children: [
+            const SizedBox(width: _labelWidth),
+            Expanded(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: ['0', '15m', '30m', '45m', '1h']
+                    .map((t) => Text(t,
+                        style: const TextStyle(
+                            fontSize: 8, color: Color(0xFF757575))))
+                    .toList(),
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -1221,7 +1237,28 @@ class _LastDaysPatternChartState extends State<_LastDaysPatternChart> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       ...rows,
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 2),
+                      // Time axis (0 → 1h) per day column
+                      Row(
+                        children: [
+                          for (int di = 0; di < nDays; di++) ...[
+                            if (di > 0) const SizedBox(width: 1),
+                            SizedBox(
+                              width: dayW,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: ['0', '30m', '1h']
+                                    .map((t) => Text(t,
+                                        style: const TextStyle(
+                                            fontSize: 7,
+                                            color: Color(0xFF9E9E9E))))
+                                    .toList(),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 2),
                       // Day labels below bars
                       Row(children: dayLabels),
                     ],
