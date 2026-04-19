@@ -284,6 +284,45 @@ class StorageService {
 
   // ── Query helpers ──
 
+  /// Erases all usage history keys (daily_ms_, device_daily_ms_, open_count_,
+  /// unlock_count_, device_hourly_ms_, hourly_*, session_bucket_).
+  /// Settings (overlay, goals, language, etc.) are preserved.
+  Future<void> deleteAllData() async {
+    const historyPrefixes = [
+      'daily_ms_', 'device_daily_ms_', 'open_count_', 'unlock_count_',
+      'device_hourly_ms_', 'hourly_ms_', 'hourly_opens_', 'hourly_unlocks_',
+      'session_bucket_',
+    ];
+    for (final k in List.of(_prefs.getKeys())) {
+      if (historyPrefixes.any((p) => k.startsWith(p))) await _prefs.remove(k);
+    }
+  }
+
+  /// Removes all per-day and per-hour keys older than [keepDays] days.
+  /// Call once on app start to prevent unbounded data accumulation.
+  Future<void> pruneOldData({int keepDays = 90}) async {
+    final cutoff = _dayAnchor(DateTime.now()).subtract(Duration(days: keepDays));
+    final datePrefixes = <String, bool>{};
+    // Build a set of date strings that are within the retention window.
+    for (final k in _prefs.getKeys()) {
+      // Keys with date suffixes look like: daily_ms_com.pkg_2024-01-15
+      // or device_hourly_ms_2024-01-15_3
+      final dateMatch = RegExp(r'(\d{4}-\d{2}-\d{2})').allMatches(k).lastOrNull;
+      if (dateMatch == null) continue;
+      final dateStr = dateMatch.group(0)!;
+      if (datePrefixes.containsKey(dateStr)) continue;
+      final parts = dateStr.split('-');
+      final dt = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+      datePrefixes[dateStr] = dt.isAfter(cutoff);
+    }
+    for (final k in List.of(_prefs.getKeys())) {
+      final dateMatch = RegExp(r'(\d{4}-\d{2}-\d{2})').allMatches(k).lastOrNull;
+      if (dateMatch == null) continue;
+      final dateStr = dateMatch.group(0)!;
+      if (datePrefixes[dateStr] == false) await _prefs.remove(k);
+    }
+  }
+
   /// Retorna packages que têm dados de uso para a data dada (formato YYYY-MM-DD).
   List<String> packagesDailyMs(String date) {
     // Flutter's getKeys() strips the 'flutter.' storage prefix — match without it.

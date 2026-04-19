@@ -22,6 +22,9 @@ void main() async {
     storage.languageCode = initialLocale.languageCode;
   }
 
+  // Fire-and-forget: prune data older than 90 days in the background.
+  storage.pruneOldData();
+
   final results = await Future.wait([
     ServiceChannel.hasOverlayPermission(),
     ServiceChannel.hasUsagePermission(),

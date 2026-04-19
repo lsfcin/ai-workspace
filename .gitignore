@@ -65,3 +65,5 @@
 !dev/apptime/android/app/src/main/res/values/ic_launcher_background.xml
 !dev/apptime/android/app/src/main/res/drawable/ic_launcher_foreground.png
 !dev/apptime/pubspec.yaml
+!dev/apptime/docs/
+!dev/apptime/docs/**

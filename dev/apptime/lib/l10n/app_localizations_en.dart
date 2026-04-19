@@ -221,4 +221,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override String get goalOverrideGlobal => 'Global';
   @override String get goalSettingsTile => 'Usage goals';
   @override String get goalSettingsSub => 'Feedback levels and per-app limits';
+
+  @override String get sectionData => 'Data & Privacy';
+  @override String get deleteAllDataTitle => 'Delete all data';
+  @override String get deleteAllDataSub => 'Permanently erase all recorded usage history from this device';
+  @override String get deleteAllDataConfirm => 'Delete all usage history? This cannot be undone.';
+  @override String get deleteAllDataDone => 'All data deleted.';
+  @override String get privacyPolicyTitle => 'Privacy policy';
+  @override String get privacyPolicySub => 'All data stays on your device — no network, no third parties';
 }

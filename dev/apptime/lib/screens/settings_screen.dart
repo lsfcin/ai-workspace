@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../l10n/app_localizations.dart';
 import '../services/service_channel.dart';
 import '../services/storage_service.dart';
@@ -212,6 +213,34 @@ class _SettingsScreenState extends State<SettingsScreen>
           ),
           const SizedBox(height: AppSpacing.md),
 
+          // ── Data & Privacy ────────────────────────────────────────────
+          _SectionHeader(l10n.sectionData),
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.policy_outlined),
+                  title: Text(l10n.privacyPolicyTitle),
+                  subtitle: Text(l10n.privacyPolicySub),
+                  trailing: const Icon(Icons.open_in_new, size: 16),
+                  onTap: () => launchUrl(
+                    Uri.parse('https://YOUR_GITHUB_USER.github.io/apptime/privacy_policy.html'),
+                    mode: LaunchMode.externalApplication,
+                  ),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                  title: Text(l10n.deleteAllDataTitle,
+                      style: const TextStyle(color: Colors.redAccent)),
+                  subtitle: Text(l10n.deleteAllDataSub),
+                  onTap: () => _confirmDeleteAll(l10n),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+
           // ── Language ──────────────────────────────────────────────────
           _SectionHeader(l10n.sectionLanguage),
           Card(
@@ -244,6 +273,34 @@ class _SettingsScreenState extends State<SettingsScreen>
   void _changeLocale(String? code, AppLocalizations l10n) {
     setState(() => _s.languageCode = code);
     widget.onLocaleChange(code);
+  }
+
+  Future<void> _confirmDeleteAll(AppLocalizations l10n) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        content: Text(l10n.deleteAllDataConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.deleteAllDataTitle,
+                style: const TextStyle(color: Colors.redAccent)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) {
+      await _s.deleteAllData();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.deleteAllDataDone)),
+        );
+      }
+    }
   }
 }
 

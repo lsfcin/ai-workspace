@@ -190,6 +190,15 @@ abstract class AppLocalizations {
   String get goalOverrideGlobal;
   String get goalSettingsTile;
   String get goalSettingsSub;
+
+  // ── Data / Privacy ───────────────────────────────────────────────────────────
+  String get sectionData;
+  String get deleteAllDataTitle;
+  String get deleteAllDataSub;
+  String get deleteAllDataConfirm;
+  String get deleteAllDataDone;
+  String get privacyPolicyTitle;
+  String get privacyPolicySub;
 }
 
 // ─── Delegate ────────────────────────────────────────────────────────────────

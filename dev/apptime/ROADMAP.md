@@ -2,44 +2,38 @@
 
 Read the next milestone, implement it bullet by bullet. After a bullet is done, change the dash - to an x, and commit.
 
-## Milestone — Overall Adjustments
-x In the dopamine drain chart improve the references, just author and year is not enough to find it. display title and venue of publication (journal/conference proceedings)
-
-x In the 30 days analysis subtab, the first card says "2h44 total usage". Is it an average usage per day? complete it plz. same for unblocks count. state that it is /day (/dia)
-
-x In the usage trend chart - 30 days . show captions for the apps lines. also, fix the reference, author and year is not enough.
-
-x Delete the last card/block of 30-days trend, it does not have any rich analysis
-
-x Standardize the first analysis card (about usage time and unlocks) of all three subtabs (1 day, 7 days, 30 days) using the 30 days as standard
-
-x Monitoring gaps: we should handle the monitoring gaps when our app is not active. Do you have any ideas? If you have any better you can bring it on. Mine is to use android data to fill unmonitored gaps. Somehow we must know when we lost the track and when we recovered it and then search through the android data to grab info about exactly that period.
-
-x Let's separate the overlay visualization from our status if monitoring is on or off. Please create a toggle that is on by default for analyzing usage and choose the best place to display it on the config tab.
-
-x Insight links are not clickable
-
-x The reference on the insight of the day brings just author and year, it is not enough. Use the sama structure for all our references.
-
-x The slider of overlay font size does not affect the actual overlay
-
-x The goals should be moved to its own tab, but let's call it monitoring (monitoramento), you can abbreviate it to fit a a tab. Now in this tab we will group of features, the goals and the monitoring + per-app control. Aggregate the per-app control in the same drop-down of the goals, adding an option to not monitor. Actually it is already aggregated... right? Ok! So all you need is to ditch the per-app goals list.
-
-x The list of per-app goals, which is now the same as the per-app control, is too technical. Exclude background and coresystem apps (e.g., android, settings, permissioncontroller); Fix names to use the popular (maybe the play store) names; Place the icon of each app before its name
-
-x Stop showing the unlock count of the home-screen (android/launcher/etc) if the user presses the home (circle) button or the atlernate (square) button. These are moments of quick transition so showing immediatly the count can be confusing, so just don't show it, wait 5 secs and then if the user remains on the home screen/launcher then you can show the total time of phone usage on the overlay as it already happens. Show the count only after unlocks that go directly to the launcher. If an unlock shows at first an app, than you should proceed with the behavior of the overlay for that app. Do not change the count behavior itself, just when it is showed.
-
-x Configured to have the strict goal, because of that just saw a personalized message on the overlay about melatonin but it is 4:30pm. Check the triggers/routes/decision of these messages so they are picked for the right context.
-
-x Review the insights and see if there is a need to add more to cover two topics, brain-rot and comparisons between phone addiction and drugs addiction. I want you to give more attention on these two topics, perhaps prepare 4 insights for each (2 about the issue and 2 with strategies). I believe those are strong convincing points
-
 ## Milestone — Security and privacy check
 
-- Point core security issues apps may impose on users
+x Point core security issues apps may impose on users
 
-- Assess which of those are relevant to our app/context
+x Assess which of those are relevant to our app/context
 
-- 
+x Add all relevant points to this milestone and go fix or propose solutions, one by one.
+
+### Relevant issues and fixes
+
+x `android:usesCleartextTraffic="false"` — declare in AndroidManifest; proves to Play scanners no network communication is possible
+
+x Data retention — auto-delete SharedPreferences keys older than 90 days on app start; prevents unbounded accumulation of sensitive usage history
+
+x Delete all data — add a "Delete all data" action in Settings so the user can wipe their history at any time (right to erasure, expected by Play reviewers)
+
+x Privacy policy — draft a minimal policy (data stays on-device, no network, no third parties); host on GitHub Pages; link from Settings and store listing
+  - Policy drafted at docs/privacy_policy.html — push to GitHub Pages and replace YOUR_GITHUB_USER in settings_screen.dart with your actual GitHub username
+
+x Overlay clickjacking — verify FLAG_NOT_TOUCHABLE is set on the overlay window; confirm overlay cannot intercept user input (already implemented — mark after verification)
+
+x Encrypted storage — deferred post-launch; EncryptedSharedPreferences requires migrating both Flutter plugin and Kotlin service; revisit if Play rejects
+
+x Perform a major code review checking for possible hacker/malicious activities. Injections, don't know, it is not my area, but we must review our code thorouglhy to guarantee with the best of our knowledge that our app is safe. If you find any points then do not fix it yet, place bullets here.
+
+### Code review findings
+
+- Dead permission `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` in AndroidManifest — declared but never called in code. Play Store reviewers will demand justification for every dangerous permission; remove it.
+
+- `BootReceiver` exported without `android:permission` guard — `BOOT_COMPLETED` is a protected broadcast (only OS can send it), but `QUICKBOOT_POWERON` is a vendor-custom action; any app on the device could broadcast it and unexpectedly start MonitoringService. Fix: add `android:permission="android.permission.RECEIVE_BOOT_COMPLETED"` to the receiver declaration in the manifest.
+
+- `parseDisabledApps` swallows all JSON exceptions silently returning `emptySet()` — corrupted or tampered SharedPreferences data (rooted device) would silently re-enable the overlay on all apps the user disabled. Fix: validate that every element of the decoded array is a non-empty string matching a package-name pattern before trusting it.
 
 
 ## Milestone — Prepare to PlayStore submission
