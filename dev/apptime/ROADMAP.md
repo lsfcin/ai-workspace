@@ -41,17 +41,27 @@ x `parseDisabledApps` swallows all JSON exceptions silently returning `emptySet(
 ### Checklist
 
 #### 0. Check legal concerns
-- Once launched we'll expose the app to everyone, first review what issues may imply in legal concerns
-- Consider a launch route that protects us, if there is not, it is fine
-- Define protection startegy
-- Build all materials/documents, manifests, don't know, what you can so we avoid being sued, I have no money or energy to handle that
+x Once launched we'll expose the app to everyone, first review what issues may imply in legal concerns
+x Consider a launch route that protects us, if there is not, it is fine
+x Define protection strategy
+x Build all materials/documents, manifests, don't know, what you can so we avoid being sued, I have no money or energy to handle that
+
+**Strategy:** local-only architecture means LGPD exposure is minimal (no data leaves device). Key protections implemented:
+- Privacy policy live at https://lsfcin.github.io/apptime/privacy_policy.html
+- Disclaimer tile in Settings (not medical advice, not a medical device)
+- Scientific claims softened from definitive to hedged ("may impair", "may spike")
+- Play Console Data Safety form: mark "no data collected", "no account required"
+- No INTERNET permission in manifest — reviewers can verify network-free claim instantly
 
 #### 1. App identity & metadata
-- Set a real `applicationId` (e.g. `com.lsf.apptime`) and confirm it is final — it cannot change after publish
-- Bump `versionName` to `1.0.0` and `versionCode` to `1` in `build.gradle`
-- Replace placeholder app name in `strings.xml` / `AndroidManifest.xml` (`AppTime`)
-- Replace `ic_launcher` placeholder icon with final adaptive icon (foreground + background layers, 108dp safe zone)
-- Add a short app description in PT-BR and EN (30 chars) and a long description (4 000 chars max) for the store listing
+x Set a real `applicationId` (e.g. `com.lsf.apptime`) and confirm it is final — it cannot change after publish
+  - Using `com.lucasf.apptime` — confirmed final
+x Bump `versionName` to `1.0.0` and `versionCode` to `1` in `build.gradle`
+  - Set via pubspec.yaml `version: 1.0.0+1`
+x Replace placeholder app name in `strings.xml` / `AndroidManifest.xml` (`AppTime`)
+x Replace `ic_launcher` placeholder icon with final adaptive icon (foreground + background layers, 108dp safe zone)
+x Add a short app description in PT-BR and EN (30 chars) and a long description (4 000 chars max) for the store listing
+  - Written in docs/store_listing.md — ready to paste into Play Console
 
 #### 2. Signing
 - Create a release keystore (`keytool -genkey ...`) and store it outside the repo
@@ -59,14 +69,15 @@ x `parseDisabledApps` swallows all JSON exceptions silently returning `emptySet(
 - Build a signed AAB: `flutter build appbundle --release`
 
 #### 3. Permissions audit
-- Confirm every permission in `AndroidManifest.xml` has a visible rationale shown to the user (onboarding covers `SYSTEM_ALERT_WINDOW` + `PACKAGE_USAGE_STATS`)
-- `FOREGROUND_SERVICE` + `FOREGROUND_SERVICE_DATA_SYNC` — verify correct `foregroundServiceType` declared
-- Remove any unused permissions
+x Confirm every permission in `AndroidManifest.xml` has a visible rationale shown to the user (onboarding covers `SYSTEM_ALERT_WINDOW` + `PACKAGE_USAGE_STATS`)
+x `FOREGROUND_SERVICE` + `FOREGROUND_SERVICE_SPECIAL_USE` — foregroundServiceType="specialUse" declared on both services with subtype properties
+x Remove any unused permissions — `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` removed
 
 #### 4. Privacy policy
-- PlayStore requires a privacy policy URL for apps that request sensitive permissions (`PACKAGE_USAGE_STATS`, `SYSTEM_ALERT_WINDOW`)
-- Draft a minimal policy (data stays on-device, no network calls, no analytics); host it (GitHub Pages or similar)
-- Add the URL to the store listing and optionally link it from the app's Settings screen
+x PlayStore requires a privacy policy URL for apps that request sensitive permissions (`PACKAGE_USAGE_STATS`, `SYSTEM_ALERT_WINDOW`)
+x Draft a minimal policy (data stays on-device, no network calls, no analytics); host it (GitHub Pages or similar)
+x Add the URL to the store listing and optionally link it from the app's Settings screen
+  - Live at https://lsfcin.github.io/apptime/privacy_policy.html
 
 #### 5. Store listing assets
 - Feature graphic: 1024 × 500 px
@@ -75,9 +86,9 @@ x `parseDisabledApps` swallows all JSON exceptions silently returning `emptySet(
 - Content rating questionnaire (IARC) — likely "Everyone"
 
 #### 6. Target API & compliance
-- `targetSdkVersion` must be ≥ 34 (current Play requirement for new apps)
-- Verify `compileSdkVersion` ≥ 35 (Flutter default should handle this)
-- Declare `android:exported` on every `<activity>`, `<service>`, and `<receiver>` in the manifest
+x `targetSdkVersion` must be ≥ 34 (current Play requirement for new apps) — uses `flutter.targetSdkVersion` (Flutter 3.x defaults to 35)
+x Verify `compileSdkVersion` ≥ 35 — uses `flutter.compileSdkVersion`
+x Declare `android:exported` on every `<activity>`, `<service>`, and `<receiver>` in the manifest — all declared
 
 #### 7. Release track
 - Create a Google Play Developer account (one-time $25 fee)
