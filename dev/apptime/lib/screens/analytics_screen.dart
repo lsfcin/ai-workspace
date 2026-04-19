@@ -5,6 +5,7 @@ import '../l10n/app_localizations.dart';
 import '../services/analytics_service.dart';
 import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/app_info.dart' show labelForApp;
 
 // ─── Passive app heuristic ────────────────────────────────────────────────────
 const _passivePatterns = [
@@ -212,6 +213,7 @@ class _Tab1d extends StatelessWidget {
           chart: _YesterdayPatternChart(
             appHourly: storage.getAppHourlyBreakdown(yesterday),
             l10n: l10n,
+            disabledApps: storage.disabledApps,
           ),
           text: l10n.blockYesterdayPatternText,
         ),
@@ -385,7 +387,11 @@ class _Tab7d extends StatelessWidget {
           icon: Icons.calendar_view_week_outlined,
           title: l10n.blockLastDaysPatternTitle,
           chartHeight: null,
-          chart: _LastDaysPatternChart(daysData: sevenDayHourly, l10n: l10n),
+          chart: _LastDaysPatternChart(
+            daysData: sevenDayHourly,
+            l10n: l10n,
+            disabledApps: storage.disabledApps,
+          ),
           text: l10n.blockLastDaysPatternText,
         ),
 
@@ -681,7 +687,7 @@ class _HourlyBarChart extends StatelessWidget {
 const _kAppColors = <String, Color>{
   'com.whatsapp':                            Color(0xFF25D366), // WhatsApp green (no bg)
   'com.instagram.android':                   Color(0xFFFF80AB), // Instagram light-pink (brightened for white bg)
-  'com.instagram.barcelona':                 Color(0xFFFF80AB), // Threads (same brand)
+  'com.instagram.barcelona':                 Color(0xFF000000), // Threads — black icon
   'com.tinder':                              Color(0xFFFE3C72), // Tinder flame-pink (actual brand; white bg lightens slightly)
   'org.telegram.messenger':                  Color(0xFF2AABEE), // Telegram blue (no bg)
   'com.spotify.music':                       Color(0xFF168D3F), // Spotify darkened-green (black bg deepens perception)
@@ -691,7 +697,7 @@ const _kAppColors = <String, Color>{
   'com.supercell.clashroyale':               Color(0xFF2B59C3), // Clash Royale blue
   'com.supercell.clashofclans':              Color(0xFFFBBC04), // Clash of Clans gold
   'com.bumble.app':                          Color(0xFFFFC629), // Bumble yellow
-  'com.openai.chatgpt':                      Color(0xFF10A37F), // ChatGPT teal
+  'com.openai.chatgpt':                      Color(0xFF000000), // ChatGPT — black icon
   'com.nu.production':                       Color(0xFF8A05BE), // Nubank purple
   'com.studiosol.cifraclub':                 Color(0xFFFF6600), // CifraClub orange
   'com.google.android.keep':                 Color(0xFFFF7043), // Keep deep-orange (was #FBBC04, exact dup of Clash of Clans)
@@ -711,45 +717,10 @@ const _kAppColors = <String, Color>{
   'org.mozilla.firefox':                     Color(0xFFFF9500), // Firefox orange
 };
 
-// Human-readable labels for known packages.
-const _kAppLabels = <String, String>{
-  'com.whatsapp':                            'WhatsApp',
-  'com.instagram.android':                   'Instagram',
-  'com.instagram.barcelona':                 'Threads',
-  'com.tinder':                              'Tinder',
-  'org.telegram.messenger':                  'Telegram',
-  'com.spotify.music':                       'Spotify',
-  'com.google.android.apps.maps':            'Maps',
-  'com.android.chrome':                      'Chrome',
-  'com.google.android.youtube':              'YouTube',
-  'com.supercell.clashroyale':               'Clash Royale',
-  'com.supercell.clashofclans':              'Clash of Clans',
-  'com.bumble.app':                          'Bumble',
-  'com.openai.chatgpt':                      'ChatGPT',
-  'com.nu.production':                       'Nubank',
-  'com.studiosol.cifraclub':                 'CifraClub',
-  'com.google.android.keep':                 'Keep',
-  'com.lucasf.apptime':                      'AppTime',
-  'com.google.android.gm':                   'Gmail',
-  'com.facebook.katana':                     'Facebook',
-  'com.miui.home':                           'Início',
-  'com.google.android.apps.messaging':       'Messages',
-  'br.com.brainweb.ifood':                   'iFood',
-  'com.android.deskclock':                   'Relógio',
-  'com.google.android.googlequicksearchbox': 'Google',
-  'com.google.android.apps.bard':            'Gemini',
-  'com.google.android.apps.docs':            'Docs',
-  'com.ovelin.guitartuna':                   'GuitarTuna',
-  'com.stremio.one':                         'Stremio',
-  'br.com.bradseg.segurobradescosaude':      'Bradesco',
-  'org.mozilla.firefox':                     'Firefox',
-};
-
 Color _colorForApp(String pkg) =>
     _kAppColors[pkg] ?? const Color(0xFFB0BEC5);
 
-String _labelForApp(String pkg) =>
-    _kAppLabels[pkg] ?? pkg.split('.').where((s) => s != 'android' && s != 'app' && s != 'mobile').last;
+String _labelForApp(String pkg) => labelForApp(pkg);
 
 bool _isLauncher(String pkg) =>
     pkg == 'com.miui.home' ||
@@ -835,8 +806,8 @@ void _debugCheckColorConflicts() {
         final de = _deltaE(entries[i].value, entries[j].value);
         if (de < minDeltaE) {
           debugPrint(
-            'AppColors conflict: ${_kAppLabels[entries[i].key] ?? entries[i].key}'
-            ' ↔ ${_kAppLabels[entries[j].key] ?? entries[j].key}'
+            'AppColors conflict: ${labelForApp(entries[i].key)}'
+            ' ↔ ${labelForApp(entries[j].key)}'
             ' ΔE=${de.toStringAsFixed(1)} (< $minDeltaE)',
           );
           found = true;
@@ -852,20 +823,29 @@ class _YesterdayPatternChart extends StatelessWidget {
   const _YesterdayPatternChart({
     required this.appHourly,
     required this.l10n,
+    this.disabledApps = const {},
   });
 
   final Map<String, List<int>> appHourly;
   final AppLocalizations l10n;
+  final Set<String> disabledApps;
 
   static const double _rowHeight = 15.0; // 18 × 0.85 ≈ 15
   static const double _labelWidth = 30.0;
   static const double _barHeight = 9.0;  // 10 × 0.85 ≈ 9
   static const int _hourMs = 60 * 60 * 1000;
   static const int _topN = 7;
+  static bool _colorConflictsChecked = false;
 
   @override
   Widget build(BuildContext context) {
-    _debugCheckColorConflicts();
+    assert(() {
+      if (!_colorConflictsChecked) {
+        _colorConflictsChecked = true;
+        _debugCheckColorConflicts();
+      }
+      return true;
+    }());
 
     if (appHourly.isEmpty) {
       return Center(
@@ -882,11 +862,13 @@ class _YesterdayPatternChart extends StatelessWidget {
     // Thin separator between adjacent colored segments.
     final sep = Container(width: 1.5, color: const Color(0x99000000));
 
-    // Top-7 apps by DAILY total (not per-hour), excluding launchers + pseudoapps.
-    // These same apps are used consistently across all 24 hour rows.
+    // Top-7 apps by DAILY total (not per-hour), excluding launchers, pseudoapps,
+    // and unmonitored apps. Unmonitored apps remain in `total` so their time
+    // still appears in the "outros" bucket.
     final dailyTotals = <String, int>{
       for (final e in appHourly.entries)
-        if (!_isLauncher(e.key) && !_isPseudoApp(e.key))
+        if (!_isLauncher(e.key) && !_isPseudoApp(e.key) &&
+            !disabledApps.contains(e.key))
           e.key: e.value.fold(0, (s, v) => s + v),
     };
     final topApps = (dailyTotals.entries.toList()
@@ -1009,10 +991,15 @@ class _LegendDot extends StatelessWidget {
 // ─── Last 7 days hourly pattern chart (horizontal bars, same style as yesterday) ─
 
 class _LastDaysPatternChart extends StatefulWidget {
-  const _LastDaysPatternChart({required this.daysData, required this.l10n});
+  const _LastDaysPatternChart({
+    required this.daysData,
+    required this.l10n,
+    this.disabledApps = const {},
+  });
   // daysData: list of (dateStr "YYYY-MM-DD", appHourly) oldest→newest
   final List<(String, Map<String, List<int>>)> daysData;
   final AppLocalizations l10n;
+  final Set<String> disabledApps;
 
   @override
   State<_LastDaysPatternChart> createState() => _LastDaysPatternChartState();
@@ -1047,11 +1034,13 @@ class _LastDaysPatternChartState extends State<_LastDaysPatternChart> {
     super.dispose();
   }
 
-  /// Top [_topN] apps by DAILY total for a day, launchers + pseudoapps excluded.
+  /// Top [_topN] apps by DAILY total for a day, launchers + pseudoapps +
+  /// unmonitored apps excluded. Their time stays in `total` → "outros".
   List<String> _dayTopN(Map<String, List<int>> hourly) {
     final totals = <String, int>{
       for (final e in hourly.entries)
-        if (!_isLauncher(e.key) && !_isPseudoApp(e.key))
+        if (!_isLauncher(e.key) && !_isPseudoApp(e.key) &&
+            !widget.disabledApps.contains(e.key))
           e.key: e.value.fold(0, (s, v) => s + v),
     };
     return (totals.entries.toList()..sort((a, b) => b.value.compareTo(a.value)))

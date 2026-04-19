@@ -174,7 +174,7 @@ class MonitoringService : Service() {
         }
 
         // ── Per-app overlay visibility ──────────────────────────────────────
-        val disabledApps = prefs.getStringSet("flutter.disabled_apps", emptySet()) ?: emptySet<String>()
+        val disabledApps = parseDisabledApps(prefs)
         val monitorLauncher = prefs.getBoolean("flutter.monitor_launcher", true)
         val overlayHidden = disabledApps.contains(current) || (isLauncher && !monitorLauncher)
 
@@ -208,9 +208,8 @@ class MonitoringService : Service() {
                 }
             }
             else -> {
-                val opens = getOpenCount(current)
                 val ms = getDailyMs(current) + (System.currentTimeMillis() - sessionStartMs)
-                if (shouldShowCount()) "$opens×" else formatTime(ms)
+                formatTime(ms)
             }
         }
 
@@ -413,12 +412,6 @@ class MonitoringService : Service() {
                else "%d:%02d".format(mins, secs)
     }
 
-    // Phase 0 = mostrar contagem (primeiros 5s de cada sessão de app)
-    private fun shouldShowCount(): Boolean {
-        val elapsed = System.currentTimeMillis() - sessionStartMs
-        return elapsed < 5_000
-    }
-
     // ── Notificação ───────────────────────────────────────────────────────────
 
     private fun buildNotification(): Notification {
@@ -477,6 +470,16 @@ class MonitoringService : Service() {
         try { getLong(key, 0L) } catch (_: ClassCastException) { getInt(key, 0).toLong() }
 
     companion object {
+        /** Parse the disabled-apps set stored by Flutter as a plain JSON string via setString(). */
+        fun parseDisabledApps(prefs: android.content.SharedPreferences): Set<String> {
+            val raw = prefs.getString("flutter.disabled_apps", null) ?: return emptySet()
+            return try {
+                val arr = org.json.JSONArray(raw)
+                (0 until arr.length()).map { arr.getString(it) }.toSet()
+            } catch (_: Exception) { emptySet() }
+        }
+
+
         const val NOTIF_ID = 1002
 
         val LAUNCHERS = setOf(
@@ -487,6 +490,7 @@ class MonitoringService : Service() {
             "com.android.launcher3",
             "com.huawei.android.launcher",
             "com.oneplus.launcher",
+            "com.google.android.googlequicksearchbox",
         )
     }
 }

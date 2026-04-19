@@ -48,6 +48,7 @@ abstract class AppLocalizations {
   String get permRequired;
   String get permGrant;
   String get insightOfDay;
+  String get insightViewSource;
   String get monitoringTitle;
   String get monitoringActive;
   String get monitoringInactive;
@@ -84,6 +85,17 @@ abstract class AppLocalizations {
   String get noGoalSet;
   String goalMinutesPerDay(int min);
   String get perAppControlTitle;
+  String get perAppUsageCaption;
+  // Level chip / popup strings (per-app monitoring level selector)
+  String get levelChipOff;
+  String get levelChipDefault;
+  String get levelChipMin;
+  String get levelChipMax;
+  String get levelMenuNotMonitored;
+  String get levelMenuDefault;
+  String get levelMenuMinimal;
+  String get levelMenuNormal;
+  String get levelMenuExtensive;
   String get perAppControlSub;
   String get monitorLauncherTitle;
   String get monitorLauncherSub;

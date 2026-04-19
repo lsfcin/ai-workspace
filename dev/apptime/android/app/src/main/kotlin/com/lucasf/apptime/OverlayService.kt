@@ -55,6 +55,10 @@ class OverlayService : Service() {
     // ── Max overlay width in px (set once in addOverlayView) ─────────────────
     private var maxWidthPx = 0
 
+    // ── Delayed show — avoid blink on app switch ──────────────────────────────
+    // ── Slide suppression — only reposition window when y actually changes ────
+    private var lastTopY = -1
+
     // ── Poll loop ─────────────────────────────────────────────────────────────
     private val pollRunnable = object : Runnable {
         override fun run() {
@@ -146,15 +150,14 @@ class OverlayService : Service() {
 
         // Font size stored as Int for cross-process reliability;
         // fall back to readFloat for any existing Float/Double legacy data.
+        // Flutter shared_preferences stores int as Long on Android; use getLong().toInt().
         val fontSizeBase = run {
-            val asInt = try { prefs.getInt("flutter.overlay_font_size", 0) }
-                        catch (_: ClassCastException) { 0 }
-            if (asInt > 0) asInt.toFloat()
+            val asLong = try { prefs.getLong("flutter.overlay_font_size", 0L) }
+                         catch (_: ClassCastException) { 0L }
+            if (asLong > 0L) asLong.toFloat()
             else readFloat(prefs, "flutter.overlay_font_size", 14f)
         }.coerceIn(10f, 30f)
 
-        // Visual-weight multiplier grows the font instead of scaling the view,
-        // so corners and borders stay proportional.
         val fontSize = fontSizeBase * visualWeightMult
 
         overlayView.textSize = fontSize
@@ -168,13 +171,18 @@ class OverlayService : Service() {
         }
         overlayView.background = bg
 
-        // Only reposition the window while PM is NOT playing — repositioning
-        // during PM causes an unwanted lateral slide.
+        // Only reposition the window when y actually changed — calling
+        // updateViewLayout every tick causes the OS to re-center WRAP_CONTENT
+        // width on each frame, producing a subtle lateral slide.
         if (!pmActive) {
             try {
                 val lp = overlayView.layoutParams as WindowManager.LayoutParams
-                lp.y = (topDp * density).toInt()
-                windowManager.updateViewLayout(overlayView, lp)
+                val newY = (topDp * density).toInt()
+                if (newY != lastTopY) {
+                    lp.y = newY
+                    lastTopY = newY
+                    windowManager.updateViewLayout(overlayView, lp)
+                }
             } catch (_: Exception) {
                 isViewAdded = false
                 return
@@ -186,12 +194,15 @@ class OverlayService : Service() {
         val text           = prefs.getString("flutter.overlay_text", "") ?: ""
         val visible        = prefs.getBoolean("flutter.overlay_visible", false)
         val overlayEnabled = prefs.getBoolean("flutter.overlay_enabled", true)
+        val currentPkg    = prefs.getString("flutter.current_pkg", null)
+        val isUnmonitored = currentPkg != null &&
+            MonitoringService.parseDisabledApps(prefs).contains(currentPkg)
+        val shouldShow    = overlayEnabled && visible && text.isNotEmpty() && !isUnmonitored
 
         overlayView.text = text
-        val shouldShow = overlayEnabled && visible && text.isNotEmpty()
+        overlayView.alpha = 1f
         overlayView.visibility = if (shouldShow) View.VISIBLE else View.INVISIBLE
 
-        // After PM ends (alpha=0, pmJustEnded=true), fade the timer back in.
         if (pmJustEnded && shouldShow) {
             pmJustEnded = false
             animatePm(overlayView, 0f, 1f, 500L) {}
@@ -212,14 +223,22 @@ class OverlayService : Service() {
             return
         }
 
+        val pkg = prefs.getString("flutter.current_pkg", null)
+        val isLauncher = pkg != null && MonitoringService.LAUNCHERS.contains(pkg)
+
+        // Skip all feedback for apps the user marked as unmonitored.
+        if (pkg != null && !isLauncher &&
+            MonitoringService.parseDisabledApps(prefs).contains(pkg)) {
+            stopBreathing()
+            resetVisualWeight()
+            return
+        }
+
         val thresholds = GoalThresholds.forLevel(goalLevel)
         val lang = prefs.getString("flutter.language_code", "pt") ?: "pt"
         val date = today()
         val hour = currentHour()
         val now  = System.currentTimeMillis()
-
-        val pkg = prefs.getString("flutter.current_pkg", null)
-        val isLauncher = pkg != null && MonitoringService.LAUNCHERS.contains(pkg)
         val sessionStartMs = prefs.getLong("flutter.current_session_start_ms", now)
         val sessionMs = if (pkg != null) (now - sessionStartMs).coerceAtLeast(0L) else 0L
 
@@ -360,9 +379,9 @@ class OverlayService : Service() {
         breathingAnimator = null
 
         val fontSizeBase = run {
-            val asInt = try { prefs.getInt("flutter.overlay_font_size", 0) }
-                        catch (_: ClassCastException) { 0 }
-            if (asInt > 0) asInt.toFloat()
+            val asLong = try { prefs.getLong("flutter.overlay_font_size", 0L) }
+                         catch (_: ClassCastException) { 0L }
+            if (asLong > 0L) asLong.toFloat()
             else readFloat(prefs, "flutter.overlay_font_size", 14f)
         }.coerceIn(10f, 30f)
 

@@ -2,7 +2,7 @@
 
 Read the next milestone, implement it bullet by bullet. After a bullet is done, change the dash - to an x, and commit.
 
-## M18 — Overall Adjustments
+## Milestone — Overall Adjustments
 x In the dopamine drain chart improve the references, just author and year is not enough to find it. display title and venue of publication (journal/conference proceedings)
 
 x In the 30 days analysis subtab, the first card says "2h44 total usage". Is it an average usage per day? complete it plz. same for unblocks count. state that it is /day (/dia)
@@ -33,7 +33,16 @@ x Configured to have the strict goal, because of that just saw a personalized me
 
 x Review the insights and see if there is a need to add more to cover two topics, brain-rot and comparisons between phone addiction and drugs addiction. I want you to give more attention on these two topics, perhaps prepare 4 insights for each (2 about the issue and 2 with strategies). I believe those are strong convincing points
 
-## M19 — Prepare to PlayStore submission
+## Milestone — Security and privacy check
+
+- Point core security issues apps may impose on users
+
+- Assess which of those are relevant to our app/context
+
+- 
+
+
+## Milestone — Prepare to PlayStore submission
 
 ### Checklist
 

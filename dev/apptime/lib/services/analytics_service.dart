@@ -49,7 +49,10 @@ class AnalyticsService {
       final packages = i == 0
           ? _storage.packagesLast24h()      // uses _todayKey() which is already anchored
           : _storage.packagesDailyMs(dateStr);
-      final apps = packages.map((pkg) {
+      final disabled = _storage.disabledApps;
+      final apps = packages
+          .where((pkg) => !disabled.contains(pkg))
+          .map((pkg) {
         return AppUsage(
           packageName: pkg,
           dailyMs: i == 0

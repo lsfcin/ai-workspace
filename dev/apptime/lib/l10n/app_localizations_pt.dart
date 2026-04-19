@@ -21,6 +21,7 @@ class AppLocalizationsPt extends AppLocalizations {
   @override String get permRequired => 'Necessária';
   @override String get permGrant => 'Conceder';
   @override String get insightOfDay => 'Insight do dia';
+  @override String get insightViewSource => 'Ver fonte';
   @override String get monitoringTitle => 'Contador';
   @override String get monitoringActive => 'Ativo — contador mostrando uso em tempo real.';
   @override String get monitoringInactive => 'Inativo. Toque em Iniciar.';
@@ -69,6 +70,16 @@ class AppLocalizationsPt extends AppLocalizations {
   @override String get noGoalSet => 'Sem meta definida';
   @override String goalMinutesPerDay(int min) => '$min minutos / dia';
   @override String get perAppControlTitle => 'Controle por app';
+  @override String get perAppUsageCaption => 'O uso exibido é o total dos últimos 7 dias';
+  @override String get levelChipOff => 'desl.';
+  @override String get levelChipDefault => 'padrão';
+  @override String get levelChipMin => 'mín.';
+  @override String get levelChipMax => 'máx.';
+  @override String get levelMenuNotMonitored => 'não monitorado';
+  @override String get levelMenuDefault => 'padrão (meta global)';
+  @override String get levelMenuMinimal => 'leve';
+  @override String get levelMenuNormal => 'moderado';
+  @override String get levelMenuExtensive => 'intenso';
   @override String get perAppControlSub => 'Configurar monitoramento individualmente por app';
   @override String get monitorLauncherTitle => 'Monitorar tela inicial';
   @override String get monitorLauncherSub => 'Mostrar o visor ao voltar para a tela inicial';
@@ -190,23 +201,23 @@ class AppLocalizationsPt extends AppLocalizations {
       'Clinical Psychological Science.';
 
   @override String get goalScreenTitle => 'Metas de uso';
-  @override String get goalLevelSectionTitle => 'Nível de meta';
-  @override String get goalLevelNone => 'Nenhum';
-  @override String get goalLevelMinimal => 'Mínimo';
-  @override String get goalLevelNormal => 'Normal';
-  @override String get goalLevelExtensive => 'Extensivo';
+  @override String get goalLevelSectionTitle => 'Nível de controle';
+  @override String get goalLevelNone => 'Desligado';
+  @override String get goalLevelMinimal => 'Leve';
+  @override String get goalLevelNormal => 'Moderado';
+  @override String get goalLevelExtensive => 'Intenso';
   @override String get goalRationaleNone =>
       'Apenas consciência — sem feedback ativo. Ideal para começar a '
       'entender seus padrões sem pressão.';
   @override String get goalRationaleMinimal =>
-      'Limites rigorosos baseados em pesquisas sobre bem-estar digital. '
-      'Recomendado para quem quer reduzir o uso significativamente.';
+      'Controle leve com lembretes suaves. Bom para quem quer '
+      'se manter consciente sem restrições fortes.';
   @override String get goalRationaleNormal =>
-      'Equilíbrio entre produtividade e lazer digital. Alinha-se com '
-      'recomendações de especialistas em saúde mental para adultos.';
+      'Controle moderado — equilíbrio entre produtividade e lazer digital. '
+      'Alinha-se com recomendações de especialistas em saúde mental.';
   @override String get goalRationaleExtensive =>
-      'Limites relaxados, mas com feedback ativo. Ideal para quem quer '
-      'monitorar sem restrições severas.';
+      'Controle intenso com limites rigorosos. Recomendado para quem quer '
+      'reduzir o uso de tela significativamente.';
   @override String get goalPerAppTitle => 'Metas por app';
   @override String get goalPerAppSub =>
       'Substitua a meta global para apps específicos.';

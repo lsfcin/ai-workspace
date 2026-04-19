@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../data/insights.dart';
 import '../l10n/app_localizations.dart';
 import '../models/goal_config.dart';
@@ -98,7 +99,7 @@ class _MonitoringScreenState extends State<MonitoringScreen> {
     return _appLabels.containsKey(pkg) || kAppLabels.containsKey(pkg);
   }
 
-  String _labelFor(String pkg) => _appLabels[pkg] ?? labelForApp(pkg);
+  String _labelFor(String pkg) => kAppLabels[pkg] ?? _appLabels[pkg] ?? labelForApp(pkg);
 
   int _effectiveLevel(String pkg) {
     if (_s.disabledApps.contains(pkg)) return _kNotMonitored;
@@ -152,7 +153,8 @@ class _MonitoringScreenState extends State<MonitoringScreen> {
           // ── Insight of the day ──────────────────────────────────────────
           _InsightCard(
             headerLabel: l10n.insightOfDay,
-            insight: kInsights[_insightIndex],
+            sourceLabel: l10n.insightViewSource,
+            entry: kInsights[_insightIndex],
           ),
           const SizedBox(height: AppSpacing.lg),
 
@@ -198,7 +200,15 @@ class _MonitoringScreenState extends State<MonitoringScreen> {
 
           // ── Per-app control (inline) ────────────────────────────────────
           _SectionHeader(l10n.perAppControlTitle),
-          const SizedBox(height: AppSpacing.xs),
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: AppSpacing.xs),
+            child: Text(
+              l10n.perAppUsageCaption,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
+            ),
+          ),
           if (packages.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
@@ -266,9 +276,14 @@ class _MonitoringScreenState extends State<MonitoringScreen> {
 // ── Insight card ───────────────────────────────────────────────────────────────
 
 class _InsightCard extends StatelessWidget {
-  const _InsightCard({required this.headerLabel, required this.insight});
+  const _InsightCard({
+    required this.headerLabel,
+    required this.sourceLabel,
+    required this.entry,
+  });
   final String headerLabel;
-  final String insight;
+  final String sourceLabel;
+  final InsightEntry entry;
 
   @override
   Widget build(BuildContext context) {
@@ -292,7 +307,27 @@ class _InsightCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.sm),
-            Text(insight, style: Theme.of(context).textTheme.bodySmall),
+            Text(entry.text, style: Theme.of(context).textTheme.bodySmall),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: const Size(0, 32),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                onPressed: () => launchUrl(
+                  Uri.parse(entry.url),
+                  mode: LaunchMode.externalApplication,
+                ),
+                child: Text(
+                  sourceLabel,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: AppColors.primary,
+                      ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -403,29 +438,42 @@ class _LevelChip extends StatelessWidget {
   final int level;
   final ValueChanged<int> onSelected;
 
-  static const _labels = {
-    _kNotMonitored: ('off', Icons.visibility_off_outlined),
-    _kDefault: ('default', Icons.tune_outlined),
-    1: ('min', Icons.signal_cellular_alt_1_bar),
-    2: ('normal', Icons.signal_cellular_alt_2_bar),
-    3: ('max', Icons.signal_cellular_alt),
+  static const _icons = {
+    _kNotMonitored: Icons.visibility_off_outlined,
+    _kDefault: Icons.tune_outlined,
+    1: Icons.signal_cellular_alt_1_bar,
+    2: Icons.signal_cellular_alt_2_bar,
+    3: Icons.signal_cellular_alt,
   };
 
   @override
   Widget build(BuildContext context) {
-    final (label, icon) = _labels[level] ?? ('default', Icons.tune_outlined);
+    final l10n = AppLocalizations.of(context);
+    final chipLabels = {
+      _kNotMonitored: l10n.levelChipOff,
+      _kDefault: l10n.levelChipDefault,
+      1: l10n.levelMenuMinimal,
+      2: l10n.levelMenuNormal,
+      3: l10n.levelMenuExtensive,
+    };
+    final label = chipLabels[level] ?? l10n.levelChipDefault;
+    final icon = _icons[level] ?? Icons.tune_outlined;
     final isOff = level == _kNotMonitored;
 
     return PopupMenuButton<int>(
       onSelected: onSelected,
       itemBuilder: (_) => [
-        _item(context, _kNotMonitored, 'not monitored',
+        _item(context, l10n, _kNotMonitored, l10n.levelMenuNotMonitored,
             Icons.visibility_off_outlined),
-        _item(context, _kDefault, 'default (global goal)', Icons.tune_outlined),
+        _item(context, l10n, _kDefault, l10n.levelMenuDefault,
+            Icons.tune_outlined),
         const PopupMenuDivider(),
-        _item(context, 1, 'minimal', Icons.signal_cellular_alt_1_bar),
-        _item(context, 2, 'normal', Icons.signal_cellular_alt_2_bar),
-        _item(context, 3, 'extensive', Icons.signal_cellular_alt),
+        _item(context, l10n, 1, l10n.levelMenuMinimal,
+            Icons.signal_cellular_alt_1_bar),
+        _item(context, l10n, 2, l10n.levelMenuNormal,
+            Icons.signal_cellular_alt_2_bar),
+        _item(context, l10n, 3, l10n.levelMenuExtensive,
+            Icons.signal_cellular_alt),
       ],
       child: Chip(
         avatar: Icon(icon,
@@ -450,8 +498,8 @@ class _LevelChip extends StatelessWidget {
     );
   }
 
-  PopupMenuItem<int> _item(
-      BuildContext context, int value, String text, IconData icon) {
+  PopupMenuItem<int> _item(BuildContext context, AppLocalizations l10n,
+      int value, String text, IconData icon) {
     final selected = value == level;
     return PopupMenuItem(
       value: value,
@@ -460,8 +508,7 @@ class _LevelChip extends StatelessWidget {
         const SizedBox(width: 8),
         Text(text,
             style: TextStyle(
-                fontWeight:
-                    selected ? FontWeight.w600 : FontWeight.normal)),
+                fontWeight: selected ? FontWeight.w600 : FontWeight.normal)),
       ]),
     );
   }

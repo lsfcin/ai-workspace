@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Wrapper tipado sobre SharedPreferences.
@@ -23,7 +24,13 @@ class StorageService {
   // ── Overlay appearance (escrito pelo Flutter, lido pelo OverlayService) ──
 
   // Stored as Int so the Kotlin OverlayService can read it with getInt() reliably.
-  double get overlayFontSize => (_prefs.getInt('overlay_font_size') ?? 14).toDouble();
+  // Handles legacy double values that may be stored from older builds.
+  double get overlayFontSize {
+    final raw = _prefs.get('overlay_font_size');
+    if (raw is int) return raw.toDouble();
+    if (raw is double) return raw;
+    return 14.0;
+  }
   set overlayFontSize(double v) => _prefs.setInt('overlay_font_size', v.round());
 
   double get overlayTopDp => _prefs.getDouble('overlay_top_dp') ?? 40.0;
@@ -160,11 +167,21 @@ class StorageService {
   bool get monitorLauncher => _prefs.getBool('monitor_launcher') ?? true;
   set monitorLauncher(bool v) => _prefs.setBool('monitor_launcher', v);
 
-  Set<String> get disabledApps =>
-      _prefs.getStringList('disabled_apps')?.toSet() ?? {};
+  Set<String> get disabledApps {
+    final raw = _prefs.get('disabled_apps');
+    if (raw == null) return {};
+    // Legacy format: setStringList stored a List<String> directly.
+    if (raw is List) return raw.cast<String>().toSet();
+    // New format: setString stores a JSON-encoded string readable by Kotlin.
+    if (raw is String) {
+      try { return (jsonDecode(raw) as List).cast<String>().toSet(); }
+      catch (_) { return {}; }
+    }
+    return {};
+  }
 
   set disabledApps(Set<String> apps) =>
-      _prefs.setStringList('disabled_apps', apps.toList());
+      _prefs.setString('disabled_apps', jsonEncode(apps.toList()));
 
   void toggleApp(String packageName) {
     final apps = disabledApps;

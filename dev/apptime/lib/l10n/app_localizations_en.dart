@@ -20,6 +20,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override String get permRequired => 'Required';
   @override String get permGrant => 'Grant';
   @override String get insightOfDay => 'Insight of the day';
+  @override String get insightViewSource => 'View source';
   @override String get monitoringTitle => 'Counter';
   @override String get monitoringActive => 'Active — overlay showing real-time usage.';
   @override String get monitoringInactive => 'Inactive. Tap Start.';
@@ -67,6 +68,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override String get noGoalSet => 'No goal set';
   @override String goalMinutesPerDay(int min) => '$min minutes / day';
   @override String get perAppControlTitle => 'Per-app control';
+  @override String get perAppUsageCaption => 'Usage shown is the total for the last 7 days';
+  @override String get levelChipOff => 'off';
+  @override String get levelChipDefault => 'default';
+  @override String get levelChipMin => 'min';
+  @override String get levelChipMax => 'max';
+  @override String get levelMenuNotMonitored => 'not monitored';
+  @override String get levelMenuDefault => 'default (global goal)';
+  @override String get levelMenuMinimal => 'light';
+  @override String get levelMenuNormal => 'moderate';
+  @override String get levelMenuExtensive => 'intense';
   @override String get perAppControlSub => 'Enable / disable overlay per app';
   @override String get monitorLauncherTitle => 'Monitor home screen';
   @override String get monitorLauncherSub => 'Show overlay on the launcher / home screen';
@@ -187,23 +198,23 @@ class AppLocalizationsEn extends AppLocalizations {
       'Clinical Psychological Science.';
 
   @override String get goalScreenTitle => 'Usage goals';
-  @override String get goalLevelSectionTitle => 'Goal level';
-  @override String get goalLevelNone => 'None';
-  @override String get goalLevelMinimal => 'Minimal';
-  @override String get goalLevelNormal => 'Normal';
-  @override String get goalLevelExtensive => 'Extensive';
+  @override String get goalLevelSectionTitle => 'Control level';
+  @override String get goalLevelNone => 'Off';
+  @override String get goalLevelMinimal => 'Light';
+  @override String get goalLevelNormal => 'Moderate';
+  @override String get goalLevelExtensive => 'Intense';
   @override String get goalRationaleNone =>
       'Awareness only — no active feedback. Great for understanding '
       'your patterns without pressure.';
   @override String get goalRationaleMinimal =>
-      'Strict limits based on digital wellbeing research. '
-      'Recommended for users aiming to significantly cut screen time.';
+      'Light control with gentle reminders. Good for users who want '
+      'to stay aware without strong restrictions.';
   @override String get goalRationaleNormal =>
-      'Balance between productivity and digital leisure. Aligns with '
-      'mental health expert recommendations for adults.';
+      'Moderate control — balance between productivity and digital leisure. '
+      'Aligns with mental health expert recommendations for adults.';
   @override String get goalRationaleExtensive =>
-      'Relaxed limits with active feedback. Ideal for users who want '
-      'monitoring without strict restrictions.';
+      'Intense control with strict limits. Recommended for users aiming '
+      'to significantly reduce screen time.';
   @override String get goalPerAppTitle => 'Per-app goals';
   @override String get goalPerAppSub =>
       'Override the global goal for specific apps.';

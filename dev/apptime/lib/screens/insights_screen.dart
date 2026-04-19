@@ -71,12 +71,13 @@ class _InsightData {
     }
 
     int passiveMs = 0;
+    final disabled = s.disabledApps;
     final packages = <String>{};
     for (int i = 0; i < 7; i++) {
       packages.addAll(s.packagesDailyMs(fmt(today.subtract(Duration(days: i)))));
     }
     for (final pkg in packages) {
-      if (_isPassive(pkg)) {
+      if (_isPassive(pkg) && !disabled.contains(pkg)) {
         for (int i = 0; i < 7; i++) {
           passiveMs += s.getDailyMs(pkg, date: fmt(today.subtract(Duration(days: i))));
         }

@@ -22,26 +22,37 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
+  late final List<Widget> _screens;
 
   @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final screens = [
-      MonitoringScreen(storage: widget.storage),
-      AnalyticsScreen(storage: widget.storage),
-      InsightsScreen(storage: widget.storage),
+  void initState() {
+    super.initState();
+    _screens = [
       SettingsScreen(
         storage: widget.storage,
         onLocaleChange: widget.onLocaleChange,
       ),
+      MonitoringScreen(storage: widget.storage),
+      AnalyticsScreen(storage: widget.storage),
+      InsightsScreen(storage: widget.storage),
     ];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      body: screens[_selectedIndex],
+      body: IndexedStack(index: _selectedIndex, children: _screens),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: (i) => setState(() => _selectedIndex = i),
         destinations: [
+          NavigationDestination(
+            icon: const Icon(Icons.settings_outlined),
+            selectedIcon: const Icon(Icons.settings),
+            label: l10n.navSettings,
+          ),
           NavigationDestination(
             icon: const Icon(Icons.monitor_heart_outlined),
             selectedIcon: const Icon(Icons.monitor_heart),
@@ -56,11 +67,6 @@ class _MainScreenState extends State<MainScreen> {
             icon: const Icon(Icons.lightbulb_outlined),
             selectedIcon: const Icon(Icons.lightbulb),
             label: l10n.navInsights,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.settings_outlined),
-            selectedIcon: const Icon(Icons.settings),
-            label: l10n.navSettings,
           ),
         ],
       ),

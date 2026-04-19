@@ -1,10 +1,40 @@
 import 'package:flutter/material.dart';
 
+// ─── Three-tier naming + classification strategy ──────────────────────────────
+//
+// TIER 1 — Android PackageManager (primary, most reliable)
+//   Queried at runtime via getInstalledApps() in MainActivity.kt.
+//   Filters FLAG_SYSTEM == 0 → user-installed apps only.
+//   Label = the display name the user sees in their launcher.
+//   Stored in _appLabels (MonitoringScreen). Handles ~95 % of apps.
+//
+// TIER 2 — Static maps kAppLabels / kAppColors
+//   Overrides or supplements PM for:
+//   • Apps with confusing internal names (e.g. com.google.android.apps.tachyon → "Meet")
+//   • Brand colors (PM does not provide these)
+//   • Historic usage data for apps that were later uninstalled
+//
+// TIER 3 — labelForApp() fallback
+//   Last resort for packages absent from both Tier 1 and Tier 2.
+//   Strips TLD / vendor / generic segments, capitalises the brand name.
+//
+// CLASSIFICATION (decides whether an app appears in lists / charts)
+//   isLauncherPkg() — home-screen launchers: counted but not listed
+//   isSystemPkg()   — OS daemons / services: suppressed entirely
+//   The PackageManager FLAG_SYSTEM filter in Kotlin handles most system apps.
+//   isSystemPkg() catches the remainder (GMS, sync adapters, STK, etc.).
+//   Rule of thumb for new strange packages:
+//     • If PM has loaded and the package is NOT in _appLabels → background/system
+//       → _showInList() already excludes it (see MonitoringScreen).
+//     • If it still appears, add it to the isSystemPkg() patterns below.
+//
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ─── Brand colors ─────────────────────────────────────────────────────────────
 const kAppColors = <String, Color>{
   'com.whatsapp':                            Color(0xFF25D366),
   'com.instagram.android':                   Color(0xFFFF80AB),
-  'com.instagram.barcelona':                 Color(0xFFFF80AB),
+  'com.instagram.barcelona':                 Color(0xFF000000), // Threads — black icon
   'com.tinder':                              Color(0xFFFE3C72),
   'org.telegram.messenger':                  Color(0xFF2AABEE),
   'com.spotify.music':                       Color(0xFF168D3F),
@@ -14,7 +44,7 @@ const kAppColors = <String, Color>{
   'com.supercell.clashroyale':               Color(0xFF2B59C3),
   'com.supercell.clashofclans':              Color(0xFFFBBC04),
   'com.bumble.app':                          Color(0xFFFFC629),
-  'com.openai.chatgpt':                      Color(0xFF10A37F),
+  'com.openai.chatgpt':                      Color(0xFF000000), // ChatGPT — black icon
   'com.nu.production':                       Color(0xFF8A05BE),
   'com.studiosol.cifraclub':                 Color(0xFFFF6600),
   'com.google.android.keep':                 Color(0xFFFF7043),
@@ -27,6 +57,7 @@ const kAppColors = <String, Color>{
   'com.android.deskclock':                   Color(0xFF607D8B),
   'com.google.android.googlequicksearchbox': Color(0xFFDB4437),
   'com.google.android.apps.bard':            Color(0xFFF48FB1),
+  'com.google.android.apps.aistudio':       Color(0xFF000000), // AI Studio — black icon
   'com.google.android.apps.docs':            Color(0xFF1565C0),
   'com.ovelin.guitartuna':                   Color(0xFFAA00FF),
   'com.stremio.one':                         Color(0xFF26C6DA),
@@ -61,6 +92,7 @@ const kAppColors = <String, Color>{
   'com.google.android.apps.photos':          Color(0xFF4285F4),
   'com.paypal.android.p2pmobile':            Color(0xFF003087),
   'com.google.android.apps.finance':         Color(0xFF34A853),
+  'com.google.android.apps.tachyon':         Color(0xFF00897B), // Google Meet
 };
 
 const kAppLabels = <String, String>{
@@ -87,8 +119,9 @@ const kAppLabels = <String, String>{
   'com.google.android.apps.messaging':       'Messages',
   'br.com.brainweb.ifood':                   'iFood',
   'com.android.deskclock':                   'Relógio',
-  'com.google.android.googlequicksearchbox': 'Google',
+  'com.google.android.googlequicksearchbox': 'Google Search',
   'com.google.android.apps.bard':            'Gemini',
+  'com.google.android.apps.aistudio':       'AI Studio',
   'com.google.android.apps.docs':            'Docs',
   'com.ovelin.guitartuna':                   'GuitarTuna',
   'com.stremio.one':                         'Stremio',
@@ -122,62 +155,110 @@ const kAppLabels = <String, String>{
   'com.google.android.apps.photos':          'Google Photos',
   'com.paypal.android.p2pmobile':            'PayPal',
   'com.google.android.apps.finance':         'Google Finance',
+  'com.google.android.apps.tachyon':         'Meet',            // internal codename: Tachyon
 };
 
 Color colorForApp(String pkg) => kAppColors[pkg] ?? const Color(0xFFB0BEC5);
 
+// Segments that carry no brand information and should be stripped when
+// deriving a fallback label from a package name (Tier 3).
+const _kTld      = {'com', 'org', 'net', 'io', 'br', 'uk', 'de', 'fr', 'co'};
+const _kNoise    = {'android', 'app', 'apps', 'mobile', 'production', 'release',
+                    'mediaclient', 'frontpage', 'katana', 'barcelona'};
+// Generic English nouns that describe a category, not a brand.
+const _kGeneric  = {'music', 'messenger', 'messages', 'browser', 'player',
+                    'service', 'manager', 'provider', 'launcher', 'home',
+                    'camera', 'gallery', 'notes', 'note', 'calendar', 'mail',
+                    'clock', 'dialer', 'phone', 'contacts', 'photos', 'video',
+                    'wallet', 'store', 'market', 'search', 'assistant', 'one'};
+
 /// Returns the best display label for a package name.
-/// Falls back to the last meaningful segment of the package name.
+/// Tier 2 (kAppLabels) → Tier 3 fallback (heuristic from package ID).
 String labelForApp(String pkg) {
   if (kAppLabels.containsKey(pkg)) return kAppLabels[pkg]!;
-  final parts = pkg
-      .split('.')
-      .where((s) => s != 'android' && s != 'app' && s != 'mobile')
+
+  final segments = pkg.split('.');
+
+  // Strip TLDs and noise from both ends, keep brand-like segments.
+  final meaningful = segments
+      .where((s) => !_kTld.contains(s) && !_kNoise.contains(s) && s.length > 1)
       .toList();
-  // Guard against empty list (e.g. pkg = 'android' or 'app.mobile')
-  return parts.isNotEmpty ? parts.last : pkg.split('.').last;
+
+  if (meaningful.isEmpty) return segments.last;
+
+  // Prefer the first segment that is NOT a generic category word.
+  // e.g. ['spotify', 'music'] → 'spotify'; ['telegram', 'messenger'] → 'telegram'
+  final brand = meaningful.firstWhere(
+    (s) => !_kGeneric.contains(s.toLowerCase()),
+    orElse: () => meaningful.first,
+  );
+
+  // Capitalise first letter only (preserve camelCase if present).
+  return '${brand[0].toUpperCase()}${brand.substring(1)}';
 }
 
 bool isLauncherPkg(String pkg) =>
     pkg == 'com.miui.home' ||
+    pkg == 'com.google.android.googlequicksearchbox' ||
     pkg.contains('.launcher') ||
     pkg.endsWith('.home') ||
     pkg == 'com.android.systemui';
 
 bool isSystemPkg(String pkg) {
+  // ── Exact known system packages ────────────────────────────────────────────
   const exact = {
     'android',
-    'com.google.android.gms',
-    'com.android.vending',
-    'com.google.android.providers.media.module',
-    'com.android.settings',
-    'com.miui.securitycenter',
-    'com.android.permissioncontroller',
-    'com.google.android.documentsui',
-    'com.android.systemui',
-    'com.miui.systemAdSolution',
-    'com.android.packageinstaller',
-    'com.google.android.packageinstaller',
-    'com.android.stk',            // SIM Toolkit
-    'com.qualcomm.qti.sta',       // Qualcomm STA
     'com.android.phone',
     'com.android.contacts',
     'com.android.mms',
     'com.android.dialer',
+    'com.android.settings',
+    'com.android.systemui',
+    'com.android.permissioncontroller',
+    'com.android.packageinstaller',
+    'com.android.documentsuI',
+    'com.android.stk',                  // SIM Toolkit
+    'com.google.android.gms',           // Play Services
+    'com.google.android.gsf',           // Google Services Framework
+    'com.google.android.vending',       // Play Store process
+    'com.android.vending',
+    'com.google.android.packageinstaller',
+    'com.google.android.providers.media.module',
+    'com.google.android.documentsui',
+    'com.qualcomm.qti.sta',
+    'com.miui.securitycenter',
     'com.miui.securityadd',
     'com.miui.analytics',
+    'com.miui.systemAdSolution',
   };
   if (exact.contains(pkg)) return true;
-  return pkg.contains('photopicker') ||
-      pkg.contains('permissioncontroller') ||
-      pkg.contains('.provision') ||
-      pkg.contains('.setup') ||
-      pkg.contains('btcontrol') ||    // Bluetooth chip controllers
-      pkg.contains('.inputmethod') ||
-      pkg.contains('wallpaper') ||
-      pkg.contains('.systemui') ||
-      pkg.contains('miui.system') ||
-      pkg.contains('.stk');           // SIM Toolkit variants
+
+  // ── Vendor-namespace prefixes (all packages in these namespaces are system) ─
+  if (pkg.startsWith('com.qualcomm.') ||
+      pkg.startsWith('com.qti.') ||
+      pkg.startsWith('com.mediatek.') ||
+      pkg.startsWith('com.android.internal.') ||
+      pkg.startsWith('com.google.android.syncadapters.') ||
+      pkg.startsWith('com.google.android.gsf.') ||
+      pkg.startsWith('com.xiaomi.bluetooth')) { return true; }
+
+  // ── Substring patterns ──────────────────────────────────────────────────────
+  return pkg.contains('photopicker')           ||
+      pkg.contains('permissioncontroller')     ||
+      pkg.contains('.provision')               ||
+      pkg.contains('.setup')                   ||
+      pkg.contains('btcontrol')                || // Bluetooth chip controllers
+      pkg.contains('.inputmethod')             ||
+      pkg.contains('wallpaper')                ||
+      pkg.contains('.systemui')                ||
+      pkg.contains('miui.system')              ||
+      pkg.contains('.stk')                     || // SIM Toolkit variants
+      // Background service/daemon suffixes — user apps are never named like this
+      pkg.endsWith('.service')                 ||
+      pkg.endsWith('.services')                ||
+      pkg.endsWith('.provider')                ||
+      pkg.endsWith('.providers')               ||
+      pkg.endsWith('.daemon');
 }
 
 bool isUserFacingApp(String pkg) =>
