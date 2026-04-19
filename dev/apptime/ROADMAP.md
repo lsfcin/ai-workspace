@@ -19,7 +19,7 @@ x Data retention — auto-delete SharedPreferences keys older than 90 days on ap
 x Delete all data — add a "Delete all data" action in Settings so the user can wipe their history at any time (right to erasure, expected by Play reviewers)
 
 x Privacy policy — draft a minimal policy (data stays on-device, no network, no third parties); host on GitHub Pages; link from Settings and store listing
-  - Policy drafted at docs/privacy_policy.html — push to GitHub Pages and replace YOUR_GITHUB_USER in settings_screen.dart with your actual GitHub username
+  x Hosted at https://lsfcin.github.io/apptime/privacy_policy.html
 
 x Overlay clickjacking — verify FLAG_NOT_TOUCHABLE is set on the overlay window; confirm overlay cannot intercept user input (already implemented — mark after verification)
 
@@ -29,11 +29,11 @@ x Perform a major code review checking for possible hacker/malicious activities.
 
 ### Code review findings
 
-- Dead permission `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` in AndroidManifest — declared but never called in code. Play Store reviewers will demand justification for every dangerous permission; remove it.
+x Dead permission `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` in AndroidManifest — declared but never called in code. Play Store reviewers will demand justification for every dangerous permission; remove it.
 
-- `BootReceiver` exported without `android:permission` guard — `BOOT_COMPLETED` is a protected broadcast (only OS can send it), but `QUICKBOOT_POWERON` is a vendor-custom action; any app on the device could broadcast it and unexpectedly start MonitoringService. Fix: add `android:permission="android.permission.RECEIVE_BOOT_COMPLETED"` to the receiver declaration in the manifest.
+x `BootReceiver` exported without `android:permission` guard — `BOOT_COMPLETED` is a protected broadcast (only OS can send it), but `QUICKBOOT_POWERON` is a vendor-custom action; any app on the device could broadcast it and unexpectedly start MonitoringService. Fix: add `android:permission="android.permission.RECEIVE_BOOT_COMPLETED"` to the receiver declaration in the manifest.
 
-- `parseDisabledApps` swallows all JSON exceptions silently returning `emptySet()` — corrupted or tampered SharedPreferences data (rooted device) would silently re-enable the overlay on all apps the user disabled. Fix: validate that every element of the decoded array is a non-empty string matching a package-name pattern before trusting it.
+x `parseDisabledApps` swallows all JSON exceptions silently returning `emptySet()` — corrupted or tampered SharedPreferences data (rooted device) would silently re-enable the overlay on all apps the user disabled. Fix: validate that every element of the decoded array is a non-empty string matching a package-name pattern before trusting it.
 
 
 ## Milestone — Prepare to PlayStore submission
