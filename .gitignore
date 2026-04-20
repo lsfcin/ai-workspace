@@ -52,6 +52,9 @@
 !dev/apptime/HISTORY.md
 !dev/apptime/CONTEXT.md
 !dev/apptime/SPECS.md
+!dev/apptime/CODE_STRUCTURE.md
+!dev/apptime/REFACTOR_PLAN.md
+!dev/apptime/OPTIMIZATION_PLAN.md
 !dev/apptime/lib/
 !dev/apptime/lib/**
 !dev/apptime/lib/data/

@@ -2,39 +2,26 @@
 
 Read the next milestone, implement it bullet by bullet. After a bullet is done, change the dash - to an x, and commit.
 
-## Milestone — Security and privacy check
+## Milestone — Revision and Code Structure blueprint
+x Revise all the code. Read file for file. Everything. Write down an schematic study on a separate file e.g., CODE_STRUCTURE (can be a .md file or any other more suitable format). the code structure must show how we organize the code, which 'modules' and their responsabilities, how data flows. Think of this file as an useful blueprint for yourself, a intermediate file that makes it clear for you how our code works and is very useful for your navigation on the code from now on. Make it in a way you can even skip reading some functions or files, as an entrypoint for investigation. Also update the CONTEXT.md with two instructions for you, the first is to consult the file, the second is to update it whenever it is needed. In this schematic/structure file write down some pointers/references that will help you later to connect the notes on CODE_STRUCTURE with the actual code files, these notes are for you to use later, so write it in the best format for you. also, already make use of the revision time to note down observations on: 
+  - ambiguities
+  - redundancies
+  - duplicated/uncentralized variables and functions
+  - extra-complex, suboptimized routines
+  - overall bad practicies
+  - potential safety issues
+  - point out wrong naming patterns
+  - any other topic you think it is worth writing down
 
-x Point core security issues apps may impose on users
+x After writing down the CODE_STRUCTURE and all its info, revise it, create a list of points in another file called REFACTOR_PLAN and sort it from the most relevant to the least. The refactor plan should prioritize mostly to reorganize the code, make it more robust and concise, taking all the care to not loose any features or to make them malfunction. If you think some features can be redesigned a bit, or even excluded you can point it out, ask me, or just write the suggestion on the plan. Do not refactor yet! Just create the plan.
 
-x Assess which of those are relevant to our app/context
+x Separately, create another file called OPTIMIZATION_PLAN. It is a ToDo list of sorted points to speed up our app, make it lighter to load and to run. To make it more cumbersome regarding battery consumption both in foreground and in background. If you think some features can be redesigned a bit, or even excluded to make our app lighter and faster you can point it out, ask me, or just write the suggestion on the plan. Do not optimize yet! Just create the plan.
 
-x Add all relevant points to this milestone and go fix or propose solutions, one by one.
+## Milestone — Refactor
+- Perform the planned refactor in the REFACTOR_PLAN, point by point, ticking them with an x. If there are core decisions to make about the the refactoring tasks, ask me, give me the options before, and then follow the plan. then rename the previous CODE_STRUCTURE file as old, or deprecated, or any other word you see more fit and create a new one representing the current structure.
 
-### Relevant issues and fixes
-
-x `android:usesCleartextTraffic="false"` — declare in AndroidManifest; proves to Play scanners no network communication is possible
-
-x Data retention — auto-delete SharedPreferences keys older than 90 days on app start; prevents unbounded accumulation of sensitive usage history
-
-x Delete all data — add a "Delete all data" action in Settings so the user can wipe their history at any time (right to erasure, expected by Play reviewers)
-
-x Privacy policy — draft a minimal policy (data stays on-device, no network, no third parties); host on GitHub Pages; link from Settings and store listing
-  x Hosted at https://lsfcin.github.io/apptime/privacy_policy.html
-
-x Overlay clickjacking — verify FLAG_NOT_TOUCHABLE is set on the overlay window; confirm overlay cannot intercept user input (already implemented — mark after verification)
-
-x Encrypted storage — deferred post-launch; EncryptedSharedPreferences requires migrating both Flutter plugin and Kotlin service; revisit if Play rejects
-
-x Perform a major code review checking for possible hacker/malicious activities. Injections, don't know, it is not my area, but we must review our code thorouglhy to guarantee with the best of our knowledge that our app is safe. If you find any points then do not fix it yet, place bullets here.
-
-### Code review findings
-
-x Dead permission `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` in AndroidManifest — declared but never called in code. Play Store reviewers will demand justification for every dangerous permission; remove it.
-
-x `BootReceiver` exported without `android:permission` guard — `BOOT_COMPLETED` is a protected broadcast (only OS can send it), but `QUICKBOOT_POWERON` is a vendor-custom action; any app on the device could broadcast it and unexpectedly start MonitoringService. Fix: add `android:permission="android.permission.RECEIVE_BOOT_COMPLETED"` to the receiver declaration in the manifest.
-
-x `parseDisabledApps` swallows all JSON exceptions silently returning `emptySet()` — corrupted or tampered SharedPreferences data (rooted device) would silently re-enable the overlay on all apps the user disabled. Fix: validate that every element of the decoded array is a non-empty string matching a package-name pattern before trusting it.
-
+## Milestone — Optimization
+- Perform the planned optimization in the OPTIMIZATION_PLAN, point by point, ticking them with an x. If there are core decisions to make about the the optimization tasks, ask me, give me the options before, and then follow the plan. then rename the previous CODE_STRUCTURE file as old, or deprecated, or any other word you see more fit and create a new one representing the current structure.
 
 ## Milestone — Prepare to PlayStore submission
 
@@ -55,7 +42,7 @@ x Build all materials/documents, manifests, don't know, what you can so we avoid
 
 #### 1. App identity & metadata
 x Set a real `applicationId` (e.g. `com.lsf.apptime`) and confirm it is final — it cannot change after publish
-  - Using `com.lucasf.apptime` — confirmed final
+  - Using `com.lsf.apptime` — confirmed final (changed from com.lucasf.apptime to bypass a MIUI install block)
 x Bump `versionName` to `1.0.0` and `versionCode` to `1` in `build.gradle`
   - Set via pubspec.yaml `version: 1.0.0+1`
 x Replace placeholder app name in `strings.xml` / `AndroidManifest.xml` (`AppTime`)
