@@ -3,16 +3,8 @@ import 'package:url_launcher/url_launcher.dart';
 import '../l10n/app_localizations.dart';
 import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/app_info.dart';
 
-// ─── Passive app detection (mirrors analytics_screen) ────────────────────────
-const _passivePatterns = [
-  'instagram', 'tiktok', 'youtube', 'netflix', 'twitter', 'facebook',
-  'reddit', 'pinterest', 'snapchat', 'twitch', 'hulu', 'disneyplus',
-  'kwai', 'likee', 'reels', 'shorts',
-];
-
-bool _isPassive(String pkg) =>
-    _passivePatterns.any(pkg.toLowerCase().contains);
 
 // ─── Precomputed user metrics used by analysis stubs ─────────────────────────
 
@@ -77,7 +69,7 @@ class _InsightData {
       packages.addAll(s.packagesDailyMs(fmt(today.subtract(Duration(days: i)))));
     }
     for (final pkg in packages) {
-      if (_isPassive(pkg) && !disabled.contains(pkg)) {
+      if (isPassiveApp(pkg) && !disabled.contains(pkg)) {
         for (int i = 0; i < 7; i++) {
           passiveMs += s.getDailyMs(pkg, date: fmt(today.subtract(Duration(days: i))));
         }

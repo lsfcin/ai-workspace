@@ -7,7 +7,7 @@ Goal: reorganize and harden without losing any feature or causing regressions.
 
 ## Priority 1 — Critical divergence risks (correctness)
 
-- [ ] **R1. Unify passive/social patterns into one source of truth.**
+- [x] **R1. Unify passive/social patterns into one source of truth.**
   Three divergent lists: `analytics_screen._passivePatterns` (19), `insights_screen._passivePatterns` (16), `OverlayService.SOCIAL_PATTERNS` (Kotlin). Extract to `lib/utils/app_info.dart` as `const kPassivePatterns`. Have `AnalyticsService`, `InsightsScreen`, and `OverlayService` all reference the same list (pass via prefs or a shared Kotlin file for the Kotlin side).
 
 - [ ] **R2. Extract GoalThresholds to a single JSON config; generate both Dart and Kotlin from it.**
@@ -63,24 +63,24 @@ Rule of thumb: a file doing more than one thing should be split. Target ≤ 400 
 - [ ] **R6. Merge `getInstalledAppLabels()` + `getLaunchers()` into a single `getAppMetadata()` channel call.**
   Currently two round-trips fired together every time. Combine on Kotlin side into one method returning `Map<String, Any>` with `labels` and `launchers` keys. Update `ServiceChannel.dart` and `MainActivity.kt`.
 
-- [ ] **R7. Extract channel name `'apptime/service'` to a shared constant.**
+- [x] **R7. Extract channel name `'apptime/service'` to a shared constant.**
   Define `const kServiceChannel = 'apptime/service'` in `service_channel.dart`. In Kotlin: `private const val CHANNEL = "apptime/service"` in `MainActivity.kt`. Prevents silent string mismatch.
 
 ---
 
 ## Priority 4 — Date/time utilities (8 duplicates)
 
-- [ ] **R8. Centralize 4am day-boundary date helpers into `lib/utils/date_utils.dart`.**
+- [x] **R8. Centralize 4am day-boundary date helpers into `lib/utils/date_utils.dart`.**
   Create `dayAnchor()`, `todayKey()`, `yesterdayKey()`, `fmtDate(DateTime)` functions. Remove duplicated implementations in `StorageService`, `AnalyticsService`, `analytics_screen.dart`, `insights_screen.dart`, `monitoring_screen.dart`. Update all call sites to import `date_utils.dart`.
 
-- [ ] **R9. Centralize `today()`, `currentHour()`, `safeGetCount()` in a shared `DateUtils.kt`.**
+- [x] **R9. Centralize `today()`, `currentHour()`, `safeGetCount()` in a shared `DateUtils.kt`.**
   Both `MonitoringService.kt` and `OverlayService.kt` define identical copies. Extract to a `DateUtils.kt` companion or top-level functions.
 
 ---
 
 ## Priority 5 — App metadata consolidation
 
-- [ ] **R10. Merge `kAppLabels` + `kAppColors` into a single `kAppMeta: Map<String, AppMeta>` structure.**
+- [x] **R10. Merge `kAppLabels` + `kAppColors` into a single `kAppMeta: Map<String, AppMeta>` structure.**
   `AppMeta(label: String, color: Color)`. Guarantees every package has both or neither. Eliminates the risk of a package in one map but missing from the other.
 
 - [ ] **R11. Remove `_kAppColors` from `analytics_screen.dart`.**
@@ -99,17 +99,17 @@ Rule of thumb: a file doing more than one thing should be split. Target ≤ 400 
 - [ ] **R14. Cache `PowerManager` in `MonitoringService`.**
   `getSystemService(POWER_SERVICE)` called every tick. Cache as a lateinit field in `onCreate()`.
 
-- [ ] **R15. Move `LAUNCHERS` and `parseDisabledApps()` to `AppConstants.kt`.**
+- [x] **R15. Move `LAUNCHERS` and `parseDisabledApps()` to `AppConstants.kt`.**
   Eliminates `OverlayService` depending on `MonitoringService`'s companion object. Both services import `AppConstants`.
 
 ---
 
 ## Priority 7 — Flutter-side structural improvements
 
-- [ ] **R16. Extract shared `SectionHeader` widget to `lib/widgets/section_header.dart`.**
+- [x] **R16. Extract shared `SectionHeader` widget to `lib/widgets/section_header.dart`.**
   Identical private `_SectionHeader` exists in both `monitoring_screen.dart` and `settings_screen.dart`.
 
-- [ ] **R17. Extract `_fmtMs` / `_fmtDuration` to a shared `lib/utils/time_utils.dart`.**
+- [x] **R17. Extract `_fmtMs` / `_fmtDuration` to a shared `lib/utils/time_utils.dart`.**
   Unify duration formatting (currently `'${min}m'` vs `'${totalMin}min'`). Pick one format; update all call sites.
 
 - [ ] **R18. Fix double `kAppLabels` lookup in `_labelFor()` (monitoring_screen).**
@@ -150,13 +150,13 @@ Rule of thumb: a file doing more than one thing should be split. Target ≤ 400 
 - [ ] **R27. Rename `_InsightCard` in `monitoring_screen.dart`.**
   Collides (conceptually) with `_InsightCard` in `insights_screen.dart` — both private, both named the same, different signatures. Rename the monitoring one to `_InsightRotatorCard` or similar.
 
-- [ ] **R28. Fix `isSystemPkg` typo: `com.android.documentsuI` → `com.android.documentsui`.**
+- [x] **R28. Fix `isSystemPkg` typo: `com.android.documentsuI` → `com.android.documentsui`.**
   Capital I at end is a typo. Results in the Files app not being correctly classified as a system pkg.
 
 - [ ] **R29. Replace deprecated `ActivityManager.getRunningServices()` in `MainActivity.kt`.**
   Use a static boolean flag in `MonitoringService` (`isRunning: Boolean`) to check service state instead of the deprecated API.
 
-- [ ] **R30. Set explicit `minSdkVersion 23` in `build.gradle.kts`.**
+- [x] **R30. Set explicit `minSdkVersion 23` in `build.gradle.kts`.**
   Current `flutter.minSdkVersion` likely resolves to 21. The app uses `TYPE_APPLICATION_OVERLAY` and `AppOpsManager.OPSTR_GET_USAGE_STATS` which require API 23. An explicit declaration prevents installs on incompatible devices.
 
 ---
