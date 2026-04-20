@@ -14,6 +14,9 @@ Android only · min SDK 21 · Flutter (UI) + Kotlin (overlay + monitoring)
 Full module breakdown, interfaces, and constraints → [SPECS.md](SPECS.md)
 Roadmap and pending milestones → [ROADMAP.md](ROADMAP.md)
 Completed milestones → [HISTORY.md](HISTORY.md)
+**Code structure blueprint (modules, data flow, known issues) → [CODE_STRUCTURE.md](CODE_STRUCTURE.md)**
+  - Consult CODE_STRUCTURE.md before editing any module — it maps responsibilities, data flow, SharedPreferences keys, and cross-cutting issues.
+  - Update CODE_STRUCTURE.md whenever a module's responsibility, data flow, or key schema changes.
 
 ## Current feature set
 
