@@ -57,10 +57,10 @@ Rule of thumb: a file doing more than one thing should be split. Target ≤ 400 
 
 ## Priority 3 — Global state and coupling
 
-- [ ] **R5. Replace `_dynamicLabels`/`_dynamicLaunchers` module globals with an injectable `AppInfoService`.**
+- [x] **R5. Replace `_dynamicLabels`/`_dynamicLaunchers` module globals with an injectable `AppInfoService`.**
   Create `lib/services/app_info_service.dart` holding labels + launchers as instance state. Inject it at the `MainScreen` level; pass down or provide via `InheritedWidget`. Eliminates silent "labels not seeded yet" bugs and the duplicate `_loadAppLabels`/`_seedLabels` calls in MonitoringScreen and AnalyticsScreen.
 
-- [ ] **R6. Merge `getInstalledAppLabels()` + `getLaunchers()` into a single `getAppMetadata()` channel call.**
+- [x] **R6. Merge `getInstalledAppLabels()` + `getLaunchers()` into a single `getAppMetadata()` channel call.**
   Currently two round-trips fired together every time. Combine on Kotlin side into one method returning `Map<String, Any>` with `labels` and `launchers` keys. Update `ServiceChannel.dart` and `MainActivity.kt`.
 
 - [x] **R7. Extract channel name `'apptime/service'` to a shared constant.**
@@ -112,7 +112,7 @@ Rule of thumb: a file doing more than one thing should be split. Target ≤ 400 
 - [x] **R17. Extract `_fmtMs` / `_fmtDuration` to a shared `lib/utils/time_utils.dart`.**
   Unify duration formatting (currently `'${min}m'` vs `'${totalMin}min'`). Pick one format; update all call sites.
 
-- [ ] **R18. Fix double `kAppLabels` lookup in `_labelFor()` (monitoring_screen).**
+- [x] **R18. Fix double `kAppLabels` lookup in `_labelFor()` (monitoring_screen).**
   `_labelFor(pkg)` checks `kAppLabels[pkg]` then calls `labelForApp(pkg)`, which checks `kAppLabels` again. Remove the first check; call `labelForApp(pkg)` directly (which already checks `kAppLabels` first).
 
 - [ ] **R19. Fix double `languageCode` write on locale change.**

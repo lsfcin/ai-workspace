@@ -5,15 +5,16 @@ import '../l10n/app_localizations.dart';
 import '../services/analytics_service.dart';
 import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
-import '../services/service_channel.dart';
+import '../services/app_info_service.dart';
 import '../utils/app_info.dart';
 
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 class AnalyticsScreen extends StatefulWidget {
-  const AnalyticsScreen({super.key, required this.storage});
+  const AnalyticsScreen({super.key, required this.storage, required this.appInfo});
   final StorageService storage;
+  final AppInfoService appInfo;
 
   @override
   State<AnalyticsScreen> createState() => _AnalyticsScreenState();
@@ -29,17 +30,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
     super.initState();
     _analytics = AnalyticsService(widget.storage);
     _tabs = TabController(length: 3, vsync: this);
-    _seedLabels();
-  }
-
-  Future<void> _seedLabels() async {
-    final results = await Future.wait([
-      ServiceChannel.getInstalledAppLabels(),
-      ServiceChannel.getLaunchers(),
-    ]);
-    seedDynamicLabels(results[0] as Map<String, String>);
-    seedDynamicLaunchers(results[1] as Set<String>);
-    if (mounted) setState(() {});
   }
 
   @override

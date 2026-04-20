@@ -4,7 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../data/insights.dart';
 import '../l10n/app_localizations.dart';
 import '../models/goal_config.dart';
-import '../services/service_channel.dart';
+import '../services/app_info_service.dart';
 import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/app_info.dart';
@@ -16,8 +16,9 @@ const _kNotMonitored = -1;
 const _kDefault = 0;
 
 class MonitoringScreen extends StatefulWidget {
-  const MonitoringScreen({super.key, required this.storage});
+  const MonitoringScreen({super.key, required this.storage, required this.appInfo});
   final StorageService storage;
+  final AppInfoService appInfo;
 
   @override
   State<MonitoringScreen> createState() => _MonitoringScreenState();
@@ -37,7 +38,8 @@ class _MonitoringScreenState extends State<MonitoringScreen> {
 
   // ── Per-app list ──────────────────────────────────────────────────────────
   _Sort _sort = _Sort.usage;
-  Map<String, String> _appLabels = {};
+
+  Map<String, String> get _appLabels => widget.appInfo.labels;
 
   @override
   void initState() {
@@ -47,18 +49,12 @@ class _MonitoringScreenState extends State<MonitoringScreen> {
       final next = _currentInsightIndex();
       if (next != _insightIndex) setState(() => _insightIndex = next);
     });
-    _loadAppLabels();
   }
 
   @override
   void dispose() {
     _insightTimer?.cancel();
     super.dispose();
-  }
-
-  Future<void> _loadAppLabels() async {
-    final labels = await ServiceChannel.getInstalledAppLabels();
-    if (mounted) setState(() => _appLabels = labels);
   }
 
   // 4am boundary
@@ -94,12 +90,14 @@ class _MonitoringScreenState extends State<MonitoringScreen> {
   }
 
   bool _showInList(String pkg) {
+    if (isLauncherPkg(pkg) || widget.appInfo.launchers.contains(pkg)) return false;
     if (!isUserFacingApp(pkg)) return false;
-    if (_appLabels.isEmpty) return true; // still loading → show kAppLabels apps
-    return _appLabels.containsKey(pkg) || kAppLabels.containsKey(pkg);
+    if (_appLabels.isEmpty) return true;
+    return _appLabels.containsKey(pkg) || kAppMeta.containsKey(pkg);
   }
 
-  String _labelFor(String pkg) => kAppLabels[pkg] ?? _appLabels[pkg] ?? labelForApp(pkg);
+  // R18: labelForApp() already checks kAppMeta first — no need for a duplicate lookup.
+  String _labelFor(String pkg) => _appLabels[pkg] ?? labelForApp(pkg);
 
   int _effectiveLevel(String pkg) {
     if (_s.disabledApps.contains(pkg)) return _kNotMonitored;

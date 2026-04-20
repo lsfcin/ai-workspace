@@ -4,6 +4,7 @@ import 'screens/analytics_screen.dart';
 import 'screens/insights_screen.dart';
 import 'screens/monitoring_screen.dart';
 import 'screens/settings_screen.dart';
+import 'services/app_info_service.dart';
 import 'services/storage_service.dart';
 
 class MainScreen extends StatefulWidget {
@@ -22,20 +23,24 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
+  late final AppInfoService _appInfo;
   late final List<Widget> _screens;
 
   @override
   void initState() {
     super.initState();
+    _appInfo = AppInfoService();
     _screens = [
       SettingsScreen(
         storage: widget.storage,
         onLocaleChange: widget.onLocaleChange,
       ),
-      MonitoringScreen(storage: widget.storage),
-      AnalyticsScreen(storage: widget.storage),
+      MonitoringScreen(storage: widget.storage, appInfo: _appInfo),
+      AnalyticsScreen(storage: widget.storage, appInfo: _appInfo),
       InsightsScreen(storage: widget.storage),
     ];
+    // Single load point — seeds labelForApp() + isLauncherPkg() globals.
+    _appInfo.load().then((_) { if (mounted) setState(() {}); });
   }
 
   @override
