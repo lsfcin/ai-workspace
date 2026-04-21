@@ -56,7 +56,7 @@ class AnalyticsService {
         return AppUsage(
           packageName: pkg,
           dailyMs: i == 0
-              ? _storage.getLast24hMs(pkg)
+              ? _storage.getTodayMs(pkg)
               : _storage.getDailyMs(pkg, date: dateStr),
           openCount: i == 0
               ? _storage.getOpenCount(pkg)
@@ -66,10 +66,10 @@ class AnalyticsService {
       summaries.add(DaySummary(
         date: i == 0 ? 'today' : dateStr,
         totalMs: i == 0
-            ? _storage.getDeviceLast24hMs()
+            ? _storage.getDeviceTodayMs()
             : _storage.getDeviceDailyMs(date: dateStr),
         unlockCount: i == 0
-            ? _storage.getUnlockLast24h()
+            ? _storage.getUnlockToday()
             : _storage.getUnlockCount(date: dateStr),
         apps: apps,
       ));

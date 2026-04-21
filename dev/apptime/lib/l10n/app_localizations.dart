@@ -29,7 +29,6 @@ abstract class AppLocalizations {
   ];
 
   // ── Navigation ───────────────────────────────────────────────────────────────
-  String get navHome;
   String get navAnalysis;
   String get navInsights;
   String get navMonitoring;
@@ -81,9 +80,7 @@ abstract class AppLocalizations {
   String get showBackground;
   String fontSize(int size);
   String get sectionBehavior;
-  String get dailyGoalTitle;
   String get noGoalSet;
-  String goalMinutesPerDay(int min);
   String get perAppControlTitle;
   String get perAppUsageCaption;
   // Level chip / popup strings (per-app monitoring level selector)
@@ -99,7 +96,6 @@ abstract class AppLocalizations {
   String get perAppControlSub;
   String get monitorLauncherTitle;
   String get monitorLauncherSub;
-  String get dialogDailyGoalTitle;
   String get dialogNoGoal;
   String dialogGoalMinDay(int min);
   String get sectionLanguage;
@@ -110,10 +106,10 @@ abstract class AppLocalizations {
   // ── PerAppScreen ─────────────────────────────────────────────────────────────
   String get perAppTitle;
   String get noAppsMsg;
-  String get overlayDisabled;
-  String get overlayActive;
 
   // ── AnalyticsScreen ──────────────────────────────────────────────────────────
+  String get trendIdealLabel;
+  String get trendCriticalLabel;
   String get analysisTitle;
   String get tab1d;
   String get tab7d;
@@ -185,8 +181,6 @@ abstract class AppLocalizations {
   String get goalRationaleMinimal;
   String get goalRationaleNormal;
   String get goalRationaleExtensive;
-  String get goalPerAppTitle;
-  String get goalPerAppSub;
   String get goalOverrideGlobal;
   String get goalSettingsTile;
   String get goalSettingsSub;

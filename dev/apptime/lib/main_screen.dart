@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'l10n/app_localizations.dart';
-import 'screens/analytics_screen.dart';
-import 'screens/insights_screen.dart';
+import 'screens/analytics/analytics_screen.dart';
+import 'screens/insights/insights_screen.dart';
 import 'screens/monitoring_screen.dart';
 import 'screens/settings_screen.dart';
 import 'services/app_info_service.dart';

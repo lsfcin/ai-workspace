@@ -41,7 +41,7 @@ class ServiceChannel {
       getAppMetadata() async {
     final raw =
         await _channel.invokeMethod<Map<Object?, Object?>>('getAppMetadata');
-    if (raw == null) return (labels: const {}, launchers: const {});
+    if (raw == null) return (labels: const <String, String>{}, launchers: const <String>{});
     final labelsRaw = raw['labels'] as Map<Object?, Object?>? ?? {};
     final launchersRaw = raw['launchers'] as List<Object?>? ?? [];
     return (

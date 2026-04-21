@@ -4,7 +4,6 @@ import 'app_localizations.dart';
 class AppLocalizationsPt extends AppLocalizations {
   const AppLocalizationsPt(Locale locale) : super(locale);
 
-  @override String get navHome => 'Início';
   @override String get navAnalysis => 'Análise';
   @override String get navInsights => 'Insights';
   @override String get navMonitoring => 'Monit.';
@@ -66,9 +65,7 @@ class AppLocalizationsPt extends AppLocalizations {
   @override String get showBackground => 'Mostrar fundo';
   @override String fontSize(int size) => 'Tamanho da fonte: ${size}sp';
   @override String get sectionBehavior => 'Comportamento';
-  @override String get dailyGoalTitle => 'Meta diária de uso';
   @override String get noGoalSet => 'Sem meta definida';
-  @override String goalMinutesPerDay(int min) => '$min minutos / dia';
   @override String get perAppControlTitle => 'Controle por app';
   @override String get perAppUsageCaption => 'O uso exibido é o total dos últimos 7 dias';
   @override String get levelChipOff => 'desl.';
@@ -83,7 +80,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override String get perAppControlSub => 'Configurar monitoramento individualmente por app';
   @override String get monitorLauncherTitle => 'Monitorar tela inicial';
   @override String get monitorLauncherSub => 'Mostrar o visor ao voltar para a tela inicial';
-  @override String get dialogDailyGoalTitle => 'Meta diária';
   @override String get dialogNoGoal => 'Sem meta';
   @override String dialogGoalMinDay(int min) => '$min min / dia';
   @override String get sectionLanguage => 'Idioma';
@@ -95,9 +91,8 @@ class AppLocalizationsPt extends AppLocalizations {
   @override String get noAppsMsg =>
       'Nenhum app registrado nos últimos 7 dias.\n'
       'Inicie o monitoramento e use o celular normalmente.';
-  @override String get overlayDisabled => 'Visor desabilitado';
-  @override String get overlayActive => 'Visor ativo';
-
+  @override String get trendIdealLabel => '2h ideal';
+  @override String get trendCriticalLabel => '4h crítico';
   @override String get analysisTitle => 'Análise';
   @override String get tab1d => '1 dia';
   @override String get tab7d => '7 dias';
@@ -218,9 +213,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override String get goalRationaleExtensive =>
       'Controle intenso com limites rigorosos. Recomendado para quem quer '
       'reduzir o uso de tela significativamente.';
-  @override String get goalPerAppTitle => 'Metas por app';
-  @override String get goalPerAppSub =>
-      'Substitua a meta global para apps específicos.';
   @override String get goalOverrideGlobal => 'Global';
   @override String get goalSettingsTile => 'Metas de uso';
   @override String get goalSettingsSub => 'Níveis de feedback e limites por app';

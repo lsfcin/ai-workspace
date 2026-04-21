@@ -3,7 +3,6 @@ import 'app_localizations.dart';
 class AppLocalizationsEn extends AppLocalizations {
   const AppLocalizationsEn(super.locale);
 
-  @override String get navHome => 'Home';
   @override String get navAnalysis => 'Analysis';
   @override String get navInsights => 'Insights';
   @override String get navMonitoring => 'Monitor';
@@ -64,9 +63,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override String get showBackground => 'Show background';
   @override String fontSize(int size) => 'Font size: ${size}sp';
   @override String get sectionBehavior => 'Behavior';
-  @override String get dailyGoalTitle => 'Daily usage goal';
   @override String get noGoalSet => 'No goal set';
-  @override String goalMinutesPerDay(int min) => '$min minutes / day';
   @override String get perAppControlTitle => 'Per-app control';
   @override String get perAppUsageCaption => 'Usage shown is the total for the last 7 days';
   @override String get levelChipOff => 'off';
@@ -81,7 +78,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override String get perAppControlSub => 'Enable / disable overlay per app';
   @override String get monitorLauncherTitle => 'Monitor home screen';
   @override String get monitorLauncherSub => 'Show overlay on the launcher / home screen';
-  @override String get dialogDailyGoalTitle => 'Daily goal';
   @override String get dialogNoGoal => 'No goal';
   @override String dialogGoalMinDay(int min) => '$min min / day';
   @override String get sectionLanguage => 'Language';
@@ -93,9 +89,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override String get noAppsMsg =>
       'No apps recorded in the last 7 days.\n'
       'Start monitoring and use your phone normally.';
-  @override String get overlayDisabled => 'Overlay disabled';
-  @override String get overlayActive => 'Overlay active';
-
+  @override String get trendIdealLabel => '2h ideal';
+  @override String get trendCriticalLabel => '4h critical';
   @override String get analysisTitle => 'Analysis';
   @override String get tab1d => '1 day';
   @override String get tab7d => '7 days';
@@ -215,9 +210,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override String get goalRationaleExtensive =>
       'Intense control with strict limits. Recommended for users aiming '
       'to significantly reduce screen time.';
-  @override String get goalPerAppTitle => 'Per-app goals';
-  @override String get goalPerAppSub =>
-      'Override the global goal for specific apps.';
   @override String get goalOverrideGlobal => 'Global';
   @override String get goalSettingsTile => 'Usage goals';
   @override String get goalSettingsSub => 'Feedback levels and per-app limits';

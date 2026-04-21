@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 
 abstract final class AppColors {
   static const primary = Color(0xFF4F6EF7);
-  static const primaryDark = Color(0xFF3A55D4);
-  static const surfaceLight = Color(0xFFF7F8FC);
+static const surfaceLight = Color(0xFFF7F8FC);
   static const surfaceDark = Color(0xFF1A1D2E);
   static const cardDark = Color(0xFF242740);
   static const success = Color(0xFF34D399);

@@ -1,4 +1,4 @@
-package com.lucasf.apptime
+package com.lsf.apptime
 
 /**
  * Mirror of lib/models/goal_config.dart — must stay in sync.
@@ -28,10 +28,11 @@ data class GoalThresholds(
             wakeupHour        = 0
         )
 
+        // 1=Light (relaxed), 2=Moderate, 3=Intense (strict)
         fun forLevel(level: Int): GoalThresholds = when (level) {
-            1 -> GoalThresholds(90,  15, 25,  5, 21, 9)
+            1 -> GoalThresholds(240, 60, 60, 20,  1, 7)
             2 -> GoalThresholds(150, 30, 40, 10, 23, 8)
-            3 -> GoalThresholds(240, 60, 60, 20,  1, 7)
+            3 -> GoalThresholds( 90, 15, 25,  5, 21, 9)
             else -> NONE
         }
     }

@@ -89,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           const SizedBox(height: AppSpacing.md),
           _InsightCard(
             headerLabel: l10n.insightOfDay,
-            insight: kInsights[_insightIndex],
+            insight: kInsights[_insightIndex].text,
           ),
         ],
       ),

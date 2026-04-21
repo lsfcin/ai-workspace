@@ -149,7 +149,7 @@ class _MonitoringScreenState extends State<MonitoringScreen> {
         padding: const EdgeInsets.all(AppSpacing.md),
         children: [
           // ── Insight of the day ──────────────────────────────────────────
-          _InsightCard(
+          _InsightRotatorCard(
             headerLabel: l10n.insightOfDay,
             sourceLabel: l10n.insightViewSource,
             entry: kInsights[_insightIndex],
@@ -273,8 +273,8 @@ class _MonitoringScreenState extends State<MonitoringScreen> {
 
 // ── Insight card ───────────────────────────────────────────────────────────────
 
-class _InsightCard extends StatelessWidget {
-  const _InsightCard({
+class _InsightRotatorCard extends StatelessWidget {
+  const _InsightRotatorCard({
     required this.headerLabel,
     required this.sourceLabel,
     required this.entry,
@@ -314,10 +314,12 @@ class _InsightCard extends StatelessWidget {
                   minimumSize: const Size(0, 32),
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                onPressed: () => launchUrl(
-                  Uri.parse(entry.url),
-                  mode: LaunchMode.externalApplication,
-                ),
+                onPressed: () async {
+                  final uri = Uri.tryParse(entry.url);
+                  if (uri != null && await canLaunchUrl(uri)) {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  }
+                },
                 child: Text(
                   sourceLabel,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(

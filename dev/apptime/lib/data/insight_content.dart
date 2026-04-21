@@ -1,102 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
-import '../l10n/app_localizations.dart';
-import '../services/storage_service.dart';
-import '../theme/app_theme.dart';
-import '../utils/app_info.dart';
+import '../screens/insights/insight_data.dart';
 
-
-// ─── Precomputed user metrics used by analysis stubs ─────────────────────────
-
-class _InsightData {
-  const _InsightData({
-    required this.todayUnlocks,
-    required this.weeklyUnlocks,
-    required this.avgDailyMin,
-    required this.weeklyMin,
-    required this.lateNightMin,
-    required this.earlyUnlocks,
-    required this.workUnlocks,
-    required this.mealUnlocks,
-    required this.microSessions,
-    required this.passiveMin,
-  });
-
-  final int todayUnlocks;
-  final int weeklyUnlocks;
-  final int avgDailyMin;
-  final int weeklyMin;
-  final int lateNightMin;
-  final int earlyUnlocks;
-  final int workUnlocks;
-  final int mealUnlocks;
-  final int microSessions;
-  final int passiveMin;
-
-  static _InsightData compute(StorageService s) {
-    final today = DateTime.now();
-    String fmt(DateTime d) =>
-        '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-
-    int totalMs = 0, lateMs = 0, earlyUnlocks = 0, workUnlocks = 0,
-        mealUnlocks = 0, weeklyUnlocks = 0, microSessions = 0;
-
-    for (int i = 0; i < 7; i++) {
-      final d = today.subtract(Duration(days: i));
-      final date = fmt(d);
-      totalMs += s.getDeviceDailyMs(date: date);
-      weeklyUnlocks += s.getUnlockCount(date: date);
-      for (final h in [22, 23, 0, 1, 2, 3, 4, 5]) {
-        lateMs += s.getDeviceHourlyMs(date: date, hour: h);
-      }
-      for (final h in [6, 7]) {
-        earlyUnlocks += s.getHourlyUnlocks(date: date, hour: h);
-      }
-      for (final h in [9, 10, 11, 12, 13, 14, 15, 16, 17, 18]) {
-        workUnlocks += s.getHourlyUnlocks(date: date, hour: h);
-      }
-      for (final h in [12, 13, 14, 19, 20, 21]) {
-        mealUnlocks += s.getHourlyUnlocks(date: date, hour: h);
-      }
-      final buckets = s.getSessionBuckets(date: date);
-      if (buckets.isNotEmpty) microSessions += buckets[0];
-    }
-
-    int passiveMs = 0;
-    final disabled = s.disabledApps;
-    final packages = <String>{};
-    for (int i = 0; i < 7; i++) {
-      packages.addAll(s.packagesDailyMs(fmt(today.subtract(Duration(days: i)))));
-    }
-    for (final pkg in packages) {
-      if (isPassiveApp(pkg) && !disabled.contains(pkg)) {
-        for (int i = 0; i < 7; i++) {
-          passiveMs += s.getDailyMs(pkg, date: fmt(today.subtract(Duration(days: i))));
-        }
-      }
-    }
-
-    return _InsightData(
-      todayUnlocks: s.getUnlockCount(),
-      weeklyUnlocks: weeklyUnlocks,
-      avgDailyMin: totalMs ~/ 7 ~/ 60000,
-      weeklyMin: totalMs ~/ 60000,
-      lateNightMin: lateMs ~/ 60000,
-      earlyUnlocks: earlyUnlocks,
-      workUnlocks: workUnlocks,
-      mealUnlocks: mealUnlocks,
-      microSessions: microSessions,
-      passiveMin: passiveMs ~/ 60000,
-    );
-  }
-
-  bool get hasData => weeklyMin > 0 || weeklyUnlocks > 0;
-}
-
-// ─── Data model ───────────────────────────────────────────────────────────────
-
-class _Insight {
-  const _Insight({
+class InsightEntry {
+  const InsightEntry({
     required this.icon,
     required this.title,
     required this.body,
@@ -110,13 +16,13 @@ class _Insight {
   final String body;
   final String reference;
   final String url;
-  final String Function(_InsightData) analysisFn;
+  final String Function(InsightData) analysisFn;
 }
 
-// ─── Content ──────────────────────────────────────────────────────────────────
+// ─── Alertas (problem-awareness cards) ───────────────────────────────────────
 
-final _alertas = <_Insight>[
-  _Insight(
+final kAlertas = <InsightEntry>[
+  InsightEntry(
     icon: Icons.timer_outlined,
     title: 'A regra dos 23 minutos',
     body: 'Após uma única interrupção por notificação, o cérebro leva em média '
@@ -127,7 +33,7 @@ final _alertas = <_Insight>[
         ? 'você pegou o celular ~${d.workUnlocks} vezes entre 9h–18h na semana passada — cada uma custa 23 min de refoco'
         : 'registre uso por alguns dias para ver quantas interrupções você acumula no trabalho',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.psychology_outlined,
     title: 'Queda temporária de QI',
     body: 'A multitarefa digital pode reduzir o QI funcional em 10 pontos — '
@@ -138,7 +44,7 @@ final _alertas = <_Insight>[
         ? '${d.microSessions} das suas sessões na semana passada duraram menos de 1 min — puro custo de multitarefa'
         : 'use o app por alguns dias para ver quantas sessões breves você acumula',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.hourglass_empty_outlined,
     title: 'Erosão da atenção',
     body: 'Nos últimos 20 anos, o tempo médio de atenção em uma tarefa digital '
@@ -149,7 +55,7 @@ final _alertas = <_Insight>[
         ? 'você usou o celular em média ${d.avgDailyMin} min/dia na semana passada — cada sessão curta fragmenta mais a atenção'
         : 'registre alguns dias de uso para ver sua duração média de sessões',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.trending_down_outlined,
     title: 'Dreno de produtividade',
     body: 'Alternar entre apps e trabalho pode consumir até 40% do seu tempo '
@@ -160,7 +66,7 @@ final _alertas = <_Insight>[
         ? 'você desbloqueou o celular ~${d.workUnlocks} vezes no horário de trabalho (9h–18h) na semana passada'
         : 'use o app em dias úteis para ver quantas vezes o celular interrompe seu trabalho',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.bedtime_outlined,
     title: 'Atraso da melatonina',
     body: 'Usar telas antes de dormir pode atrasar a liberação de melatonina '
@@ -171,7 +77,7 @@ final _alertas = <_Insight>[
         ? 'você ficou ${d.lateNightMin} min na tela após as 22h na semana passada'
         : 'registre uso noturno para ver quanto do seu sono está sendo afetado',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.alarm_outlined,
     title: 'Acordar estressado',
     body: 'Checar o celular nos primeiros 5 minutos após acordar coloca o '
@@ -182,7 +88,7 @@ final _alertas = <_Insight>[
         ? 'você desbloqueou ${d.earlyUnlocks} vezes antes das 8h na semana passada'
         : 'registre seu uso matinal para ver como você começa os dias',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.airline_seat_flat_outlined,
     title: 'Perda de sono REM',
     body: 'Pessoas que usam redes sociais na cama perdem em média 16 minutos '
@@ -193,7 +99,7 @@ final _alertas = <_Insight>[
         ? '${d.lateNightMin} min do seu tempo de tela semanal aconteceu após as 22h'
         : 'use o app para rastrear quanto do seu uso cai no horário de sono',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.schedule_outlined,
     title: 'Duração do sono',
     body: 'Uso intenso do smartphone (mais de 63h por semana) está diretamente '
@@ -204,7 +110,7 @@ final _alertas = <_Insight>[
         ? 'sua média foi ${d.avgDailyMin} min/dia (${(d.weeklyMin / 60).toStringAsFixed(0)}h na semana) — acima de 63h/semana há risco clínico'
         : 'registre uso por uma semana para comparar com o limite de risco',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.autorenew_outlined,
     title: 'O ciclo da ansiedade',
     body: 'Checar notificações com frequência cria um ciclo de "recompensa '
@@ -216,7 +122,7 @@ final _alertas = <_Insight>[
         ? 'você desbloqueou ${d.todayUnlocks}× hoje — média de ${d.weeklyUnlocks ~/ 7}/dia na semana passada'
         : 'registre uso hoje para ver quantas vezes você busca essa recompensa',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.lock_open_outlined,
     title: 'O custo de desbloquear',
     body: 'Cada vez que você desbloqueia o celular sem um objetivo claro, '
@@ -228,7 +134,7 @@ final _alertas = <_Insight>[
         ? '${d.weeklyUnlocks} desbloqueios na semana passada, ${d.microSessions} sessões abaixo de 1 min — provavelmente sem objetivo'
         : 'registre uso por alguns dias para ver quantos desbloqueios são impulsivos',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.phone_android_outlined,
     title: 'Frequência vs. Sono',
     body: 'Checar o celular mais de 400 vezes por semana aumenta o risco de '
@@ -239,7 +145,7 @@ final _alertas = <_Insight>[
         ? 'você desbloqueou ~${d.weeklyUnlocks} vezes na semana passada${d.weeklyUnlocks > 400 ? " — acima do limiar de risco (400×)" : ""}'
         : 'registre uma semana completa para comparar com o limiar de risco',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.bolt_outlined,
     title: 'Estresse do micro-uso',
     body: 'Sessões de uso menores que 10 segundos são tipicamente "checagens '
@@ -250,7 +156,7 @@ final _alertas = <_Insight>[
         ? '${d.microSessions} sessões abaixo de 1 min na semana passada — cada uma é uma checagem por tédio'
         : 'use o app por alguns dias para ver quantas checagens breves você faz',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.sentiment_dissatisfied_outlined,
     title: 'Dreno emocional',
     body: 'Rolar feeds passivamente sem interagir está fortemente ligado ao '
@@ -261,7 +167,7 @@ final _alertas = <_Insight>[
         ? 'você passou ${d.passiveMin} min em apps passivos (social, vídeo) na semana passada'
         : 'registre uso por uma semana para ver quanto tempo vai para consumo passivo',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.compare_arrows_outlined,
     title: 'O mito do multitarefa',
     body: 'Apenas 2,5% da população consegue fazer multitarefa com eficiência; '
@@ -272,7 +178,7 @@ final _alertas = <_Insight>[
         ? 'você alternou contexto ~${d.workUnlocks} vezes no horário de trabalho na semana passada'
         : 'registre uso em dias úteis para ver seu padrão de multitarefa',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.dynamic_feed_outlined,
     title: 'Doomscrolling',
     body: 'Consumir notícias negativas sem fim ativa a amígdala, mantendo o '
@@ -283,7 +189,7 @@ final _alertas = <_Insight>[
         ? '${d.passiveMin} min em apps de social, vídeo e notícias na semana passada'
         : 'registre uso para ver quanto do seu tempo vai para consumo de conteúdo',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.flight_outlined,
     title: 'Fuga maladaptativa',
     body: 'Usar o smartphone para "matar o tempo" ou evitar emoções negativas '
@@ -294,7 +200,7 @@ final _alertas = <_Insight>[
         ? 'você usou o celular ${d.weeklyMin} min total na semana passada — quanto foi intenção vs. fuga?'
         : 'registre uso por uma semana para avaliar padrões de fuga',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.arrow_downward_outlined,
     title: 'Pressão no pescoço',
     body: 'Inclinar a cabeça 60 graus para olhar o celular exerce 27 kg de '
@@ -305,7 +211,7 @@ final _alertas = <_Insight>[
         ? 'você passou ${d.avgDailyMin} min/dia olhando para baixo — ${(d.avgDailyMin / 60).toStringAsFixed(1)}h de carga cervical diária'
         : 'registre uso para quantificar a carga mecânica diária no seu pescoço',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.visibility_outlined,
     title: 'Fadiga visual digital',
     body: 'O uso prolongado de tela reduz a taxa de piscar em até 50%, causando '
@@ -316,7 +222,7 @@ final _alertas = <_Insight>[
         ? '${d.weeklyMin} min na tela na semana passada — seus olhos ficaram muito tempo sem descanso'
         : 'registre uso para calcular sua carga visual semanal',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.healing_outlined,
     title: 'Risco de dor crônica',
     body: 'Usuários excessivos de smartphone têm risco seis vezes maior de '
@@ -327,7 +233,7 @@ final _alertas = <_Insight>[
         ? '${d.avgDailyMin} min/dia — uso diário consistente acumula risco crônico ao longo do tempo'
         : 'registre uso diário para ver sua exposição acumulada',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.group_outlined,
     title: 'A presença silenciosa',
     body: 'Mesmo um celular virado para baixo sobre a mesa reduz a profundidade '
@@ -338,7 +244,7 @@ final _alertas = <_Insight>[
         ? 'você pegou o celular ${d.mealUnlocks} vezes nos horários de refeição (12–14h, 19–21h) na semana passada'
         : 'registre uso para ver quantas refeições foram interrompidas pelo celular',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.person_remove_outlined,
     title: 'Solidão digital',
     body: 'O "phubbing" — ignorar outros pelo celular — desperta sentimentos de '
@@ -349,7 +255,7 @@ final _alertas = <_Insight>[
         ? '${d.mealUnlocks} desbloqueios nos horários de refeição na semana passada — cada um foi um momento de phubbing'
         : 'registre uso para quantificar momentos de interrupção de conexão social',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.favorite_border_outlined,
     title: 'Declínio da empatia',
     body: 'Estudantes universitários que cresceram com uso intenso de tecnologia '
@@ -360,9 +266,7 @@ final _alertas = <_Insight>[
         ? '${(d.weeklyMin / 60).toStringAsFixed(0)}h de tela na semana passada reduz o tempo de conexão face a face'
         : 'registre uso para ver quanto tempo o celular substitui interação humana',
   ),
-
-  // ── Brain-rot (problema) ──────────────────────────────────────────────────
-  _Insight(
+  InsightEntry(
     icon: Icons.psychology_alt_outlined,
     title: 'Brain-rot: atrofia cognitiva digital',
     body: 'O consumo crônico de conteúdo curto e hipnótico (Reels, Shorts, TikTok) '
@@ -376,7 +280,7 @@ final _alertas = <_Insight>[
         ? '${d.microSessions} sessões abaixo de 1 min na semana — cada uma é um treino do cérebro para rejeitar conteúdo mais longo'
         : 'registre uso por alguns dias para ver sua proporção de sessões ultra-curtas',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.auto_graph_outlined,
     title: 'Conteúdo curto destrói a memória',
     body: 'O consumo de vídeos de 15–60 segundos prejudica a consolidação da '
@@ -389,9 +293,7 @@ final _alertas = <_Insight>[
         ? '${d.passiveMin} min em apps de vídeo/social na semana passada — quanto desse conteúdo você ainda lembra?'
         : 'registre uso para ver quanto tempo vai para consumo de conteúdo descartável',
   ),
-
-  // ── Comparação com drogas (problema) ─────────────────────────────────────
-  _Insight(
+  InsightEntry(
     icon: Icons.science_outlined,
     title: 'Celular = droga de design',
     body: 'Neuroimagens mostram que o uso compulsivo de smartphone ativa o '
@@ -405,7 +307,7 @@ final _alertas = <_Insight>[
         ? '${d.weeklyUnlocks} desbloqueios na semana passada — cada um é uma busca pelo próximo pico de dopamina'
         : 'registre uma semana de uso para ver com que frequência você busca essa recompensa',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.warning_amber_outlined,
     title: 'Tolerância e abstinência digital',
     body: 'Usuários compulsivos de smartphone desenvolvem tolerância — precisam '
@@ -421,8 +323,10 @@ final _alertas = <_Insight>[
   ),
 ];
 
-final _solucoes = <_Insight>[
-  _Insight(
+// ─── Soluções (solution cards) ────────────────────────────────────────────────
+
+final kSolucoes = <InsightEntry>[
+  InsightEntry(
     icon: Icons.hourglass_empty_outlined,
     title: 'A regra do atrito',
     body: 'Introduzir apenas 10 segundos de atraso antes de abrir um app-alvo '
@@ -433,7 +337,7 @@ final _solucoes = <_Insight>[
         ? '${d.microSessions} sessões impulsivas (< 1 min) na semana passada — um atraso de 10s poderia ter evitado a maioria'
         : 'registre uso por alguns dias para ver quantas aberturas são impulsivas',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.invert_colors_off_outlined,
     title: 'O poder do escala de cinza',
     body: 'Mudar a tela para preto e branco reduz o uso diário em '
@@ -444,7 +348,7 @@ final _solucoes = <_Insight>[
         ? 'sua média é ${d.avgDailyMin} min/dia — escala de cinza poderia economizar 20–40 min diários'
         : 'registre uso por uma semana e compare após ativar escala de cinza',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.visibility_off_outlined,
     title: 'Fora da vista',
     body: 'Manter o celular em outro cômodo enquanto trabalha melhora '
@@ -455,7 +359,7 @@ final _solucoes = <_Insight>[
         ? '${d.workUnlocks} vezes que o celular interrompeu seu trabalho (9h–18h) na semana passada'
         : 'registre uso em dias úteis para medir o impacto do celular na sua concentração',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.center_focus_strong_outlined,
     title: 'Treinamento unitarefa',
     body: 'Reconstruir o tempo de atenção exige treinar o cérebro para focar '
@@ -466,7 +370,7 @@ final _solucoes = <_Insight>[
         ? '${d.microSessions} sessões abaixo de 1 min na semana passada — seu músculo de foco precisa ser treinado'
         : 'registre uso para ver sua capacidade atual de manter o foco',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.spa_outlined,
     title: 'Detox de tela',
     body: 'Reduzir o tempo de tela por apenas 3 semanas pode melhorar '
@@ -477,7 +381,7 @@ final _solucoes = <_Insight>[
         ? '${(d.weeklyMin / 60).toStringAsFixed(0)}h de tela na semana passada — 3 semanas de redução já geram ganhos clínicos'
         : 'registre uma semana de uso para planejar seu detox',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.remove_circle_outline_outlined,
     title: 'Remoção de gatilhos',
     body: 'Esconder apps de redes sociais em pastas fora da tela inicial reduz '
@@ -488,7 +392,7 @@ final _solucoes = <_Insight>[
         ? '${d.microSessions} checagens impulsivas na semana passada — remova os gatilhos visuais da tela inicial'
         : 'registre uso para identificar quais apps você abre por impulso',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.lock_outlined,
     title: 'Senhas manuais',
     body: 'Desabilitar desbloqueio biométrico em favor de senhas longas adiciona '
@@ -499,7 +403,7 @@ final _solucoes = <_Insight>[
         ? '${d.weeklyUnlocks} desbloqueios na semana passada — atrito adicional reduziria os impulsivos'
         : 'registre quantos desbloqueios você faz para avaliar o impacto do atrito',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.hotel_outlined,
     title: 'A regra do quarto',
     body: 'Carregar o celular fora do quarto melhora a qualidade do sono e '
@@ -510,7 +414,7 @@ final _solucoes = <_Insight>[
         ? '${d.lateNightMin} min na tela após as 22h na semana passada — o carregador deveria estar em outro cômodo'
         : 'registre seu uso noturno para medir o impacto do celular no quarto',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.notifications_off_outlined,
     title: 'Notificações seletivas',
     body: 'Manter apenas alertas de humano para humano (mensagens) enquanto '
@@ -521,7 +425,7 @@ final _solucoes = <_Insight>[
         ? '${d.workUnlocks} interrupções no horário de trabalho na semana passada — quantas foram notificações?'
         : 'registre uso para ver o impacto das notificações na sua atenção',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.pause_circle_outlined,
     title: 'Pausa de atenção plena',
     body: 'Antes de abrir um app, perguntar "Por que estou pegando isso?" '
@@ -532,7 +436,7 @@ final _solucoes = <_Insight>[
         ? '${d.weeklyUnlocks} desbloqueios na semana passada — quantos foram conscientes?'
         : 'registre uso para descobrir a proporção de aberturas automáticas vs. intencionais',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.remove_red_eye_outlined,
     title: 'A regra 20-20-20',
     body: 'A cada 20 minutos de uso de tela, olhe para algo a 6 metros de '
@@ -543,7 +447,7 @@ final _solucoes = <_Insight>[
         ? '${d.avgDailyMin} min/dia na tela — isso significa ${d.avgDailyMin ~/ 20} pausas de 20s necessárias por dia'
         : 'registre uso para calcular quantas pausas visuais você deveria fazer',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.trending_up_outlined,
     title: 'Metas adaptativas',
     body: 'Reduzir o uso em incrementos semanais de 10% é mais eficaz para '
@@ -554,7 +458,7 @@ final _solucoes = <_Insight>[
         ? 'você está em ${d.avgDailyMin} min/dia — uma meta de 10% a menos = ${(d.avgDailyMin * 0.9).round()} min/dia'
         : 'registre uso por uma semana para definir sua meta de redução de 10%',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.access_time_outlined,
     title: 'Custo de oportunidade',
     body: 'Visualizar o tempo de tela como "horas perdidas" ajuda a priorizar '
@@ -565,7 +469,7 @@ final _solucoes = <_Insight>[
         ? '${(d.weeklyMin / 60).toStringAsFixed(0)}h de tela na semana passada — o equivalente a ${(d.weeklyMin / 60 * 30).round()} páginas lidas, ${(d.weeklyMin / 60 * 5).round()} km caminhados'
         : 'registre uso por uma semana para calcular o que você poderia ter feito',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.park_outlined,
     title: 'Reinicialização pela natureza',
     body: 'Passar 3 dias na natureza sem celular pode aumentar a função '
@@ -576,7 +480,7 @@ final _solucoes = <_Insight>[
         ? '${(d.weeklyMin / 60).toStringAsFixed(0)}h de tela esta semana — seu córtex pré-frontal precisa de natureza para recuperar'
         : 'registre uso por uma semana para planejar seu próximo detox na natureza',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.fitness_center_outlined,
     title: 'Fortalecimento pré-frontal',
     body: 'Períodos diários de "jejum digital" ajudam a fortalecer o córtex '
@@ -587,7 +491,7 @@ final _solucoes = <_Insight>[
         ? '${d.microSessions} impulsos de checagem na semana passada — o córtex pré-frontal pode retomar esse controle'
         : 'registre uso para medir o quanto o impulso digital domina suas escolhas',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.directions_walk_outlined,
     title: 'Recuperação ativa',
     body: 'Substituir 5 minutos de scroll por uma caminhada rápida rejuvenesce '
@@ -598,7 +502,7 @@ final _solucoes = <_Insight>[
         ? '${(d.weeklyMin / 60).toStringAsFixed(0)}h de tela esta semana — substituir 5 min de scroll por caminhada faz diferença real'
         : 'registre uso para identificar janelas onde uma caminhada substituiria o scroll',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.bar_chart_outlined,
     title: 'A lacuna da subestimação',
     body: 'Usuários tipicamente subestimam seu uso real de smartphone em 20% '
@@ -609,7 +513,7 @@ final _solucoes = <_Insight>[
         ? 'o rastreador registra ${d.avgDailyMin} min/dia — acima do que a maioria das pessoas estima para si mesma'
         : 'use o app para obter os dados reais e comparar com o que você imagina usar',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.filter_list_outlined,
     title: 'Auditoria do feed',
     body: 'Deixar de seguir contas que geram emoções negativas pode '
@@ -620,9 +524,7 @@ final _solucoes = <_Insight>[
         ? '${d.passiveMin} min em apps passivos esta semana — vale auditar o que esse feed está te entregando'
         : 'registre uso para ver quanto tempo vai para consumo passivo de conteúdo',
   ),
-
-  // ── Brain-rot (estratégia) ────────────────────────────────────────────────
-  _Insight(
+  InsightEntry(
     icon: Icons.menu_book_outlined,
     title: 'Leitura longa como antídoto',
     body: 'Ler 20 minutos de texto contínuo por dia — livro, artigo, ensaio — '
@@ -635,7 +537,7 @@ final _solucoes = <_Insight>[
         ? '${d.microSessions} checagens impulsivas na semana passada — cada sessão longa de leitura desfaz vários desses danos'
         : 'registre uso para medir a proporção de sessões fragmentadas vs. profundas',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.self_improvement_outlined,
     title: 'Tédio como exercício cognitivo',
     body: 'Tolerar o tédio sem recorrer ao celular é, literalmente, um treino '
@@ -648,9 +550,7 @@ final _solucoes = <_Insight>[
         ? '${d.microSessions} vezes que você buscou o celular ao sentir tédio esta semana — experimente esperar 2 minutos antes de pegar'
         : 'registre uso para identificar quantas aberturas são respostas automáticas ao tédio',
   ),
-
-  // ── Comparação com drogas (estratégia) ───────────────────────────────────
-  _Insight(
+  InsightEntry(
     icon: Icons.spa_outlined,
     title: 'Protocolos de dependência aplicados ao celular',
     body: 'Técnicas validadas para dependência química funcionam para smartphones: '
@@ -663,7 +563,7 @@ final _solucoes = <_Insight>[
         ? 'você tem ${d.weeklyUnlocks} desbloqueios semanais — identifique os 3 principais gatilhos e crie atrito para cada um'
         : 'registre uso por uma semana para mapear seus principais gatilhos de abertura',
   ),
-  _Insight(
+  InsightEntry(
     icon: Icons.group_work_outlined,
     title: 'Responsabilidade social como âncora',
     body: 'Em programas de recuperação de dependência, o suporte social é '
@@ -677,263 +577,3 @@ final _solucoes = <_Insight>[
         : 'registre uso por uma semana e compartilhe os dados com alguém de confiança',
   ),
 ];
-
-// ─── Screen ───────────────────────────────────────────────────────────────────
-
-class InsightsScreen extends StatelessWidget {
-  const InsightsScreen({super.key, required this.storage});
-  final StorageService storage;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final data = _InsightData.compute(storage);
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(l10n.insightsTitle),
-          bottom: TabBar(tabs: [
-            Tab(text: l10n.tabAlerts),
-            Tab(text: l10n.tabSolutions),
-          ]),
-        ),
-        body: TabBarView(
-          children: [
-            _InsightCarousel(insights: _alertas, data: data),
-            _InsightCarousel(insights: _solucoes, data: data),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Carousel ─────────────────────────────────────────────────────────────────
-
-class _InsightCarousel extends StatefulWidget {
-  const _InsightCarousel({required this.insights, required this.data});
-  final List<_Insight> insights;
-  final _InsightData data;
-
-  @override
-  State<_InsightCarousel> createState() => _InsightCarouselState();
-}
-
-class _InsightCarouselState extends State<_InsightCarousel> {
-  late final PageController _controller;
-  int _current = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = PageController();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final count = widget.insights.length;
-    return Column(
-      children: [
-        Expanded(
-          child: PageView.builder(
-            controller: _controller,
-            itemCount: count,
-            onPageChanged: (i) => setState(() => _current = i),
-            itemBuilder: (_, i) => SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.xs),
-              child: _InsightCard(
-                insight: widget.insights[i],
-                data: widget.data,
-                index: i,
-                total: count,
-              ),
-            ),
-          ),
-        ),
-        _DotIndicator(
-            count: count, current: _current, controller: _controller),
-        const SizedBox(height: AppSpacing.sm),
-      ],
-    );
-  }
-}
-
-// ─── Dot indicator ────────────────────────────────────────────────────────────
-
-class _DotIndicator extends StatelessWidget {
-  const _DotIndicator(
-      {required this.count,
-      required this.current,
-      required this.controller});
-  final int count;
-  final int current;
-  final PageController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(count, (i) {
-        final active = i == current;
-        return GestureDetector(
-          onTap: () => controller.animateToPage(i,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            margin: const EdgeInsets.symmetric(horizontal: 3),
-            width: active ? 18 : 6,
-            height: 6,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(3),
-              color: active
-                  ? AppColors.primary
-                  : AppColors.primary.withAlpha(60),
-            ),
-          ),
-        );
-      }),
-    );
-  }
-}
-
-// ─── Card ─────────────────────────────────────────────────────────────────────
-
-class _InsightCard extends StatelessWidget {
-  const _InsightCard({
-    required this.insight,
-    required this.data,
-    required this.index,
-    required this.total,
-  });
-  final _Insight insight;
-  final _InsightData data;
-  final int index;
-  final int total;
-
-  @override
-  Widget build(BuildContext context) {
-    final analysis = insight.analysisFn(data);
-    final scheme = Theme.of(context).colorScheme;
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // ── Header: icon + counter ─────────────────────────────────
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withAlpha(24),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(insight.icon,
-                      size: 22, color: AppColors.primary),
-                ),
-                const Spacer(),
-                Text(
-                  '${index + 1} / $total',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.outline,
-                      ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
-
-            // ── Title ──────────────────────────────────────────────────
-            Text(
-              insight.title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w700,
-                  ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-
-            // ── Personalized analysis stub ─────────────────────────────
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.sm, vertical: AppSpacing.xs + 2),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withAlpha(18),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                    color: AppColors.primary.withAlpha(50), width: 1),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.data_usage_outlined,
-                      size: 13, color: AppColors.primary),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      analysis,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.primary,
-                            fontStyle: FontStyle.italic,
-                          ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-
-            // ── Insight body ───────────────────────────────────────────
-            Text(
-              insight.body,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-
-            // ── Reference ─────────────────────────────────────────────
-            const Divider(height: 1),
-            const SizedBox(height: AppSpacing.xs),
-            GestureDetector(
-              onTap: () async {
-                final uri = Uri.tryParse(insight.url);
-                if (uri != null && await canLaunchUrl(uri)) {
-                  await launchUrl(uri, mode: LaunchMode.externalApplication);
-                }
-              },
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.open_in_new,
-                      size: 11, color: scheme.primary),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      insight.reference,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontStyle: FontStyle.italic,
-                            color: scheme.primary,
-                            decoration: TextDecoration.underline,
-                          ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

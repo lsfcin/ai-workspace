@@ -1,6 +1,5 @@
 package com.lsf.apptime
 
-import android.app.ActivityManager
 import android.app.AppOpsManager
 import android.content.Intent
 import android.content.pm.ApplicationInfo
@@ -116,10 +115,6 @@ class MainActivity : FlutterActivity() {
         return mode == AppOpsManager.MODE_ALLOWED
     }
 
-    @Suppress("DEPRECATION")
-    private fun isServiceRunning(serviceClass: Class<*>): Boolean {
-        val manager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
-        return manager.getRunningServices(Int.MAX_VALUE)
-            .any { it.service.className == serviceClass.name }
-    }
+    private fun isServiceRunning(serviceClass: Class<*>): Boolean =
+        serviceClass == MonitoringService::class.java && MonitoringService.isRunning
 }

@@ -69,7 +69,7 @@ class _AppTimeAppState extends State<AppTimeApp> {
     _locale = widget.initialLocale;
   }
 
-  /// Called by SettingsScreen. [languageCode] null = revert to system locale.
+  /// Called by SettingsScreen. [languageCode] null = reset to Portuguese (default).
   void _setLocale(String? languageCode) {
     final next = languageCode != null ? Locale(languageCode) : const Locale('pt');
     widget.storage.languageCode = languageCode;

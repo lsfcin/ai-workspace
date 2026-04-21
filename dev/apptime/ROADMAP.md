@@ -2,26 +2,11 @@
 
 Read the next milestone, implement it bullet by bullet. After a bullet is done, change the dash - to an x, and commit.
 
-## Milestone — Revision and Code Structure blueprint
-x Revise all the code. Read file for file. Everything. Write down an schematic study on a separate file e.g., CODE_STRUCTURE (can be a .md file or any other more suitable format). the code structure must show how we organize the code, which 'modules' and their responsabilities, how data flows. Think of this file as an useful blueprint for yourself, a intermediate file that makes it clear for you how our code works and is very useful for your navigation on the code from now on. Make it in a way you can even skip reading some functions or files, as an entrypoint for investigation. Also update the CONTEXT.md with two instructions for you, the first is to consult the file, the second is to update it whenever it is needed. In this schematic/structure file write down some pointers/references that will help you later to connect the notes on CODE_STRUCTURE with the actual code files, these notes are for you to use later, so write it in the best format for you. also, already make use of the revision time to note down observations on: 
-  x ambiguities
-  x redundancies
-  x duplicated/uncentralized variables and functions
-  x extra-complex, suboptimized routines
-  x overall bad practicies
-  x potential safety issues
-  x point out wrong naming patterns
-  x any other topic you think it is worth writing down
-
-x After writing down the CODE_STRUCTURE and all its info, revise it, create a list of points in another file called REFACTOR_PLAN and sort it from the most relevant to the least. The refactor plan should prioritize mostly to reorganize the code, make it more robust and concise, taking all the care to not loose any features or to make them malfunction. If you think some features can be redesigned a bit, or even excluded you can point it out, ask me, or just write the suggestion on the plan. Do not refactor yet! Just create the plan.
-
-x Separately, create another file called OPTIMIZATION_PLAN. It is a ToDo list of sorted points to speed up our app, make it lighter to load and to run. To make it more cumbersome regarding battery consumption both in foreground and in background. If you think some features can be redesigned a bit, or even excluded to make our app lighter and faster you can point it out, ask me, or just write the suggestion on the plan. Do not optimize yet! Just create the plan.
-
-## Milestone — Refactor
-- Perform the planned refactor in the REFACTOR_PLAN, point by point, ticking them with an x. If there are core decisions to make about the the refactoring tasks, ask me, give me the options before, and then follow the plan. then rename the previous CODE_STRUCTURE file as old, or deprecated, or any other word you see more fit and create a new one representing the current structure.
+## Milestone — Refactor ✓
+x Performed the planned refactor in REFACTOR_PLAN, all items ticked. CODE_STRUCTURE_pre_refactor.md archived; CODE_STRUCTURE.md updated to reflect post-refactor layout.
 
 ## Milestone — Optimization
-- Perform the planned optimization in the OPTIMIZATION_PLAN, point by point, ticking them with an x. If there are core decisions to make about the the optimization tasks, ask me, give me the options before, and then follow the plan. then rename the previous CODE_STRUCTURE file as old, or deprecated, or any other word you see more fit and create a new one representing the current structure.
+- Perform the planned optimization in the OPTIMIZATION_PLAN, point by point, ticking them with an x. But before you may consult our plan and compare with the updated CODE_STRUCTURE.md, given we've performed major refactors lately the optimization plan may require adjustments. If there are core decisions to make about the the optimization tasks, ask me, give me the options before, and then follow the plan. then rename the previous CODE_STRUCTURE file as old, or deprecated, or any other word you see more fit and create a new one representing the current structure.
 
 ## Milestone — Prepare to PlayStore submission
 

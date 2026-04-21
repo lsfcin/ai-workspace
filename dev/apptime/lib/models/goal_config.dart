@@ -2,9 +2,9 @@
 /// Index matches the `goal_level` SharedPreferences Int (0–3).
 enum GoalLevel {
   none,       // 0 — awareness only, no feedback
-  minimal,    // 1 — strictest limits
-  normal,     // 2 — balanced
-  extensive,  // 3 — relaxed but still guided
+  minimal,    // 1 — Light: relaxed limits
+  normal,     // 2 — Moderate: balanced
+  extensive,  // 3 — Intense: strict limits
 }
 
 /// Thresholds for a single goal level, covering every usage metric.
@@ -39,14 +39,15 @@ class GoalThresholds {
 
   // ── Tier table (mirrors GoalThresholds.kt on the Kotlin side) ────────────
 
+  // minimal=Light (relaxed), normal=Moderate, extensive=Intense (strict)
   static const Map<GoalLevel, GoalThresholds> byLevel = {
     GoalLevel.minimal: GoalThresholds(
-      phoneLimitMinutes: 90,
-      appLimitMinutes: 15,
-      unlockLimit: 25,
-      maxSessionMinutes: 5,
-      sleepCutoffHour: 21,
-      wakeupHour: 9,
+      phoneLimitMinutes: 240,
+      appLimitMinutes: 60,
+      unlockLimit: 60,
+      maxSessionMinutes: 20,
+      sleepCutoffHour: 1,
+      wakeupHour: 7,
     ),
     GoalLevel.normal: GoalThresholds(
       phoneLimitMinutes: 150,
@@ -57,12 +58,12 @@ class GoalThresholds {
       wakeupHour: 8,
     ),
     GoalLevel.extensive: GoalThresholds(
-      phoneLimitMinutes: 240,
-      appLimitMinutes: 60,
-      unlockLimit: 60,
-      maxSessionMinutes: 20,
-      sleepCutoffHour: 1,
-      wakeupHour: 7,
+      phoneLimitMinutes: 90,
+      appLimitMinutes: 15,
+      unlockLimit: 25,
+      maxSessionMinutes: 5,
+      sleepCutoffHour: 21,
+      wakeupHour: 9,
     ),
   };
 

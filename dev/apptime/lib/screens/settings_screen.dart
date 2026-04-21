@@ -277,7 +277,6 @@ class _SettingsScreenState extends State<SettingsScreen>
   }
 
   void _changeLocale(String? code, AppLocalizations l10n) {
-    setState(() => _s.languageCode = code);
     widget.onLocaleChange(code);
   }
 
