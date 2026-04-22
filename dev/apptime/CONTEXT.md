@@ -4,26 +4,26 @@ Android app to reduce phone addiction through awareness — without blocking. A 
 
 ## Setup
 
-Android only · min SDK 21 · Flutter (UI) + Kotlin (overlay + monitoring)
+Android only · min SDK 23 · Flutter (UI) + Kotlin (overlay + monitoring)
 
 ## Architecture
 
 `Flutter UI → SharedPreferences ← MonitoringService (Kotlin) → OverlayService (Kotlin)`
 `BootReceiver (Kotlin) → starts MonitoringService on device reboot`
 
-Full module breakdown, interfaces, and constraints → [SPECS.md](SPECS.md)
+**Code structure, architecture constraints, SharedPreferences schema, and MethodChannel API → [CODE_STRUCTURE.md](CODE_STRUCTURE.md)**
+  - Consult CODE_STRUCTURE.md before editing any module — it maps responsibilities, data flow, SharedPreferences keys, and cross-cutting invariants.
+  - Update CODE_STRUCTURE.md whenever a module's responsibility, data flow, or key schema changes.
+
 Roadmap and pending milestones → [ROADMAP.md](ROADMAP.md)
 Completed milestones → [HISTORY.md](HISTORY.md)
-**Code structure blueprint (modules, data flow, known issues) → [CODE_STRUCTURE.md](CODE_STRUCTURE.md)**
-  - Consult CODE_STRUCTURE.md before editing any module — it maps responsibilities, data flow, SharedPreferences keys, and cross-cutting issues.
-  - Update CODE_STRUCTURE.md whenever a module's responsibility, data flow, or key schema changes.
 
 ## Current feature set
 
-- Overlay: `TYPE_APPLICATION_OVERLAY`, `FLAG_NOT_TOUCHABLE`, shows daily timer per app; hidden on unmonitored apps and (optionally) the launcher
+- Overlay: `TYPE_APPLICATION_OVERLAY`, `FLAG_NOT_TOUCHABLE`, shows daily timer per app; hidden on unmonitored apps and (optionally) the launcher; timer-only display, immediate show/hide
 - Goal system: 4 levels (Off/Light/Moderate/Intense) → breathing nudge, visual weight, personalized messages; per-app overrides
 - Analytics: 1d/7d/30d tabs; hourly stacked-bar pattern charts (yesterday + last 7 days); sleep hygiene, focus fragmentation, engagement balance, dopamine drain, weekly trend, 30-day trend
-- Insights screen: 40+ research-backed cards in Alerts and Solutions tabs
+- Insights screen: 40+ research-backed bilingual (PT+EN) cards in Alerts and Solutions tabs
 - Per-app control: enable/disable overlay per app; goal level override per app
 - Storage: SharedPreferences via Flutter plugin (`FlutterSharedPreferences` namespace); data auto-pruned after 90 days; delete-all action in Settings
 - i18n: PT-BR + EN, auto-detect from system, manual override in Settings
@@ -41,6 +41,6 @@ Completed milestones → [HISTORY.md](HISTORY.md)
 
 | Item | Value |
 |------|-------|
-| Phase | Pre-release — security & Play Store prep |
-| Last milestone | M19 — Security & privacy hardening ✓ |
+| Phase | Pre-release — Play Store submission pending |
+| Last milestone | Optimization ✓ |
 | Next | Play Store submission (see ROADMAP) |
