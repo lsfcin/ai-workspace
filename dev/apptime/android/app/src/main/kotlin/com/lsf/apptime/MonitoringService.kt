@@ -125,13 +125,11 @@ class MonitoringService : Service() {
     }
 
     private fun tick() {
-        // Heartbeat: record the current time so gap detection can measure how
-        // long the service was inactive if it gets killed and restarted later.
-        prefs.edit().putLong(HistoryBackfill.HEARTBEAT_KEY, System.currentTimeMillis()).apply()
-
         // Watchdog: restart OverlayService every 30s; refresh default launcher every 60s.
+        // Heartbeat written here too — 30s granularity is sufficient for gap detection.
         if (++watchdogTick >= 30) {
             watchdogTick = 0
+            prefs.edit().putLong(HistoryBackfill.HEARTBEAT_KEY, System.currentTimeMillis()).apply()
             startService(Intent(this, OverlayService::class.java))
             val homeIntent = Intent(Intent.ACTION_MAIN).apply { addCategory(Intent.CATEGORY_HOME) }
             val defaultPkg = packageManager
@@ -296,19 +294,27 @@ class MonitoringService : Service() {
         val duration = endMs - startMs
         if (duration <= 0L) return
 
-        // Walk from startMs to endMs in hour-boundary steps, accumulating
-        // hourly AND daily totals at the same time. This ensures daily totals
-        // match the sum of their hourly values even for sessions that cross the
-        // 4am day-boundary (e.g. a session running from 02:00 to 05:00 credits
-        // ~2h to the previous day and ~1h to the new day, not all 3h to one day).
+        // Accumulate all increments into a local map, then flush in a single
+        // editor.apply() — reduces ~5 separate async disk writes to 1 per session.
+        // addMs() reads the current stored value on first access per key; subsequent
+        // calls for the same key use the already-accumulated value, correctly handling
+        // multi-hour sessions where the same daily/device key receives multiple chunks.
         val endDate = epochToDateKey(endMs)
+        val acc = mutableMapOf<String, Long>()
+        fun addMs(key: String, ms: Long) {
+            acc[key] = (acc[key] ?: prefs.getLong(key, 0L)) + ms
+        }
+
+        // Walk from startMs to endMs in hour-boundary steps. This ensures daily totals
+        // match the sum of their hourly values even for sessions crossing the 4am boundary.
+        // indexUpdates tracks which (date → pkg) pairs to add to the per-day package index.
+        val indexUpdates = mutableMapOf<String, MutableSet<String>>()
         var cursor = startMs
         while (cursor < endMs) {
             val cal = java.util.Calendar.getInstance().apply { timeInMillis = cursor }
             val hour = cal.get(java.util.Calendar.HOUR_OF_DAY)
             val date = epochToDateKey(cursor)
 
-            // Start of next hour
             val nextHourCal = java.util.Calendar.getInstance().apply {
                 timeInMillis = cursor
                 set(java.util.Calendar.MINUTE, 0)
@@ -319,20 +325,15 @@ class MonitoringService : Service() {
             val chunkEnd = minOf(nextHourCal.timeInMillis, endMs)
             val chunkMs  = chunkEnd - cursor
 
-            val hourKey = "flutter.hourly_ms_${pkg}_${date}_${hour}"
-            prefs.edit().putLong(hourKey, prefs.getLong(hourKey, 0L) + chunkMs).apply()
-            val deviceHourKey = "flutter.device_hourly_ms_${date}_${hour}"
-            prefs.edit().putLong(deviceHourKey, prefs.getLong(deviceHourKey, 0L) + chunkMs).apply()
-
-            val dailyKey = "flutter.daily_ms_${pkg}_${date}"
-            prefs.edit().putLong(dailyKey, prefs.getLong(dailyKey, 0L) + chunkMs).apply()
-            val deviceDailyKey = "flutter.device_daily_ms_${date}"
-            prefs.edit().putLong(deviceDailyKey, prefs.getLong(deviceDailyKey, 0L) + chunkMs).apply()
+            addMs("flutter.hourly_ms_${pkg}_${date}_${hour}", chunkMs)
+            addMs("flutter.device_hourly_ms_${date}_${hour}", chunkMs)
+            addMs("flutter.daily_ms_${pkg}_${date}", chunkMs)
+            addMs("flutter.device_daily_ms_${date}", chunkMs)
+            indexUpdates.getOrPut(date) { mutableSetOf() }.add(pkg)
 
             cursor = chunkEnd
         }
 
-        // Session duration bucket (based on total duration, attributed to end date)
         val bucketIdx = when {
             duration < 60_000L  -> 0   // < 1 min
             duration < 300_000L -> 1   // 1–5 min
@@ -340,7 +341,23 @@ class MonitoringService : Service() {
             else                -> 3   // > 15 min
         }
         val bucketKey = "flutter.session_bucket_${bucketIdx}_${endDate}"
-        prefs.edit().putLong(bucketKey, prefs.safeGetCount(bucketKey) + 1).apply()
+        acc[bucketKey] = prefs.safeGetCount(bucketKey) + 1
+
+        val editor = prefs.edit()
+        for ((key, value) in acc) editor.putLong(key, value)
+        // Update per-day package index — allows Flutter to look up packages in O(1)
+        // instead of scanning all prefs keys.
+        for ((date, pkgs) in indexUpdates) {
+            val indexKey = "flutter.packages_index_$date"
+            val existing = try {
+                val raw = prefs.getString(indexKey, "[]") ?: "[]"
+                val arr = org.json.JSONArray(raw)
+                (0 until arr.length()).mapTo(mutableSetOf()) { arr.getString(it) }
+            } catch (_: Exception) { mutableSetOf() }
+            existing.addAll(pkgs)
+            editor.putString(indexKey, org.json.JSONArray(existing.toList()).toString())
+        }
+        editor.apply()
     }
 
     private fun incrementOpenCount(pkg: String) {

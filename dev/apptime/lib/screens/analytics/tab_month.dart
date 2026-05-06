@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -12,15 +13,50 @@ import 'classification_message.dart';
 
 // ─── TAB 30 dias ─────────────────────────────────────────────────────────────
 
-class Tab30d extends StatelessWidget {
+class Tab30d extends StatefulWidget {
   const Tab30d({super.key, required this.storage, required this.analytics});
   final StorageService storage;
   final AnalyticsService analytics;
 
   @override
+  State<Tab30d> createState() => _Tab30dState();
+}
+
+class _Tab30dState extends State<Tab30d> {
+  late List<DaySummary> _summaries;
+  Timer? _refreshTimer;
+  String? _classificationMsg;
+
+  void _refresh() {
+    setState(() {
+      _summaries = widget.analytics.getSummaries(30);
+      _classificationMsg = null;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _summaries = widget.analytics.getSummaries(30);
+    _refreshTimer = Timer.periodic(const Duration(minutes: 5), (_) => _refresh());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _classificationMsg = null;
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final summaries = analytics.getSummaries(30);
+    final summaries = _summaries;
     final nDays = summaries.length.clamp(1, 30);
     final totalMs = summaries.fold<int>(0, (acc, s) => acc + s.totalMs);
     final totalUnlocks = summaries.fold<int>(0, (acc, s) => acc + s.unlockCount);
@@ -69,7 +105,7 @@ class Tab30d extends StatelessWidget {
             nDays: nDays,
             l10n: l10n,
           ),
-          text: classificationMessage(l10n, avgMinDay, avgUnlocksDay),
+          text: _classificationMsg ??= classificationMessage(l10n, avgMinDay, avgUnlocksDay),
         ),
 
         analysisCard(

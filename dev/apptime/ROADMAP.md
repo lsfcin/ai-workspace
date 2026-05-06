@@ -2,12 +2,6 @@
 
 Read the next milestone, implement it bullet by bullet. After a bullet is done, change the dash - to an x, and commit.
 
-## Milestone — Refactor ✓
-x Performed the planned refactor in REFACTOR_PLAN, all items ticked. CODE_STRUCTURE_pre_refactor.md archived; CODE_STRUCTURE.md updated to reflect post-refactor layout.
-
-## Milestone — Optimization
-- Perform the planned optimization in the OPTIMIZATION_PLAN, point by point, ticking them with an x. But before you may consult our plan and compare with the updated CODE_STRUCTURE.md, given we've performed major refactors lately the optimization plan may require adjustments. If there are core decisions to make about the the optimization tasks, ask me, give me the options before, and then follow the plan. then rename the previous CODE_STRUCTURE file as old, or deprecated, or any other word you see more fit and create a new one representing the current structure.
-
 ## Milestone — Prepare to PlayStore submission
 
 ### Checklist

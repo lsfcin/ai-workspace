@@ -24,21 +24,31 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
   late final AppInfoService _appInfo;
-  late final List<Widget> _screens;
+  // Screens are built lazily on first visit — avoids running initState (and
+  // prefs reads) for tabs the user never opens in a given session.
+  final _screens = <int, Widget>{};
+
+  Widget _buildScreen(int index) {
+    switch (index) {
+      case 0:
+        return SettingsScreen(
+          storage: widget.storage,
+          onLocaleChange: widget.onLocaleChange,
+        );
+      case 1:
+        return MonitoringScreen(storage: widget.storage, appInfo: _appInfo);
+      case 2:
+        return AnalyticsScreen(storage: widget.storage, appInfo: _appInfo);
+      default:
+        return InsightsScreen(storage: widget.storage);
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     _appInfo = AppInfoService();
-    _screens = [
-      SettingsScreen(
-        storage: widget.storage,
-        onLocaleChange: widget.onLocaleChange,
-      ),
-      MonitoringScreen(storage: widget.storage, appInfo: _appInfo),
-      AnalyticsScreen(storage: widget.storage, appInfo: _appInfo),
-      InsightsScreen(storage: widget.storage),
-    ];
+    _screens[0] = _buildScreen(0);   // initial tab always built at startup
     // Single load point — seeds labelForApp() + isLauncherPkg() globals.
     _appInfo.load().then((_) { if (mounted) setState(() {}); });
   }
@@ -48,10 +58,24 @@ class _MainScreenState extends State<MainScreen> {
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      body: IndexedStack(index: _selectedIndex, children: _screens),
+      body: Stack(
+        children: [
+          for (int i = 0; i < 4; i++)
+            Offstage(
+              offstage: _selectedIndex != i,
+              child: _screens.containsKey(i)
+                  ? _screens[i]!
+                  : const SizedBox.shrink(),
+            ),
+        ],
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
-        onDestinationSelected: (i) => setState(() => _selectedIndex = i),
+        onDestinationSelected: (i) {
+          // Build the screen widget on first visit only.
+          _screens.putIfAbsent(i, () => _buildScreen(i));
+          setState(() => _selectedIndex = i);
+        },
         destinations: [
           NavigationDestination(
             icon: const Icon(Icons.settings_outlined),

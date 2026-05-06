@@ -75,6 +75,15 @@ class MainActivity : FlutterActivity() {
                             ?.activityInfo?.packageName
                         result.success((fromQuery + setOfNotNull(defaultPkg)).toList())
                     }
+                    "getStartupStatus" -> {
+                        val overlay = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                            Settings.canDrawOverlays(this) else true
+                        result.success(mapOf(
+                            "overlayGranted" to overlay,
+                            "usageGranted" to hasUsagePermission(),
+                            "isRunning" to MonitoringService.isRunning,
+                        ))
+                    }
                     "getAppMetadata" -> {
                         val pm = packageManager
                         val labels = mutableMapOf<String, String>()

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
@@ -11,17 +12,55 @@ import 'classification_message.dart';
 
 // ─── TAB 1 dia ───────────────────────────────────────────────────────────────
 
-class Tab1d extends StatelessWidget {
+class Tab1d extends StatefulWidget {
   const Tab1d({super.key, required this.storage, required this.analytics});
   final StorageService storage;
   final AnalyticsService analytics;
+
+  @override
+  State<Tab1d> createState() => _Tab1dState();
+}
+
+class _Tab1dState extends State<Tab1d> {
+  StorageService get storage => widget.storage;
+  AnalyticsService get analytics => widget.analytics;
+
+  late List<DaySummary> _summaries;
+  Timer? _refreshTimer;
+  String? _classificationMsg;   // cached — recomputed only when summaries or locale changes
+
+  void _refresh() {
+    setState(() {
+      _summaries = widget.analytics.getSummaries(1);
+      _classificationMsg = null;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _summaries = widget.analytics.getSummaries(1);
+    _refreshTimer = Timer.periodic(const Duration(minutes: 5), (_) => _refresh());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _classificationMsg = null;   // locale or theme may have changed
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final today = todayKey();
     final yesterday = yesterdayKey();
-    final summaries = analytics.getSummaries(1);
+    final summaries = _summaries;
     final summary = summaries.isEmpty ? null : summaries.first;
     final totalMs = summary?.totalMs ?? 0;
     final unlocks = summary?.unlockCount ?? 0;
@@ -32,6 +71,7 @@ class Tab1d extends StatelessWidget {
     final hasHourly = hourlyMs.any((v) => v > 0);
 
     final avgMinDay1d = totalMs ~/ 60000;
+    _classificationMsg ??= classificationMessage(l10n, avgMinDay1d, unlocks);
 
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -49,7 +89,7 @@ class Tab1d extends StatelessWidget {
             nDays: 1,
             l10n: l10n,
           ),
-          text: classificationMessage(l10n, avgMinDay1d, unlocks),
+          text: _classificationMsg!,
         ),
 
         analysisCard(

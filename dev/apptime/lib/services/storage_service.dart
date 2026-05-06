@@ -141,9 +141,12 @@ class StorageService {
   List<String> packagesLast24h() {
     final today = _todayKey();
     final yesterday = _yesterdayKey();
-    // Flutter's getKeys() strips the 'flutter.' storage prefix — match without it.
-    const prefix = 'daily_ms_';
     final packages = <String>{};
+    packages.addAll(_packagesFromIndex(today));
+    packages.addAll(_packagesFromIndex(yesterday));
+    if (packages.isNotEmpty) return packages.toList();
+    // Fallback: full key scan for data written before the index was added.
+    const prefix = 'daily_ms_';
     for (final k in _prefs.getKeys()) {
       if (k.startsWith(prefix)) {
         if (k.endsWith('_$today') || k.endsWith('_$yesterday')) {
@@ -279,7 +282,7 @@ class StorageService {
     const historyPrefixes = [
       'daily_ms_', 'device_daily_ms_', 'open_count_', 'unlock_count_',
       'device_hourly_ms_', 'hourly_ms_', 'hourly_opens_', 'hourly_unlocks_',
-      'session_bucket_',
+      'session_bucket_', 'packages_index_',
     ];
     for (final k in List.of(_prefs.getKeys())) {
       if (historyPrefixes.any((p) => k.startsWith(p))) await _prefs.remove(k);
@@ -290,30 +293,23 @@ class StorageService {
   /// Call once on app start to prevent unbounded data accumulation.
   Future<void> pruneOldData({int keepDays = 90}) async {
     final cutoff = _dayAnchor(DateTime.now()).subtract(Duration(days: keepDays));
-    final datePrefixes = <String, bool>{};
-    // Build a set of date strings that are within the retention window.
-    for (final k in _prefs.getKeys()) {
-      // Keys with date suffixes look like: daily_ms_com.pkg_2024-01-15
-      // or device_hourly_ms_2024-01-15_3
-      final dateMatch = RegExp(r'(\d{4}-\d{2}-\d{2})').allMatches(k).lastOrNull;
+    // Compile once, single pass — eliminates double iteration and double RegExp compilation.
+    final dateRegex = RegExp(r'(\d{4}-\d{2}-\d{2})');
+    for (final k in List.of(_prefs.getKeys())) {
+      final dateMatch = dateRegex.allMatches(k).lastOrNull;
       if (dateMatch == null) continue;
       final dateStr = dateMatch.group(0)!;
-      if (datePrefixes.containsKey(dateStr)) continue;
       final parts = dateStr.split('-');
       final dt = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
-      datePrefixes[dateStr] = dt.isAfter(cutoff);
-    }
-    for (final k in List.of(_prefs.getKeys())) {
-      final dateMatch = RegExp(r'(\d{4}-\d{2}-\d{2})').allMatches(k).lastOrNull;
-      if (dateMatch == null) continue;
-      final dateStr = dateMatch.group(0)!;
-      if (datePrefixes[dateStr] == false) await _prefs.remove(k);
+      if (!dt.isAfter(cutoff)) await _prefs.remove(k);
     }
   }
 
   /// Retorna packages que têm dados de uso para a data dada (formato YYYY-MM-DD).
   List<String> packagesDailyMs(String date) {
-    // Flutter's getKeys() strips the 'flutter.' storage prefix — match without it.
+    final indexed = _packagesFromIndex(date);
+    if (indexed.isNotEmpty) return indexed;
+    // Fallback: full key scan for data written before the index was added.
     const prefix = 'daily_ms_';
     final suffix = '_$date';
     return _prefs
@@ -321,5 +317,17 @@ class StorageService {
         .where((k) => k.startsWith(prefix) && k.endsWith(suffix))
         .map((k) => k.substring(prefix.length, k.length - suffix.length))
         .toList();
+  }
+
+  /// Reads the per-day package index written by MonitoringService.
+  /// Returns empty list on miss — callers fall back to key scan.
+  List<String> _packagesFromIndex(String date) {
+    final raw = _prefs.getString('packages_index_$date');
+    if (raw == null) return const [];
+    try {
+      return (jsonDecode(raw) as List).cast<String>();
+    } catch (_) {
+      return const [];
+    }
   }
 }

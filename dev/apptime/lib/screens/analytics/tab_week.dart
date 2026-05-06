@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
@@ -11,15 +12,53 @@ import 'classification_message.dart';
 
 // ─── TAB 7 dias ───────────────────────────────────────────────────────────────
 
-class Tab7d extends StatelessWidget {
+class Tab7d extends StatefulWidget {
   const Tab7d({super.key, required this.storage, required this.analytics});
   final StorageService storage;
   final AnalyticsService analytics;
 
   @override
+  State<Tab7d> createState() => _Tab7dState();
+}
+
+class _Tab7dState extends State<Tab7d> {
+  StorageService get storage => widget.storage;
+  AnalyticsService get analytics => widget.analytics;
+
+  late List<DaySummary> _summaries;
+  Timer? _refreshTimer;
+  String? _classificationMsg;
+
+  void _refresh() {
+    setState(() {
+      _summaries = widget.analytics.getSummaries(7);
+      _classificationMsg = null;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _summaries = widget.analytics.getSummaries(7);
+    _refreshTimer = Timer.periodic(const Duration(minutes: 5), (_) => _refresh());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _classificationMsg = null;
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final summaries = analytics.getSummaries(7);
+    final summaries = _summaries;
     final totalMs = summaries.fold<int>(0, (acc, s) => acc + s.totalMs);
     final totalUnlocks = summaries.fold<int>(0, (acc, s) => acc + s.unlockCount);
 
@@ -79,7 +118,7 @@ class Tab7d extends StatelessWidget {
             nDays: summaries.length.clamp(1, 7),
             l10n: l10n,
           ),
-          text: classificationMessage(l10n, avgMinDay7d, avgUnlocksDay7d),
+          text: _classificationMsg ??= classificationMessage(l10n, avgMinDay7d, avgUnlocksDay7d),
         ),
 
         analysisCard(

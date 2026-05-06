@@ -11,9 +11,9 @@ Android only · min SDK 23 · Flutter (UI) + Kotlin (overlay + monitoring)
 `Flutter UI → SharedPreferences ← MonitoringService (Kotlin) → OverlayService (Kotlin)`
 `BootReceiver (Kotlin) → starts MonitoringService on device reboot`
 
-**Code structure, architecture constraints, SharedPreferences schema, and MethodChannel API → [CODE_STRUCTURE.md](CODE_STRUCTURE.md)**
-  - Consult CODE_STRUCTURE.md before editing any module — it maps responsibilities, data flow, SharedPreferences keys, and cross-cutting invariants.
-  - Update CODE_STRUCTURE.md whenever a module's responsibility, data flow, or key schema changes.
+**Code structure, architecture constraints, SharedPreferences schema, and MethodChannel API → [SPECS.md](SPECS.md)**
+  - Consult SPECS.md before editing any module — it maps responsibilities, data flow, SharedPreferences keys, and cross-cutting invariants.
+  - Update SPECS.md whenever a module's responsibility, data flow, or key schema changes.
 
 Roadmap and pending milestones → [ROADMAP.md](ROADMAP.md)
 Completed milestones → [HISTORY.md](HISTORY.md)

@@ -25,11 +25,8 @@ void main() async {
   // Fire-and-forget: prune data older than 90 days in the background.
   storage.pruneOldData();
 
-  final results = await Future.wait([
-    ServiceChannel.hasOverlayPermission(),
-    ServiceChannel.hasUsagePermission(),
-  ]);
-  final allGranted = results[0] && results[1];
+  final status = await ServiceChannel.getStartupStatus();
+  final allGranted = status.overlayGranted && status.usageGranted;
 
   // Auto-start monitoring on first use once permissions are granted.
   if (allGranted && !storage.monitoringEverStarted) {

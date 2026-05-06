@@ -14,6 +14,7 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.os.PowerManager
 import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
@@ -25,11 +26,14 @@ class OverlayService : Service() {
     // ── Regular overlay (tiny counter in status-bar zone) ─────────────────────
     private lateinit var overlayView: TextView
     private lateinit var prefs: SharedPreferences
+    private lateinit var powerManager: PowerManager
     private val handler = Handler(Looper.getMainLooper())
     private var isViewAdded = false
 
-    // ── Feedback engine (F.BN / F.VW / F.PM) ─────────────────────────────────
-    private lateinit var feedbackEngine: FeedbackEngine
+    // ── Feedback engine (PM — Personalized Messages) ──────────────────────────
+    // Lazily initialized once — must survive watchdog restarts (onStartCommand
+    // is called every 30 s by MonitoringService) without resetting PM schedules.
+    private var feedbackEngine: FeedbackEngine? = null
 
     // ── Feedback evaluation every 5 poll ticks (~2.5 s) ──────────────────────
     private var evalTick = 0
@@ -40,15 +44,23 @@ class OverlayService : Service() {
     // ── Slide suppression — only reposition window when y actually changes ────
     private var lastTopY = -1
 
+    // ── Width restoration — tracked to defer WRAP_CONTENT until timer text is set ──
+    private var pmWasActive = false
+
     // ── Poll loop ─────────────────────────────────────────────────────────────
+    // Use a slower interval when the screen is off — the overlay is invisible
+    // and feedback evaluation is unnecessary, so 2 s wastes ~4× less CPU.
     private val pollRunnable = object : Runnable {
         override fun run() {
-            updateOverlay()
-            if (++evalTick >= 5) {
-                evalTick = 0
-                feedbackEngine.evaluate()
+            val screenOn = powerManager.isInteractive
+            if (screenOn) {
+                updateOverlay()
+                if (++evalTick >= 5) {
+                    evalTick = 0
+                    feedbackEngine?.evaluate()
+                }
             }
-            handler.postDelayed(this, 500)
+            handler.postDelayed(this, if (screenOn) 500L else 2_000L)
         }
     }
 
@@ -61,15 +73,18 @@ class OverlayService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         startForeground(NOTIF_ID, buildNotification())
         prefs = getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
+        powerManager = getSystemService(POWER_SERVICE) as PowerManager
         if (!isViewAdded) addOverlayView()
-        feedbackEngine = FeedbackEngine(
-            view         = overlayView,
-            handler      = handler,
-            getViewAdded = { isViewAdded },
-            setWindowWidth = ::setWindowWidth,
-            getMaxWidthPx  = { maxWidthPx },
-            getPrefs = { prefs },
-        )
+        if (feedbackEngine == null) {
+            feedbackEngine = FeedbackEngine(
+                view           = overlayView,
+                getViewAdded   = { isViewAdded },
+                setWindowWidth = ::setWindowWidth,
+                getMaxWidthPx  = { maxWidthPx },
+                getPrefs       = { prefs },
+                getAppLabel    = ::resolveAppLabel,
+            )
+        }
         handler.removeCallbacks(pollRunnable)
         handler.post(pollRunnable)
         return START_STICKY
@@ -103,8 +118,7 @@ class OverlayService : Service() {
             setPadding(16, 8, 16, 8)
             maxWidth = maxWidthPx
             setSingleLine(false)
-            scaleX = 1f
-            scaleY = 1f
+            alpha = 1f
         }
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
@@ -131,26 +145,21 @@ class OverlayService : Service() {
     private fun updateOverlay() {
         if (!isViewAdded) return
 
-        val showBg     = prefs.getBoolean("flutter.overlay_show_background", true)
-        val showBorder = prefs.getBoolean("flutter.overlay_show_border", true)
-        val topDp      = readFloat(prefs, "flutter.overlay_top_dp", 40f).coerceIn(0f, 800f)
+        // Snapshot once — prefs.all copies the entire map; reusing it here avoids
+        // multiple copies and reduces synchronized lock acquisitions on the 500ms path.
+        val snap = prefs.all
+
+        val showBg     = snap["flutter.overlay_show_background"] as? Boolean ?: true
+        val showBorder = snap["flutter.overlay_show_border"] as? Boolean ?: true
+        val topDp      = readFloat(snap, "flutter.overlay_top_dp", 40f).coerceIn(0f, 800f)
         val density    = resources.displayMetrics.density
 
-        // Font size stored as Int for cross-process reliability;
-        // fall back to readFloat for any existing Float/Double legacy data.
-        // Flutter shared_preferences stores int as Long on Android; use getLong().toInt().
+        // Flutter shared_preferences stores int as Long on Android.
         val fontSizeBase = run {
-            val asLong = try { prefs.getLong("flutter.overlay_font_size", 0L) }
-                         catch (_: ClassCastException) { 0L }
+            val asLong = snap["flutter.overlay_font_size"] as? Long ?: 0L
             if (asLong > 0L) asLong.toFloat()
-            else readFloat(prefs, "flutter.overlay_font_size", 14f)
+            else readFloat(snap, "flutter.overlay_font_size", 14f)
         }.coerceIn(10f, 30f)
-
-        val fontSize = fontSizeBase * feedbackEngine.visualWeightMult
-
-        overlayView.textSize = fontSize
-        overlayView.scaleX = 1f   // never use view scale — font size does the work
-        overlayView.scaleY = 1f
 
         val bg = GradientDrawable().apply {
             cornerRadius = 8f * density
@@ -162,7 +171,9 @@ class OverlayService : Service() {
         // Only reposition the window when y actually changed — calling
         // updateViewLayout every tick causes the OS to re-center WRAP_CONTENT
         // width on each frame, producing a subtle lateral slide.
-        if (!feedbackEngine.pmActive) {
+        val pmActive = feedbackEngine?.pmActive ?: false
+
+        if (!pmActive) {
             try {
                 val lp = overlayView.layoutParams as WindowManager.LayoutParams
                 val newY = (topDp * density).toInt()
@@ -177,23 +188,31 @@ class OverlayService : Service() {
             }
         }
 
-        if (feedbackEngine.pmActive) return   // PM owns text and visibility
+        if (pmActive) {
+            pmWasActive = true
+            return   // PM owns text, textSize, typeface, alpha, visibility
+        }
 
-        val text           = prefs.getString("flutter.overlay_text", "") ?: ""
-        val visible        = prefs.getBoolean("flutter.overlay_visible", false)
-        val overlayEnabled = prefs.getBoolean("flutter.overlay_enabled", true)
-        val currentPkg    = prefs.getString("flutter.current_pkg", null)
-        val isUnmonitored = currentPkg != null &&
+        overlayView.textSize = fontSizeBase
+        overlayView.alpha    = 1f
+
+        val text           = snap["flutter.overlay_text"] as? String ?: ""
+        val visible        = snap["flutter.overlay_visible"] as? Boolean ?: false
+        val overlayEnabled = snap["flutter.overlay_enabled"] as? Boolean ?: true
+        val currentPkg     = snap["flutter.current_pkg"] as? String
+        val isUnmonitored  = currentPkg != null &&
             AppConstants.parseDisabledApps(prefs).contains(currentPkg)
-        val shouldShow    = overlayEnabled && visible && text.isNotEmpty() && !isUnmonitored
+        val shouldShow     = overlayEnabled && visible && text.isNotEmpty() && !isUnmonitored
 
-        overlayView.text = text
-        if (!feedbackEngine.breathingActive && !feedbackEngine.pmActive) overlayView.alpha = 1f
+        overlayView.text       = text
         overlayView.visibility = if (shouldShow) View.VISIBLE else View.INVISIBLE
 
-        if (feedbackEngine.pmJustEnded && shouldShow) {
-            feedbackEngine.pmJustEnded = false
-            feedbackEngine.fadeInView(500L)
+        // Width restoration: the timer text is now in place — safe to shrink the window.
+        // This fires only on the first tick after a PM ends so updateViewLayout isn't
+        // called every 500 ms (which would cause lateral drift on WRAP_CONTENT windows).
+        if (pmWasActive) {
+            pmWasActive = false
+            setWindowWidth(WindowManager.LayoutParams.WRAP_CONTENT)
         }
     }
 
@@ -214,8 +233,8 @@ class OverlayService : Service() {
     // Helpers
     // ─────────────────────────────────────────────────────────────────────────
 
-    private fun readFloat(prefs: SharedPreferences, key: String, default: Float): Float {
-        val raw = prefs.all[key] ?: return default
+    private fun readFloat(snap: Map<String, *>, key: String, default: Float): Float {
+        val raw = snap[key] ?: return default
         return when (raw) {
             is Float  -> raw
             is Double -> raw.toFloat()
@@ -224,6 +243,27 @@ class OverlayService : Service() {
             is String -> raw.toFloatOrNull() ?: default
             else      -> default
         }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // App label resolution — mirrors the Dart labelForApp() three-tier strategy
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private fun resolveAppLabel(pkg: String): String {
+        // Tier 1 — PackageManager display name (same source as AppInfoService.labels in Dart)
+        try {
+            return packageManager.getApplicationInfo(pkg, 0)
+                .loadLabel(packageManager).toString()
+        } catch (_: Exception) { /* app not installed or PM unavailable */ }
+
+        // Tier 3 — heuristic fallback matching Dart's labelForApp()
+        val tld   = setOf("com", "org", "net", "io", "br", "uk", "de", "fr", "co")
+        val noise = setOf("android", "app", "apps", "mobile", "production", "release",
+                          "mediaclient", "frontpage", "katana", "barcelona")
+        val brand = pkg.split(".")
+            .filter { it !in tld && it !in noise && it.length > 1 }
+            .firstOrNull() ?: pkg.split(".").last()
+        return brand.replaceFirstChar { it.uppercase() }
     }
 
     // ─────────────────────────────────────────────────────────────────────────

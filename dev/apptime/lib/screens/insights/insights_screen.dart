@@ -6,14 +6,26 @@ import '../../services/storage_service.dart';
 import '../../theme/app_theme.dart';
 import 'insight_data.dart';
 
-class InsightsScreen extends StatelessWidget {
+class InsightsScreen extends StatefulWidget {
   const InsightsScreen({super.key, required this.storage});
   final StorageService storage;
 
   @override
+  State<InsightsScreen> createState() => _InsightsScreenState();
+}
+
+class _InsightsScreenState extends State<InsightsScreen> {
+  late InsightData _data;
+
+  @override
+  void initState() {
+    super.initState();
+    _data = InsightData.compute(widget.storage);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final data = InsightData.compute(storage);
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -26,8 +38,8 @@ class InsightsScreen extends StatelessWidget {
         ),
         body: TabBarView(
           children: [
-            _InsightCarousel(insights: kAlertas, data: data),
-            _InsightCarousel(insights: kSolucoes, data: data),
+            _InsightCarousel(insights: kAlertas, data: _data),
+            _InsightCarousel(insights: kSolucoes, data: _data),
           ],
         ),
       ),
@@ -141,7 +153,10 @@ class _InsightCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final analysis = insight.analysisFn(data);
+    final en = Localizations.localeOf(context).languageCode == 'en';
+    final displayTitle = (en ? insight.titleEn : null) ?? insight.title;
+    final displayBody = (en ? insight.bodyEn : null) ?? insight.body;
+    final analysis = ((en ? insight.analysisFnEn : null) ?? insight.analysisFn)(data);
     final scheme = Theme.of(context).colorScheme;
 
     return Card(
@@ -174,7 +189,7 @@ class _InsightCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm),
 
             Text(
-              insight.title,
+              displayTitle,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: AppColors.primary,
                     fontWeight: FontWeight.w700,
@@ -213,7 +228,7 @@ class _InsightCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm),
 
             Text(
-              insight.body,
+              displayBody,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: AppSpacing.sm),

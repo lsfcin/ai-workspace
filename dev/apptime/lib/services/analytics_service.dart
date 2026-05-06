@@ -42,6 +42,9 @@ class AnalyticsService {
     // 4am day boundary — mirrors MonitoringService.kt
     final today = _anchor(DateTime.now());
     final summaries = <DaySummary>[];
+    // Read once — disabledApps JSON-decodes on every access; decoding 30×
+    // per getSummaries(30) call is wasteful.
+    final disabled = _storage.disabledApps;
 
     for (int i = 0; i < days; i++) {
       final date = today.subtract(Duration(days: i));
@@ -49,7 +52,6 @@ class AnalyticsService {
       final packages = i == 0
           ? _storage.packagesLast24h()      // uses _todayKey() which is already anchored
           : _storage.packagesDailyMs(dateStr);
-      final disabled = _storage.disabledApps;
       final apps = packages
           .where((pkg) => !disabled.contains(pkg))
           .map((pkg) {

@@ -35,6 +35,22 @@ class ServiceChannel {
     return raw.map((e) => e.toString()).toSet();
   }
 
+  /// Single call returning overlay permission, usage permission, and service state.
+  /// Replaces the two separate hasOverlayPermission() + hasUsagePermission() round-trips.
+  static Future<({bool overlayGranted, bool usageGranted, bool isRunning})>
+      getStartupStatus() async {
+    final raw =
+        await _channel.invokeMethod<Map<Object?, Object?>>('getStartupStatus');
+    if (raw == null) {
+      return (overlayGranted: false, usageGranted: false, isRunning: false);
+    }
+    return (
+      overlayGranted: raw['overlayGranted'] as bool? ?? false,
+      usageGranted: raw['usageGranted'] as bool? ?? false,
+      isRunning: raw['isRunning'] as bool? ?? false,
+    );
+  }
+
   /// Single call combining getInstalledApps + getLaunchers — use this instead
   /// of the two separate methods to avoid double channel round-trips.
   static Future<({Map<String, String> labels, Set<String> launchers})>
